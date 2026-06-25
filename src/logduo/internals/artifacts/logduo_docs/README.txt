@@ -54,7 +54,7 @@ run(), and log.join() are included with the package installation:
         parent.py (imports parents_child.py)
 
 
-- README.txt and example scripts and  can be saved to your project in the subdirectory /logduo_docs:
+- README.txt and the example scripts can be exported to the /logduo_docs subdirectory in your local project.
 
         log.export_logduo_docs()
 
