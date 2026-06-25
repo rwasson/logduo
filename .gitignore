@@ -27,12 +27,14 @@ __pycache__/
 # --- logs / generated artifacts ---
 logs/
 **/logs/
+/logduo_docs/
 
 # --- build artifacts ---
 build/
 dist/
 *.egg-info/
 *.iml
+
 
 # --- macOS ---
 .DS_Store

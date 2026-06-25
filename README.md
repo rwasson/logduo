@@ -4,6 +4,8 @@ Logging, console, and file management for Python.
 
 Works in scripts and interactive sessions with no setup, but supports extensive customization.
 
+Platform: Tested on macOS, Windows, and Ubuntu using Python 3.13.
+
 
 Key Capabilities
 -----------------
@@ -14,7 +16,7 @@ Key Capabilities
 - Supports imported and nested scripts via log.join()
 - Supports Rich and ANSI-styled console output
 - Captures JSONL event streams (configurable)
-- Generates session artifacts such as config_table.txt, config.json, and README.txt (configurable)
+- Generates session artifacts such as config_table.txt, config.json, and README.txt
 - Provides extensive help() documentation and actionable error messages
 
 
