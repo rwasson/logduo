@@ -1,7 +1,6 @@
 Logduo
 ======
 Logging, console, and file management for Python.
-
 Works in scripts and interactive sessions with no setup, but supports extensive customization.
 
 Platform: Tested on macOS, Windows, and Ubuntu using Python 3.13.
@@ -13,9 +12,9 @@ Key Capabilities
 - Creates dedicated log files via new_logger()
 - Creates custom logging labels via new_level()
 - Supports imported and nested scripts via log.join()
-- Supports Rich and ANSI-styled console output
+- Supports Rich and ANSI-styled console output while preserving readable plain-text logs
 - Captures JSONL event streams (configurable)
-- Generates session artifacts such as config_table.txt, config.json, and README.txt
+- Generates session artifacts: config_table.txt, config.json
 - Provides extensive help() documentation and actionable error messages
 
 
@@ -27,19 +26,18 @@ Quick Start (in script or interactive session)
     log.warning("warning message")
 
 - The first log statement automatically starts a session using defaults and [tool.logduo] settings
-  in pyproject.toml (if available).
+    in pyproject.toml (if available).
 - By default, messages are sent to both console and a log file.
 - By default, Logduo generates a log file and config_table.txt in a timestamped run directory.
 - Paths of all Logduo-created files are listed in the default footer displayed in the console and
-  main log file.
+    main log file.
 
 
 Configure (Optional)
 --------------------
+    from pathlib import Path
     from logduo import log
-
     my_log_dir = Path("/absolute/path/to/my_log_dir")
-
     log.configure(log_dir_path=my_log_dir, console_verbosity=3)
     log("hello world")
 
@@ -48,21 +46,20 @@ Logduo Docs
 -----------
 - Example scripts demonstrating typical usage, Rich/ANSI rendering,
 run(), and log.join() are included with the package installation:
-
         first_script.py
-        rich_and_ansi.py
-        parent.py (imports parents_child.py)
+        console_rendering.py
+        data_analysis.py
+        math_report_notation.py
+        nested_parent_script.py (runs nested_child_script.py)
 
-
-- README.txt and the example scripts can be exported to the /logduo_docs subdirectory in your local project.
-
+- README.txt and the example scripts can be exported to the logduo_docs/ subdirectory in your local
+    project.
         log.export_logduo_docs()
 
 
 Help
 ----
 - Help is available for all Logduo methods and functions (displays in console only):
-
       help(log.configure)
 
 - Help includes examples, argument descriptions, and usage notes.
@@ -70,30 +67,26 @@ Help
 
 Typical Workflows
 ----------------
-- Debug session: By default, log.debug() includes the calling file name and line number
-  at the start of each message. Disable with: log.configure(..., show_debug_source=False)
+- Debug session: By default, log.debug() includes the calling file name and line number at the start
+    of each message. Disable with: log.configure(..., show_debug_source=False)
 
        from logduo import log
        log.configure(log_verbosity=3, console_verbosity=3)
 
        log.debug(f"made it here: var = {var}")
 
-- Create additional log files (for dedicated output) if needed. Messages logged with rep()
-  are recorded in report.log and optionally mirrored to console and/or main log file.
-
+- Create additional log files for dedicated output. Messages logged with `rep` are recorded in
+    report.log and optionally mirrored to the console and/or main log file.
        rep = log.new_logger("report", to_console=True, to_main_log=False)
        rep("Question 1 answer:")
 
 - Use the output directory to save plots, CSVs, reports, and other generated files
-
        myplot_output_path = log.output_dir_path / "myplot.png"
 
 - Close the session (required in interactive sessions, optional in scripts)
-
        log.close()
 
-
-Logduo Methods and Functions:  from logduo import log, run, text_table
+Logduo Methods and Functions:  from logduo import log, run
 ----------------------------------------------------------------------
 - Manage Sessions:
     - log.configure()
@@ -122,13 +115,10 @@ Logduo Methods and Functions:  from logduo import log, run, text_table
     - log.output_dir_path
     - log.main_log_file_path
 
-- Utility Functions:
-    - run() - import/reload a child script from a parent script or interactive session
-    - text_table() - create an ANSI-aware table string for printing or logging
+- Utility Function:
+    - run() - execute a child script inside a parent script or interactive session
 
-
---------------------------------------------------------------------------------
-
+--------
 Behavior
 ========
 
@@ -165,40 +155,25 @@ Message Rendering
 
 - ANSI-styled strings are rendered on the console and written as plain text in log files.
 
-
 Rich Integration
 ----------------
-- Console: Rich objects are displayed as blocks flush left on the line(s) below the prefix.
-    - Rich Text Example (with indent via Padding):
+- Console: Rich objects are displayed as blocks flush left on the line(s) below the prefix unless
+    spaces or Rich Padding are used. See console_rendering.py for more examples.
 
-           log(Padding(Text("Step 1: \nStep 2: "), pad=(0, 0, 0, 27),))
+  - Rich Panel Example (border box shown in blue on console):
+        log(Panel("hello", border_style='blue', title='hello panel'))
 
-            08:35:02.099 | INFO     |
-                                      Step 1:
-                                      Step 2:
+        08:35:02.099 | INFO     |
+        ┌───────┐
+        │ hello │
+        └───────┘
 
-    - Rich Panel Example (border box shown in blue on console):
-
-            log(Panel("hello", border_style='blue', title='hello panel'))
-
-            08:35:02.099 | INFO     |
-            ┌───────┐
-            │ hello │
-            └───────┘
-
-- Log: Rich Text objects are converted to plain text strings. Other objects are displayed via Rich placeholders.
-    - Rich Text Example: Rich styles not displayed in log -  plain text only.
-
-            log(Text("value = ") + Text.from_markup("[blue]hello[/blue]"))
-
-            08:35:02.099 | INFO     |  value = hello
-
-    - Rich Panel Example: Log file displays a Rich placeholder marker.
-
+- Log: Rich Text objects are converted to plain text strings and displayed in logs. Other Rich
+    objects are displayed via placeholders.
+  - Rich Panel Example: Log file displays a Rich placeholder marker.
            log(Panel("hello", border_style='blue', title='hello panel' ))
 
-           08:35:02.099 | INFO     | Padding(<rich.panel.Panel object at 0x10a396660>, (0,0,0,13))
-
+           08:35:02.099 | INFO     | <Rich renderable placeholder>
 
 Log File Naming and Location
 ----------------------------
@@ -227,7 +202,6 @@ Log File Naming and Location
        - log_dir_path becomes the parent of log_file_path
        - log_file_path does not override log_file_mode ('write', 'append', 'timestamped')
 
-
 Prune Run Directories
 ---------------------
 If log_dir_layout = "run":
@@ -235,7 +209,6 @@ If log_dir_layout = "run":
 - By default, the number of kept run directories = 10.
 - The keep value can be changed: log.configure(..., keep = 3)
 - Directories older than the keep value are removed at the start of the session.
-
 
 Loguru Integration
 ------------------
@@ -246,13 +219,12 @@ Loguru Integration
   - asynchronous/enqueued logging
   - sink lifecycle management
 - Logduo performs all message formatting, wrapping, routing, session management,
-   and Rich integration before messages reach Loguru.
-
+and Rich integration before messages reach Loguru.
 
 Quality Assurance
 -----------------
 Logduo is validated using:
-- pytest (over 500 tests)
+- pytest, with over 500 individual tests
 - Ruff
 - mypy
 - Vulture

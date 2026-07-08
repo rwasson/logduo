@@ -27,25 +27,25 @@ Last edited: 2026-5-27
 from __future__ import annotations
 
 from collections.abc import Sequence
-from logduo.utils.table.reshape_dict_rows import  _reshape_dict_obj_to_dict_rows
+
+from logduo.utils.table.reshape_dict_rows import _reshape_dict_obj_to_dict_rows
+from logduo.utils.table.text_table_classes_and_constants import (
+    _DEFAULT_MAX_CELL_LINES,
+    _DEFAULT_PADDING,
+    _DEFAULT_WRAP_TABLE_WIDTH,
+)
 from logduo.utils.table.text_table_layout import _resolve_table_layout
 from logduo.utils.table.text_table_render import (
     _build_table_block_for_column_group,
     _group_columns_to_fit_wrap_table_width,
     _render_title_and_body,
 )
-from logduo.utils.table.text_table_classes_and_constants import (
-    _DEFAULT_PADDING,
-    _DEFAULT_WRAP_TABLE_WIDTH,
-    _DEFAULT_MAX_CELL_LINES,
-)
 from logduo.utils.table.text_table_validators import (
     _normalize_global_col_widths,
-    _validate_table_args,
     _validate_num_cols_args,
+    _validate_table_args,
 )
 from logduo.utils.table.text_table_widths import _resolve_column_widths
-
 
 __all__ = ["text_table"]
 

@@ -10,11 +10,11 @@ from pathlib import Path
 __all__ = ["short_path", "short_path_list"]
 
 from logduo.utils.short_path.short_paths_utils import (
-    is_windows_path,
-    split_filename,
-    shorten_stem,
     _MIN_WIDTH_SHORT_PATH,
     _MIN_WIDTH_WINDOWS_DRIVE,
+    is_windows_path,
+    shorten_stem,
+    split_filename,
 )
 
 

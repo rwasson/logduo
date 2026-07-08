@@ -21,6 +21,7 @@ Last edited: 2026-6-22
 from pathlib import Path
 
 from logduo import log
+
 # from logduo import log, text_table, run
 
 LOG_DIR = Path.cwd() / "logs"
@@ -45,6 +46,7 @@ log("View interactive help in console: help(log.configure)")
 # help(log.configure)
 log("Obtain documented help: print(help(log.configure))) or log(help(log.configure))")
 log("Obtain Logduo docs (README.txt and example scripts): log.export_logduo_docs()")
+log.export_logduo_docs()
 log(f"View configuration field: log.session_config.console_verbosity = {log.session_config.console_verbosity}")
 log("    Note: session configuration is read-only after startup.")
 log("    Note: configuration table (including descriptions and allowed values) is auto-generated each session.")

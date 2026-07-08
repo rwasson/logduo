@@ -9,8 +9,8 @@ Last edited: 2026-5-27
 
 import importlib
 import importlib.util
-from pathlib import Path
 import sys
+from pathlib import Path
 from types import ModuleType
 
 __all__ = ["run"]

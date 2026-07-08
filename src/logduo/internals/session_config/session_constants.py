@@ -5,7 +5,6 @@ Last edited: 2026-5-27
 """
 
 import re
-
 from typing import Literal
 
 
@@ -152,7 +151,7 @@ _PID_FIELD_WIDTH = 7  # Long enough to fit PID's from any OS
 _CALLSITE_MAX_SOURCE_DISPLAY_WIDTH = 25
 _CALLSITE_MAX_LINE_NUM_DISPLAY_WIDTH = 9
 _SINK_TAG_WIDTH = _MAX_LEVEL_WIDTH + 2
-_NO_WRAP_WIDTH = 100000  # wrap width passed to pytest_toolkit, when wrapping not desired
+_NO_WRAP_WIDTH = 100000  # log_wrap_width when wrapping not desired
 _LOGURU_DISPLAY_ORDER = 100000  # ensure loguru files shown last in created file lists
 _MIN_WRAP_WIDTH = 80
 _TRACEBACK_PATH_WIDTH = 80

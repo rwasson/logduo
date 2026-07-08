@@ -8,7 +8,6 @@ Last edited: 2026_06-18
 from dataclasses import dataclass
 from typing import Any
 
-
 _RULE_CHAR = "─"
 _MIN_COL_WIDTH = 3
 _DEFAULT_MAX_CELL_LINES = 3

@@ -65,7 +65,7 @@ def _build_test_summary_block(
     lines.append(f"    XPassed:                {summary_data.xpassed_test_file_count}")
     lines.append("")
 
-    lines.append("Individual tests:")
+    lines.append("Individual test_files:")
     lines.append(f"    Passed:                 {summary_data.passed_test_function_count}")
     lines.append(f"    Failed:                 {summary_data.failed_test_function_count}")
     lines.append(f"    Errors:                 {summary_data.error_test_function_count}")
@@ -109,7 +109,7 @@ def _build_test_summary_block(
     if summary_data.unexecuted_test_files:
         lines.append("")
         lines.append(
-            f"Test files with zero executed tests "
+            f"Test files with zero executed test_files "
             f"({len(summary_data.unexecuted_test_files)}):"
         )
         for test_file_name in summary_data.unexecuted_test_files:

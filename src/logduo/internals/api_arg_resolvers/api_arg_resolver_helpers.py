@@ -28,18 +28,19 @@ from rich.style import Style
 
 from logduo.internals.engine.runtime_classes import CreatedFileRecord
 from logduo.internals.engine.runtime_warning import _runtime_warning
+from logduo.internals.session_config.cerberus_utils import _norm_log_file_mode
 from logduo.internals.session_config.session_config_classes import SessionConfig
 from logduo.internals.session_config.session_config_resolver import _resolve_header_footer_value
-from logduo.internals.session_config.cerberus_utils import _norm_log_file_mode
 from logduo.internals.session_config.session_constants import (
     _DEFAULT_LOG_VERBOSITY,
+    _MIN_WRAP_WIDTH,
     _NOT_GIVEN,
     _NotGiven,
     _RESERVED_SINK_STEMS,
     _VALID_LOG_FILE_MODES,
     _VALID_PREFIX,
     _VALID_SINK_STEM_NAME_RE,
-    _VALID_VERBOSITY_LEVELS, _MIN_WRAP_WIDTH,
+    _VALID_VERBOSITY_LEVELS,
 )
 
 

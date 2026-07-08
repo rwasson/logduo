@@ -229,10 +229,12 @@ class Duo:
             logduo_docs/
                 README.txt
                 examples/
+                    console_rendering.py
+                    data_analysis.py
                     first_script.py
-                    rich_and_ansi.py
-                    parent.py
-                    parents_child.py
+                    math_report_notation.py
+                    nested_parent_script.py
+                    nested_child_script.py
 
         Existing files are preserved and are not overwritten.
 

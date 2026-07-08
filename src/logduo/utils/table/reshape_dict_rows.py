@@ -28,8 +28,8 @@ NOTE:
 Last edited: 2026-5-27
 """
 
-from dataclasses import is_dataclass, asdict, fields
-from collections.abc  import Iterable
+from collections.abc import Iterable
+from dataclasses import asdict, fields, is_dataclass
 from pathlib import Path
 from typing import Any, cast
 

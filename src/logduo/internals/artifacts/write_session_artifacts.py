@@ -34,6 +34,8 @@ _CONFIG_TABLE_MAX_COL_WIDTHS_LIST = [19, 10, 10, 10, 35, 29]
 # Field Name, Group, Value, Source, Description, Allowed
 
 
+
+
 # --- _write_session_artifacts() -----------------------------------------------
 def _write_session_artifacts(
     duo: Duo,

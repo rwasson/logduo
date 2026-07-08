@@ -32,7 +32,7 @@ Last edited: 2026-5-27
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, TYPE_CHECKING, cast
+from typing import Any, cast, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from logduo import Duo

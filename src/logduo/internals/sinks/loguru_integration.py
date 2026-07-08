@@ -163,27 +163,6 @@ def _emit_log_payload(
             f"LOGDUO INTERNAL ERROR: unsupported message_kind={message_kind!r}"
         )
 
-    '''
-    if message_kind == MessageKind.INLINE:
-        _emit_log_line(lg, level, prefix + payload)
-        return
-
-    elif message_kind == MessageKind.STRUCTURED:
-        if prefix:
-            _emit_log_line(lg, level, prefix.rstrip())
-        for line in payload.split("\n"):
-            _emit_log_line(lg, level, line)
-        return
-
-    elif message_kind == MessageKind.OBJECT:
-        # payload is a placeholder string, not the original object
-        for line in payload.split("\n"):
-            _emit_log_line(lg, level, prefix + line)
-        return
-
-    else:
-        raise RuntimeError(f"LOGDUO INTERNAL ERROR: unsupported message_kind={message_kind!r}")
-    '''
 
 # --- _probe_loguru_rotation_retention() ---------------------------------------
 def _probe_loguru_rotation_retention(*, config: dict[str, Any]) -> None:

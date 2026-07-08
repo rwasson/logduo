@@ -11,10 +11,12 @@ Provides the shared runtime state model used by dispatcher,
 emitters, lifecycle management, and artifact generation.
 
 Note:
-    SessionConfig and ArgSourceRecord are defined in
-    session_config_classes.py
+- SessionConfig and ArgSourceRecord are defined in session_config_classes.py
+- Maintainer/debugging aid for dataclass-style inspection:
+      from logduo import log, text_table
+      print(text_table(runtime_record))
 
-Last edited: 2026-4-27
+Last edited: 2026-07-08
 """
 
 from __future__ import annotations

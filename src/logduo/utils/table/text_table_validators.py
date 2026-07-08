@@ -4,15 +4,13 @@ test_table_validators.py
 Last edited: 2026-1-19
 """
 import warnings
-from dataclasses import dataclass
 from collections.abc import Sequence
-
+from dataclasses import dataclass
 
 from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import (
     _resolve_bool_arg,
     _resolve_int_arg,
 )
-
 from logduo.utils.table.text_table_classes_and_constants import _MIN_COL_WIDTH
 from logduo.utils.table.text_table_widths import _visible_len
 

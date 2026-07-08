@@ -6,13 +6,12 @@ Last edited: 2026-06-18
 
 from typing import Any
 
-from logduo.utils.table.text_table_classes_and_constants import ANSI_BOLD, ANSI_RESET, ANSI_DIM, \
-    _RULE_CHAR
+from logduo.utils.table.text_table_classes_and_constants import _RULE_CHAR, ANSI_BOLD, ANSI_DIM, ANSI_RESET
 from logduo.utils.table.text_table_layout import _get_cell_from_row
 from logduo.utils.table.text_table_widths import (
     _stringify_for_table,
-    _wrap_cell_text_for_width,
     _visible_len,
+    _wrap_cell_text_for_width,
 )
 
 

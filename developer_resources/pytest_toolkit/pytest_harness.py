@@ -14,12 +14,9 @@ Last edited: 2026-06-11
 
 from pathlib import Path
 
-
+from developer_resources.pytest_toolkit.build_test_summary_block import _build_test_summary_block
+from developer_resources.pytest_toolkit.derive_aggregate_test_summary_data import _derive_aggregate_test_summary_data
 from developer_resources.pytest_toolkit.pytest_harness_classes import PytestTestFileRecord
-from developer_resources.pytest_toolkit.derive_aggregate_test_summary_data import \
-        _derive_aggregate_test_summary_data
-from developer_resources.pytest_toolkit.build_test_summary_block import \
-        _build_test_summary_block
 from developer_resources.pytest_toolkit.pytest_harness_engine import pytest_wrap
 from logduo import log
 
@@ -33,7 +30,6 @@ def pytest_harness(
     test_file_names: list[str] | None = None,
     debug_print: bool = False,
 ) -> None:
-
 
     log_dir_path = log_dir
     test_dir_path = test_dir
@@ -77,7 +73,7 @@ def pytest_harness(
     )
 
 
-    # Check all tests found in  test_file_names list
+    # Check all test_files found in  test_file_names list
     if test_file_names is not None:
         for test_name in test_file_names:
             test_file_path = test_dir_path / f"{test_name}.py"
@@ -101,12 +97,15 @@ def pytest_harness(
     # --- Start loop through test files--
     results: list[PytestTestFileRecord] = []
 
-    print("Running tests: ", end="", flush=True)
+    test_file_count = len(test_file_names)
+    print(f"Running {test_file_count} test files (each dot represents one test file started): ", end="", flush=True)
+
 
     for test_name in test_file_names:
         print(".", end="", flush=True)
 
         test_file_path = test_dir_path / f"{test_name}.py"
+
 
         if not test_file_path.exists():
             raise RuntimeError(
@@ -143,12 +142,17 @@ def pytest_harness(
         '''
 
         test_log_file_path = log.output_dir_path / f"{test_name}.log"
+        if debug_print:
+            print(f"\ntest_file_path = {test_file_path}")
+            print(f"test_log_file_path = {test_log_file_path}")
+            print(f"source_dir = {source_dir}")
 
         result = pytest_wrap(
             test_file_path=test_file_path,
             test_log_file_path=test_log_file_path,
             source_dir=source_dir,
             extra_pytest_args=["-q"],
+            debug_print=debug_print,
         )
 
         results.append(result)

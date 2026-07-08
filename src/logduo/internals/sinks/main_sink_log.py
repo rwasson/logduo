@@ -47,7 +47,8 @@ from logduo.internals.formatters.log_header_footer_builders import (
 )
 from logduo.internals.formatters.message_prep import (
     _build_plain_message,
-    MessageKind, _prepare_log_payload,
+    _prepare_log_payload,
+    MessageKind,
 )
 from logduo.internals.formatters.prefix_builder import _build_prefix
 from logduo.internals.sinks.loguru_integration import _create_logduo_log_sink, _emit_log_payload

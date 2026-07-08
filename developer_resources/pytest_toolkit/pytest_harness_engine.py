@@ -1,7 +1,7 @@
 """
 pytest_harness_engine.py
 
-A pytest-based framework for unit tests, integration tests,
+A pytest-based framework for unit test_files, integration test_files,
 and artifact-driven smoke/visual testing.
 
 
@@ -23,14 +23,12 @@ Last edited: 2026-03-18
 
 from __future__ import annotations
 
-
 import json
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
-
-import tempfile
 
 from coverage import Coverage
 
@@ -40,7 +38,6 @@ from developer_resources.pytest_toolkit.pytest_harness_classes import (
 )
 
 
-
 # --- pytest_wrap() ------------------------------------------------------------
 def pytest_wrap(
     *,
@@ -48,7 +45,7 @@ def pytest_wrap(
     test_log_file_path: Path,
     source_dir: Path,
     extra_pytest_args: list[str] | None = None,
-
+    debug_print: bool = False,
 ) -> PytestTestFileRecord:
     """
     Dev-mode pytest runner using subprocess.
@@ -92,8 +89,8 @@ def pytest_wrap(
         "pytest",
         # "-vv",   #  only when want very verbose tracebacks
         "-v",
-        "-rA",     # info on passed and failed tests
-        # "-rfe"   # failed tests only
+        "-rA",     # info on passed and failed test_files
+        # "-rfe"   # failed test_files only
         "--maxfail=0",
         "--capture=no",
         "--tb=short",
@@ -125,10 +122,10 @@ def pytest_wrap(
         "--capture=no",  # allow test print() output
         "--tb=short",  # compact tracebacks
         # "--showlocals",  # include local variables in failures, too big
-        "--durations=10",  # show 10 slowest tests
+        "--durations=10",  # show 10 slowest test_files
 
         # --- Execution policy ---
-        "--maxfail=0",  # run all tests
+        "--maxfail=0",  # run all test_files
         "--strict-markers",  # reject unknown pytest markers
         "--disable-warnings",  # suppress warning summary
         "--reruns=0",  # do not rerun failures
@@ -171,16 +168,16 @@ def pytest_wrap(
     process.wait()
     duration = time.time() - start
 
-    '''
-    DEBUG print section
-    print(test_file_path.name)
-    print("coverage size:", Path(".coverage").stat().st_size)
-    for p in sorted(Path(".").glob(".coverage*")):
-        print(
-            p.name,
-            p.stat().st_size,
-        )
-    '''
+
+    if debug_print:
+        print(test_file_path.name)
+        print("coverage size:", Path(".coverage").stat().st_size)
+        for p in sorted(Path(".").glob(".coverage*")):
+            print(
+                p.name,
+                p.stat().st_size,
+            )
+
 
     cleaned = strip_ansi("".join(captured))
     test_logger(cleaned)
@@ -199,40 +196,36 @@ def pytest_wrap(
     source_dir = source_dir.resolve()
 
     for source_file_path in coverage_data.measured_files():
-
         path_obj = Path(source_file_path).resolve()
-
         if source_dir not in path_obj.parents and path_obj != source_dir:
             continue
-
         analysis = coverage_obj._analyze(source_file_path)
 
-        '''
-         DEBUG print section
-        print(f"test_file_name: {Path(test_file_path).name}")
-        print(f"source_file_name: {Path(source_file_path).name}")
-        print("analysis.branch_stats()")
-        print(analysis.branch_stats())
-        print("arc_possibilities:")
-        print(sorted(analysis.arc_possibilities)[:50])
-        # print("arcs_executed:")
-        # print(sorted(analysis.arcs_executed)[:50])
-        if Path(test_file_path).name == "test_non_script_mode.py":
-            print()
-            print("================================")
+        if debug_print:
             print(f"test_file_name: {Path(test_file_path).name}")
             print(f"source_file_name: {Path(source_file_path).name}")
             print("analysis.branch_stats()")
             print(analysis.branch_stats())
-            print("executed lines:", len(analysis.executed))
-            print("branch stats:", len(analysis.branch_stats()))
-            print("has_arcs:", analysis.has_arcs)
-            print("statements:", len(analysis.statements))
-            print("executed:", len(analysis.executed))
-            print("missing:", len(analysis.missing))
-            print("numbers:", analysis.numbers)
-            print( )
-        '''
+            print("arc_possibilities:")
+            print(sorted(analysis.arc_possibilities)[:50])
+            # print("arcs_executed:")
+            # print(sorted(analysis.arcs_executed)[:50])
+            if Path(test_file_path).name == "test_non_script_mode.py":
+                print()
+                print("================================")
+                print(f"test_file_name: {Path(test_file_path).name}")
+                print(f"source_file_name: {Path(source_file_path).name}")
+                print("analysis.branch_stats()")
+                print(analysis.branch_stats())
+                print("executed lines:", len(analysis.executed))
+                print("branch stats:", len(analysis.branch_stats()))
+                print("has_arcs:", analysis.has_arcs)
+                print("statements:", len(analysis.statements))
+                print("executed:", len(analysis.executed))
+                print("missing:", len(analysis.missing))
+                print("numbers:", analysis.numbers)
+                print()
+
 
         branch_source = {
             (branch_line, destination_count)
@@ -274,8 +267,7 @@ def pytest_wrap(
             )
         )
 
-
-    # -- read JSON for pass/fail counts, then delete file ---
+    # --- Read pytest JSON report, then delete temporary file ---
     passed_test_function_names: list[str] = []
     failed_test_function_names: list[str] = []
     error_test_function_names: list[str] = []
@@ -299,7 +291,7 @@ def pytest_wrap(
         xfailed_test_function_count = summary.get("xfailed", 0)
         xpassed_test_function_count = summary.get("xpassed", 0)
 
-        for test_record in test_file_report.get("tests", []):
+        for test_record in test_file_report.get("tests", []):  # TODO changed form test_files
             nodeid = test_record["nodeid"]
             test_function_name = nodeid.rsplit("::", maxsplit=1)[-1]
             outcome = test_record["outcome"]
@@ -325,6 +317,14 @@ def pytest_wrap(
 
             if outcome in ("error", "errors"):
                 print(f"DEBUG 328 ERROR OUTCOME: {outcome!r}")
+
+        if debug_print:
+            print("DEBUG test_log_file_path =", test_log_file_path)
+            print("DEBUG passed_test_function_count =", passed_test_function_count)
+            print("DEBUG len(passed_test_function_names) =", len(passed_test_function_names))
+            print("DEBUG passed_test_function_names:")
+            for name in passed_test_function_names:
+                print("    ", name)
 
         assert passed_test_function_count == len(passed_test_function_names)
         assert failed_test_function_count == len(failed_test_function_names)

@@ -24,7 +24,6 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 
 from logduo.internals.engine.runtime_classes import CreatedFileRecord
-
 from logduo.internals.session_config.session_config_classes import SessionConfig
 
 if TYPE_CHECKING:
