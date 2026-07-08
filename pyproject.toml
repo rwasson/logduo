@@ -16,7 +16,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logduo"
 readme = "README.md"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name = "R. Wasson", email = "r.wasson.dev@gmail.com" }]
 description = "Logging, console, and file management for Python. Works in scripts and interactive sessions with no setup, but supports extensive customization."
 
