@@ -1,4 +1,4 @@
-READEME.txt for pytest_toolkit
+PYTEST_TOOLKIT_README.txt
 ==============================
 
 Purpose
@@ -27,7 +27,7 @@ Edit only when:
     - extending pytest-toolkit functionality
 
 Normal test development should occur in:
-    /developer_resources/tests
+    /developer_resources/test_files
 
 
 Multiprocess Coverage
