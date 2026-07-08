@@ -4,6 +4,7 @@ Logging, console, and file management for Python.
 Works in scripts and interactive sessions with no setup, but supports extensive customization.
 
 Platform: Tested on macOS, Windows, and Ubuntu using Python 3.13.
+Requires: Python 3.13 or newer.
 
 Key Capabilities
 -----------------
