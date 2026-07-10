@@ -50,7 +50,7 @@ def test_02_log_file_path_forces_flat_layout(duo):
 
     config = dict(DEFAULTS)
     config["log_file_path"] = "/tmp/test.log"
-    config["log_dir_layout"] = "run"
+    config["log_file_layout"] = "run"
 
     resolved = _resolve_path_conflicts(
         duo,
@@ -58,8 +58,8 @@ def test_02_log_file_path_forces_flat_layout(duo):
         arg_source_record=arg_source_record,
     )
 
-    assert resolved["log_dir_layout"] == "flat"
-    assert arg_source_record.arg_source_dict["log_dir_layout"] == "forced"
+    assert resolved["log_file_layout"] == "flat"
+    assert arg_source_record.arg_source_dict["log_file_layout"] == "forced"
 
 
 # --- test_03_log_file_path_overrides_log_dir_path() ---------------------------
@@ -249,7 +249,7 @@ def test_15_arg_source_record_defaults():
 def test_16_session_config_hints_returns_text():
 
     hint = _session_config_hints(
-        "log_dir_layout",
+        "log_file_layout",
         DEFAULTS,
     )
 
@@ -272,7 +272,7 @@ def test_17_session_config_spec_contains_required_sections():
     [
         "log_file_mode",
         "log_file_path",
-        "log_dir_layout",
+        "log_file_layout",
         "keep",
         "console_wrap_width",
         "rotation",

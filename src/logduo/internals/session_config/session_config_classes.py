@@ -23,7 +23,7 @@ class SessionConfig:
     log_file_mode: LogFileModeType
     log_file_path: str
     log_file_name: str
-    log_dir_layout: LogDirLayoutType
+    log_file_layout: LogDirLayoutType
     log_dir_path: str
     keep: int | Literal["off"]
 

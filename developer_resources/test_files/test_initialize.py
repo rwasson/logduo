@@ -47,7 +47,7 @@ def test_05_run_layout_creates_marker_file(tmp_path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="run",
+        log_file_layout="run",
     )
     marker = next(tmp_path.rglob(".logduo_marker"))
     assert marker.exists()
@@ -58,7 +58,7 @@ def test_06_script_layout_no_marker(tmp_path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
     marker_files = list(tmp_path.rglob(".logduo_marker"))
     assert marker_files == []

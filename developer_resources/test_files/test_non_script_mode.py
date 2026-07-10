@@ -24,7 +24,7 @@ from logduo import Duo
 
 log = Duo()
 
-log.configure(log_dir_path={str(tmp_path)}, log_dir_layout="script")
+log.configure(log_dir_path={str(tmp_path)}, log_file_layout="script")
 
 log("hello")
 out = log.main_log_file_path

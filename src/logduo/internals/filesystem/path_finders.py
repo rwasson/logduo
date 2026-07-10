@@ -27,7 +27,7 @@ def _derive_session_log_paths(
     *,
     project_dir_path_abs: Path,
     session_name: str,
-    log_dir_layout: str,
+    log_file_layout: str,
     log_file_mode: str,
     session_timestamp: str,
     log_file_path: str,  # "auto" | absolute path
@@ -82,13 +82,13 @@ def _derive_session_log_paths(
         log_dir_path_abs = project_dir_path_abs / "logs"
 
     # --- Determine session log directory ---
-    if log_dir_layout in {"script", "run"}:
+    if log_file_layout in {"script", "run"}:
         session_name_log_dir_path_abs = (log_dir_path_abs / session_name).resolve()
     else:
         session_name_log_dir_path_abs = log_dir_path_abs
 
     # --- Determine run directory ---
-    if log_dir_layout == "run":
+    if log_file_layout == "run":
         run_log_dir_path_abs = (
             session_name_log_dir_path_abs / f"run_{session_timestamp}"
         ).resolve()

@@ -325,7 +325,7 @@ def test_16_console_partial_rich_text(tmp_path, capsys):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log(
@@ -373,7 +373,7 @@ def test_17_console_fstring_text_loses_rich_styling(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log(f"value = {t}")
@@ -429,7 +429,7 @@ def test_19_console_verbosity_zero_suppresses_console_output(
     print(f"str(tmp_path) = {str(tmp_path)}")
     log = Duo()
 
-    log.configure(log_dir_path=str(tmp_path), console_verbosity=0, log_dir_layout="script", log_verbosity=0)
+    log.configure(log_dir_path=str(tmp_path), console_verbosity=0, log_file_layout="script", log_verbosity=0)
 
     log("hello world")
 
@@ -478,7 +478,7 @@ def test_20__ansi_red_console_output(
     capsys,
 ):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     RED = "\033[31m"
     RESET = "\033[0m"
@@ -523,7 +523,7 @@ def test_21_rich_text_console_and_log_output(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log(
@@ -558,7 +558,7 @@ def test_22_console_style_console_and_log_output(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log(
@@ -590,7 +590,7 @@ def test_23_ansi_long_message_wraps_cleanly(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         console_wrap_width=80,
         log_wrap_width=80,
     )
@@ -626,7 +626,7 @@ def test_24_multiple_ansi_segments(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     RED = "\033[31m"
@@ -681,7 +681,7 @@ def test_25_multiple_ansi_segments_with_wrap(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_wrap_width=80,
     )
 

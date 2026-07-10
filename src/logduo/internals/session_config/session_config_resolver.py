@@ -168,7 +168,7 @@ def _apply_session_config_policies(
     )
 
     # --- resolve cross-validation path conflicts ---
-    # e.g., if user provides log_file, then log_dir_layout = "flat"
+    # e.g., if user provides log_file, then log_file_layout = "flat"
     normalized_session_config = _resolve_path_conflicts(
         duo,
         normalized_session_config=normalized_session_config,
@@ -212,7 +212,7 @@ def _resolve_path_conflicts(
         - effective layout structure
 
     Conflicting lower-specificity fields are normalized or ignored:
-        - log_dir_layout forced to "flat"
+        - log_file_layout forced to "flat"
         - conflicting log_dir_path ignored
         - conflicting log_file_name ignored
 
@@ -224,10 +224,10 @@ def _resolve_path_conflicts(
     # --- only applies when full path explicitly provided ---
     if log_file_path != "auto":
         # --- force flat layout ---
-        if normalized_session_config["log_dir_layout"] != "flat":
-            normalized_session_config["log_dir_layout"] = "flat"
-            arg_source_record.arg_source_dict["log_dir_layout"] = "forced"
-            warn_msg = "custom log_file_path provided; forcing log_dir_layout='flat'"
+        if normalized_session_config["log_file_layout"] != "flat":
+            normalized_session_config["log_file_layout"] = "flat"
+            arg_source_record.arg_source_dict["log_file_layout"] = "forced"
+            warn_msg = "custom log_file_path provided; forcing log_file_layout='flat'"
             _runtime_warning(duo, warn_msg=warn_msg)
 
         # --- resolve log_dir_path conflict ---
@@ -285,7 +285,7 @@ def _populate_runtime_log_paths(*, resolved_config: dict[str, Any], runtime: Run
     paths = _derive_session_log_paths(
         project_dir_path_abs=runtime.project_dir_path_abs,
         session_name=runtime.session_name,
-        log_dir_layout=resolved_config["log_dir_layout"],
+        log_file_layout=resolved_config["log_file_layout"],
         log_file_mode=resolved_config["log_file_mode"],
         session_timestamp=runtime.session_timestamp,
         log_file_path=resolved_config["log_file_path"],

@@ -12,7 +12,7 @@ from logduo import log
 
 log.configure(
     log_dir_path=os.environ["LOGDUO_TEST_OUTPUT_DIR"],
-    log_dir_layout="script",
+    log_file_layout="script",
     log_file_mode="write",
     log_wrap_width=80,
 )

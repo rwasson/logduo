@@ -63,7 +63,7 @@ def pytest_harness(
 
     log.configure(
         log_dir_path=log_dir_path,
-        log_dir_layout="run",
+        log_file_layout="run",
         log_verbosity=3,
         keep=5,
         write_config_table=False,

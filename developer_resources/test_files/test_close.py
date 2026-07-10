@@ -105,7 +105,7 @@ def test_08_close_respects_log_verbosity_zero(tmp_path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_verbosity=0,
     )
 
@@ -144,7 +144,7 @@ def test_10_close_preserves_user_sink_until_footer(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     rep = log.new_logger("audit")

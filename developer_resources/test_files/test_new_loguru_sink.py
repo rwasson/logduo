@@ -26,7 +26,7 @@ def test_01_new_loguru_creates_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -56,7 +56,7 @@ def test_02_new_loguru_write_mode_overwrites_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink(
@@ -85,7 +85,7 @@ def test_03_new_loguru_append_mode_preserves_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink(
@@ -107,7 +107,7 @@ def test_04_new_loguru_duplicate_file_raises(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink("audit.log")
@@ -127,7 +127,7 @@ def test_05_new_loguru_timestamped_mode_creates_timestamped_file(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink(
@@ -155,7 +155,7 @@ def test_06_invalid_kwargs_emit_warning(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink(
@@ -191,7 +191,7 @@ def test_07_invalid_kwargs_not_passed_to_loguru(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     monkeypatch.setattr(
@@ -226,7 +226,7 @@ def test_08_invalid_kwargs_emit_warning_and_sink_still_works(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -258,7 +258,7 @@ def test_09_cfr_record_registered(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink("audit.log")
@@ -287,7 +287,7 @@ def test_10_duplicate_absolute_path_raises(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     audit_path = tmp_path / "audit.log"
@@ -313,7 +313,7 @@ def test_11_loguru_sink_id_stored_in_cfr(
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -344,7 +344,7 @@ def test_12_timestamped_mode_creates_timestamped_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -384,7 +384,7 @@ def test_13_write_mode_overwrites_existing_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -416,7 +416,7 @@ def test_14_append_mode_preserves_existing_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -448,7 +448,7 @@ def test_15_absolute_path_creates_file(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink(
@@ -468,7 +468,7 @@ def test_16_duplicate_path_raises(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.new_loguru_sink("audit.log")
@@ -485,7 +485,7 @@ def test_17_loguru_sink_id_stored_in_cfr(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     sink_id = log.new_loguru_sink("audit.log")

@@ -35,7 +35,7 @@ from logduo.internals.session_config.session_constants import (
     _DARK_THEME_COLORS,
     _DEFAULT_LOG_VERBOSITY,
     _LIGHT_THEME_COLORS,
-    _VALID_LOG_DIR_LAYOUTS,
+    _VALID_log_file_layoutS,
     _VALID_LOG_FILE_MODES,
     _VALID_PREFIX,
 )
@@ -80,9 +80,9 @@ from logduo.internals.session_config.session_constants import (
 DESCRIPTIONS: dict[str, str] = {
     # --- File Management ---
     "log_file_mode": "Select how log files are created (write, append, timestamped). Independent of log_file_path.",
-    "log_file_path": "Specify log file path (forces log_dir_layout='flat')",
+    "log_file_path": "Specify log file path (forces log_file_layout='flat')",
     "log_file_name": "Specify file name (with extension) for main log file",
-    "log_dir_layout": "Select: flat (/logs/myfile.log), script (/logs/myfile/myfile.log), "
+    "log_file_layout": "Select: flat (/logs/myfile.log), script (/logs/myfile/myfile.log), "
     "run (/logs/myfile/run_timestamp/myfile.log). If no script found, "
     "uses 'session' instead of 'myfile'",
     "log_dir_path": "Specify root directory for logs",
@@ -115,7 +115,6 @@ DESCRIPTIONS: dict[str, str] = {
     "show_pid_in_log": "Show process id in log line prefix (for multi-process sessions)",
     "write_jsonl": "Write JSONL file (event record)",
     "write_config_json": "Write config.json (machine-readable config snapshot)",
-    "interactive": "Force interactive-session behavior (auto-detection not guaranteed)",
     "first_instance_owns_console": "Restrict console output to the first Logduo instance",
     # --- Loguru ---
     "rotation": "Loguru arg: start new log file when size/time rule is met",
@@ -139,7 +138,7 @@ ALLOWED_USER_INPUTS: dict[str, str] = {
     "log_file_mode": "'write' | 'w' | 'append' | 'a' | 'timestamped' | 't' ",
     "log_file_path": "abs path",
     "log_file_name": "str: valid file name",
-    "log_dir_layout": "'flat' | 'script' | 'run'",
+    "log_file_layout": "'flat' | 'script' | 'run'",
     "log_dir_path": "str: valid abs path",
     "keep": "'off' | 'int ≥ 1'",
     "write_config_table": "True | False",
@@ -166,7 +165,6 @@ ALLOWED_USER_INPUTS: dict[str, str] = {
     "show_pid_in_log": "True | False",
     "write_jsonl": "True | False",
     "write_config_json": "True | False",
-    "interactive": "True | False",
     "first_instance_owns_console": "True | False",
     # === Loguru ===
     "rotation": "int (bytes) | str | 'off'",
@@ -185,9 +183,9 @@ DEFAULTS: dict[str, Any] = {
     "log_file_mode": "write",
     "log_file_path": "auto",
     "log_file_name": "auto",
-    "log_dir_layout": "run",
+    "log_file_layout": "run",
     "log_dir_path": "auto",
-    "keep": 10,
+    "keep": "off",
     "write_config_table": True,
     # --- Formatting ---
     # console
@@ -212,11 +210,10 @@ DEFAULTS: dict[str, Any] = {
     "show_pid_in_log": False,
     "write_config_json": False,
     "write_jsonl": False,
-    "interactive": False,  # See Notes
     "first_instance_owns_console": False,  # See Notes
     # --- Loguru ---
-    "rotation": "16 MB",
-    "retention": 10,
+    "rotation": "off",
+    "retention": "off",
     "compression": "off",
     "enqueue": True,
     "catch": True,
@@ -242,10 +239,10 @@ CERBERUS_SCHEMA: dict[str, Any] = {
         "coerce": _norm_path_to_string,
     },
     "log_file_name": {"type": "string", "empty": False, "default": DEFAULTS["log_file_name"]},
-    "log_dir_layout": {
+    "log_file_layout": {
         "type": "string",
-        "allowed": list(_VALID_LOG_DIR_LAYOUTS),
-        "default": DEFAULTS["log_dir_layout"],
+        "allowed": list(_VALID_log_file_layoutS),
+        "default": DEFAULTS["log_file_layout"],
         "coerce": _norm_str_lower,
     },
     "log_dir_path": {
@@ -343,7 +340,6 @@ CERBERUS_SCHEMA: dict[str, Any] = {
         "coerce": _norm_bool,
     },
     "write_jsonl": {"type": "boolean", "default": DEFAULTS["write_jsonl"], "coerce": _norm_bool},
-    "interactive": {"type": "boolean", "default": DEFAULTS["interactive"], "coerce": _norm_bool},
     "first_instance_owns_console": {
         "type": "boolean",
         "default": DEFAULTS["first_instance_owns_console"],
@@ -380,7 +376,7 @@ GROUPING = {
         "log_file_mode",
         "log_file_path",
         "log_file_name",
-        "log_dir_layout",
+        "log_file_layout",
         "log_dir_path",
         "keep",
 
@@ -412,7 +408,6 @@ GROUPING = {
         "show_pid_in_console",
         "show_pid_in_log",
         "show_logger_name",
-        "interactive",
         "first_instance_owns_console",
     ],
     # --- Type D: Advanced Engine & Output Control ---
@@ -441,13 +436,13 @@ SESSION_CONFIG_SPEC = {
 
 
 # --- logduo_config_hints() ----------------------------------------------------
-def _session_config_hints(field: str, defaults: dict) -> str: # noqa: PLR0911  # many returns
+def _session_config_hints(field: str, defaults: dict) -> str:  # noqa: PLR0911  # many returns
     # --- File Management (bools at end)---
     if field == "log_file_mode":
         return "must be 'write' (or 'w'), 'append' (or 'a'), 'timestamped' (or 't')"
     if field == "log_file_path":
         return "must be an absolute path (str or pathlib.Path)"
-    if field == "log_dir_layout":
+    if field == "log_file_layout":
         return "must be 'flat', 'script', or 'run'"
     if field == "log_dir_path":
         return "must be an absolute path (str or pathlib.Path)"
@@ -516,7 +511,6 @@ def _session_config_hints(field: str, defaults: dict) -> str: # noqa: PLR0911  #
         "write_config_table",
         "write_jsonl",
         "write_config_json",
-        "interactive",
         "first_instance_owns_console",
         # --- Loguru ---
         "enqueue",

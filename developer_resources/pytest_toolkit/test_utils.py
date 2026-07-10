@@ -59,6 +59,6 @@ def _new_test_log(tmp_path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
     return log

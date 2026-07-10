@@ -406,7 +406,7 @@ def test_35_console_prefix_off_resolves_no_prefix(tmp_path):
     log.configure(
         log_dir_path=str(tmp_path),
         console_prefix="off",
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     resolved = _resolve_level_call_args(
@@ -430,7 +430,7 @@ def test_36_console_prefix_off_behavior(tmp_path, capsys):
     log.configure(
         log_dir_path=str(tmp_path),
         console_prefix="off",
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log("hello world")

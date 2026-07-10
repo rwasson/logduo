@@ -181,7 +181,7 @@ def test_13_derive_paths_run_layout(tmp_path: Path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="run",
+        log_file_layout="run",
         log_file_mode="write",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path="auto",
@@ -205,7 +205,7 @@ def test_14_derive_paths_timestamped_filename(tmp_path: Path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="timestamped",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path="auto",
@@ -224,7 +224,7 @@ def test_15_derive_paths_explicit_file_path(tmp_path: Path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="run",
+        log_file_layout="run",
         log_file_mode="write",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path=str(tmp_path / "custom.log"),
@@ -248,7 +248,7 @@ def test_16_derive_paths_explicit_file_path_timestamped(tmp_path: Path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="run",
+        log_file_layout="run",
         log_file_mode="timestamped",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path=str(tmp_path / "custom.log"),
@@ -269,7 +269,7 @@ def test_17_derive_paths_invalid_timestamp(tmp_path: Path):
         _derive_session_log_paths(
             project_dir_path_abs=tmp_path,
             session_name="myscript",
-            log_dir_layout="run",
+            log_file_layout="run",
             log_file_mode="write",
             session_timestamp="2026-06-08 12:00:00",
             log_file_path="auto",
@@ -546,7 +546,7 @@ def test_44_derive_paths_custom_file_name_without_suffix(tmp_path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="flat",
+        log_file_layout="flat",
         log_file_mode="write",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path="auto",
@@ -568,7 +568,7 @@ def test_45_derive_paths_custom_dir_path(tmp_path):
     result = _derive_session_log_paths(
         project_dir_path_abs=tmp_path,
         session_name="myscript",
-        log_dir_layout="flat",
+        log_file_layout="flat",
         log_file_mode="write",
         session_timestamp="2026_06_08__12_00_00",
         log_file_path="auto",

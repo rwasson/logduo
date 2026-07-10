@@ -21,7 +21,7 @@ def test_01_keep_off_disables_pruning(tmp_path: Path):
     run_dir = _make_run_dir(tmp_path, "run_1")
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep="off",
         current_main_path=run_dir / "session.log",
     )
@@ -36,7 +36,7 @@ def test_02_non_run_layout_disables_pruning(tmp_path: Path):
     run_dir = _make_run_dir(tmp_path, "run_1")
 
     deleted = _prune_run_dirs(
-        log_dir_layout="script",
+        log_file_layout="script",
         keep=3,
         current_main_path=run_dir / "session.log",
     )
@@ -49,7 +49,7 @@ def test_02_non_run_layout_disables_pruning(tmp_path: Path):
 def test_03_current_main_path_none_disables_pruning(tmp_path: Path):
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=3,
         current_main_path=None,
     )
@@ -65,7 +65,7 @@ def test_04_keep_newest_two_runs(tmp_path: Path):
     r3 = _make_run_dir(tmp_path, "run_2026_01_03__10_00_00")
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=2,
         current_main_path=r3 / "session.log",
     )
@@ -115,7 +115,7 @@ def test_05_current_run_always_preserved(tmp_path: Path):
         )
 
     deleted_file_count = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=1,
         current_main_path=r3 / "session.log",
     )
@@ -162,7 +162,7 @@ def test_06_ignore_non_logduo_directories(tmp_path: Path):
     other.mkdir()
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=1,
         current_main_path=r1 / "session.log",
     )
@@ -179,7 +179,7 @@ def test_07_keep_zero_disables_pruning(tmp_path: Path):
     r1 = _make_run_dir(tmp_path, "run_1")
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=0,
         current_main_path=r1 / "session.log",
     )
@@ -194,7 +194,7 @@ def test_08_no_logduo_marker_dirs_not_pruned(tmp_path: Path):
     (tmp_path / "run_2").mkdir()
 
     deleted = _prune_run_dirs(
-        log_dir_layout="run",
+        log_file_layout="run",
         keep=1,
         current_main_path=(tmp_path / "run_2" / "session.log"),
     )
@@ -216,7 +216,7 @@ def test_09_non_run_layout_never_prunes(tmp_path: Path):
     r2.write_text("b")
 
     deleted_file_count = _prune_run_dirs(
-        log_dir_layout="script",
+        log_file_layout="script",
         keep=1,
         current_main_path=r2,
     )

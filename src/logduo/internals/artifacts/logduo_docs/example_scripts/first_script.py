@@ -19,6 +19,7 @@ Last edited: 2026-6-22
 """
 
 from pathlib import Path
+from pydoc import plain, render_doc
 
 from logduo import log
 
@@ -40,11 +41,20 @@ log("Each log message has 3 options: no_prefix (True/False), log_wrap_width, con
 log('Example: log("hello world in bold orchid", no_prefix=True, console_style="bold orchid", log_wrap_width=80)))')
 log("hello world in bold orchid", console_style="bold orchid", no_prefix=True, log_wrap_width=80)
 
+
 log(" ")
-log("--- Help ----")
-log("View interactive help in console: help(log.configure)")
-# help(log.configure)
-log("Obtain documented help: print(help(log.configure))) or log(help(log.configure))")
+log("--- Help ---")
+log("View help in the console: help(log.configure)")
+log(
+    "Write help to the log:\n"
+    "    from pydoc import plain, render_doc\n"
+    "    log(plain(render_doc(log.configure)))"
+)
+
+log(plain(render_doc(log.configure, title="Logduo documentation: %s")))
+
+
+log(" ")
 log("Obtain Logduo docs (README.txt and example scripts): log.export_logduo_docs()")
 log.export_logduo_docs()
 log(f"View configuration field: log.session_config.console_verbosity = {log.session_config.console_verbosity}")

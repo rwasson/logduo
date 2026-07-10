@@ -1,65 +1,77 @@
 Logduo
 ======
-Logging, console, and file management for Python.
+Logging, console output, and file management for Python scripts and interactive sessions.
 
-Works in scripts and interactive sessions with no setup, but supports extensive customization.
+Simple by default, configurable for advanced logging workflows.
 
-Platform: Tested on macOS, Windows, and Ubuntu. Requires Python 3.13 or newer.
-
+Platform: Tested on macOS, Windows, and Ubuntu.
 
 
 Key Capabilities
 -----------------
-- Automatically manages output directories and log files
-- Safely prunes old run sessions
-- Creates dedicated log files via new_logger()
-- Creates custom logging labels via new_level()
-- Supports imported and nested scripts via log.join()
-- Supports Rich and ANSI-styled console output while preserving readable plain-text logs
-- Captures JSONL event streams (configurable)
+- Manages output directories and log files
+- Supports ANSI-styled and Rich console output while preserving readable plain-text logs
+- Provides extensive `help()` documentation and actionable error messages
+- Validates arguments to all Logduo methods and functions to prevent unexpected behavior
+- Safely prunes old run directories containing a Logduo marker file
 - Generates session artifacts: config_table.txt, config.json
-- Provides extensive help() documentation and actionable error messages
+- Captures JSONL event streams
+- Creates dedicated log files via `new_logger()`
+- Creates custom logging labels via `new_level()`
+- Supports nested scripts via `log.join()` and `run()`
+
 
 
 Quick Start (in script or interactive session)
------------------------------------------------
+----------------------------------------------
     from logduo import log
 
     log("hello world")
     log.warning("warning message")
 
-- The first log statement automatically starts a session using defaults and [tool.logduo] settings in pyproject.toml (if available).
-- By default, messages are sent to both console and a log file.
-- By default, Logduo generates a log file and config_table.txt in a timestamped run directory.
-- Paths of all Logduo-created files are listed in the default footer displayed in the console and main log file.
+If a message is logged before `log.configure()` is called, the logging session starts automatically using Logduo defaults and `pyproject.toml` settings.
+
+Key default settings:
+  - `console_verbosity = 2` and `log_verbosity = 2`
+    - Messages (other than TRACE and DEBUG) are sent to both the console and the main log file.
+  - `log_dir_path = "auto"`
+    - The `logs` directory is placed in the project root if identified; otherwise, in the current working directory.
+  - `log_file_layout = "run"`
+    - Logs are created in timestamped run directories.
+  - `keep = "off"`
+    - Previous run directories are not pruned automatically.
+    - If `keep` is set to a positive integer `n`, the newest `n` Logduo-marked run directories are kept and older run directories are pruned.
+  - `write_config_table = True`
+    - `config_table.txt` is written with configuration values, descriptions, and allowed values.
 
 
 Configure (Optional)
 --------------------
+Recommendation: Place all regularly used configuration settings in pyproject.toml under `[tool.logduo]`
+
     from pathlib import Path
     from logduo import log
 
     my_log_dir = Path("/absolute/path/to/my_log_dir")
 
-    log.configure(log_dir_path=my_log_dir, console_verbosity=3)
+    log.configure(log_dir_path=my_log_dir, keep=3, console_verbosity=3, log_verbosity=3)
     log("hello world")
 
 
-Logduo Docs
------------
-- Example scripts demonstrating typical usage, Rich/ANSI rendering, 
-run(), and log.join() are included with the package installation:
+Export Logduo Docs
+------------------
+Export bundled documentation and example scripts to a local `logduo_docs/` directory:
 
-        first_script.py
-        console_rendering.py
-        data_analysis.py
-        math_report_notation.py
-        nested_parent_script.py (runs nested_child_script.py)
+    log.export_logduo_docs()
 
-
-- README.txt and the example scripts can be exported to the logduo_docs/ subdirectory in your local project.
-
-        log.export_logduo_docs()
+Exported files include:
+- `README.txt`
+- `examples/first_script.py`
+- `examples/console_rendering.py`
+- `examples/data_analysis.py`
+- `examples/math_report_notation.py`
+- `examples/nested_parent_script.py`
+- `examples/nested_child_script.py`
 
 
 Help
@@ -72,7 +84,7 @@ Help
 
     
 Typical Workflows
-----------------
+-----------------
 - Debug session: By default, log.debug() includes the calling file name and line number at the start of each message. Disable with: log.configure(..., show_debug_source=False)
 
        from logduo import log
@@ -94,58 +106,52 @@ Typical Workflows
        log.close()
 
 
-Logduo Methods and Functions:  from logduo import log, run
-----------------------------------------------------------------------
-- Manage Sessions:
-    - log.configure()
-    - log.close()
-    - log.join()
+Logduo Methods and Functions
+----------------------------
+- Manage session:
+  - `log.configure()`
+  - `log.close()`
+  - `log.join()`
 
+- Log levels:
+  - `log()` or `log.info()`
+  - `log.trace()`
+  - `log.debug()`
+  - `log.success()`
+  - `log.warning()`
+  - `log.error()`
+  - `log.critical()`
+  - `log.exception()`  # ERROR + Traceback
 
-- Log Messages:
-    - log.trace()
-    - log.debug()
-    - log.info() or log()
-    - log.success()
-    - log.warning()
-    - log.error()
-    - log.critical()
-    - log.exception()  # ERROR + Traceback
+- Create custom log label:
+  - `log.new_level()`  # Create a custom label handled as an existing level; default = "INFO"
 
-
-- Create Additional Output Files:
-    - log.export_logduo_docs()
-    - log.new_logger()
-    - log.new_loguru_sink()
-
-    
-- Create Custom Labels:
-    - log.new_level()
-
+- Create additional output:
+  - `log.new_logger()`       # Logduo-managed extra log file
+  - `log.new_loguru_sink()`  # Advanced Loguru sink
+  - `log.export_logduo_docs()`
 
 - Access paths:
-    - log.output_dir_path
-    - log.main_log_file_path
-  
+  - `log.output_dir_path`
+  - `log.main_log_file_path`
 
-- Utility Function: 
-    - run() - execute a child script inside a parent script or interactive session
+- Utility function: 
+  - `run()`  # Execute child script or importable module in a parent script or an interactive session.
+  - Import with: `from logduo import run`
 
-
---------
+ 
 Behavior
 ========
-
 
 Prefixes
 --------
 - One prefix per log event.
-- Console and log files have independent prefix settings: console_prefix, log_prefix
-  - off → No prefix. Wrapped lines align flush left
-  - level → Prefix shows level. Wrapped lines align under message.
-  - timestamp → Prefix shows timestamp and level. Wrapped lines align under message.
-  - source → Prefix shows timestamp, level and source. Wrapped lines align under source.
-- Example console output: prefix="source", show_pid_in_console=True, console_wrap_width=80
+- Console and log files have independent prefix settings: `console_prefix`, `log_prefix`
+  - `off` → No prefix. Wrapped lines align flush left
+  - `level` → Prefix shows level. Wrapped lines align under message.
+  - `timestamp` → Prefix shows timestamp and level. Wrapped lines align under message.
+  - `source` → Prefix shows timestamp, level, and source. Wrapped lines align under source.
+- Example console output: `console_prefix="source"`, `show_pid_in_console=True`, `console_wrap_width=80`
 
   
         16:30:40.371 | WARNING  | example_2.py:382 -  (15408:i1) Logduo is designed for
@@ -156,95 +162,81 @@ Prefixes
 
 Message Rendering
 -----------------
-- Strings without '\n': Displayed inline with the prefix.
-    - Console: Wrapped (line width = console_wrap_width).
-    - Log files:  Wrapped only if log_wrap_width is set. Default = off.
-- Strings containing '\n': Displayed as block flush left below prefix - line breaks honored
-    - This preserves the full available line width for tables,
-         panels, JSON, tracebacks, and other structured content.
-    -  Manual padding or Rich padding can be used if indent behavior is desired:
+- Strings without `\n`: Displayed inline with the prefix.
+    - Console: Wrapped (displayed line width = `console_wrap_width`).
+    - Log files: Wrapped only if `log_wrap_width` is set to a positive integer. Default is `"off"`.
+- Strings containing `\n`: Displayed as block flush left below prefix. Line breaks are honored.
+    - This preserves the full available line width for tables, panels, JSON, tracebacks, and other structured content.
+    - Use manual indenting or Rich `Padding` if indent behavior is desired:
   
-           pad = " " * 4
+           indent = " " * 13
            log(
-              f"{pad}Step 1: Load data\n"
-              f"{pad}Step 2: Clean data\n"
-           )
-    
-- ANSI-styled strings are rendered on the console and written as plain text in log files.
+              f"{indent}Step 1: Load data\n"
+              f"{indent}Step 2: Clean data\n"
+           ) 
+- ANSI-styled strings and Rich `Text` objects are rendered on the console and written as plain text in log files.
+- Other Rich objects, such as `Panel`, are rendered on the console but displayed as placeholders in log files. 
+    - For more examples, use `log.export_logduo_docs()` and see `console_rendering.py`. 
 
-
-Rich Integration
-----------------
-- Console: Rich objects are displayed as blocks flush left on the line(s) below the prefix unless spaces or Rich Padding are used. See console_rendering.py for more examples.
-
-  - Rich Panel Example (border box shown in blue on console):
-
-        log(Panel("hello", border_style='blue', title='hello panel'))
-
-        08:35:02.099 | INFO     |
-        ┌───────┐
-        │ hello │
-        └───────┘
-
-- Log: Rich Text objects are converted to plain text strings and displayed in logs. Other Rich objects are displayed via placeholders.
-
-  - Rich Panel Example: Log file displays a Rich placeholder marker.
-
-           log(Panel("hello", border_style='blue', title='hello panel' ))
-
-           08:35:02.099 | INFO     | <Rich renderable placeholder>
-
-
-Log File Naming and Location
-----------------------------
-- Log file name: 
-    - If calling script is my_file.py, default log_file_name →  "my_file.log"
-    - If calling script is not found, default log_file_name →  "session.log"
-    - Custom log_file_name can be used: log.configure(log_file_name="my_name.ext")
   
+Log File Name and Location
+--------------------------
+- Log file name:
+  - Custom `log_file_name`: `log.configure(log_file_name="my_name.ext")`
+  - Default `log_file_name`: calling script stem + `.log`
+    - If the calling script is my_file.py: default `log_file_name` → `my_file.log`
+    - If no calling script is found, as expected in interactive sessions: default `log_file_name` → `session.log`
+- Location of log directory:
+  - Custom `log_dir_path`: `log.configure(log_dir_path=my_log_dir)`
+  - Default `log_dir_path`:
+    - If pyproject.toml is not detected: `log_dir_path` = current working directory / "logs"
+    - If pyproject.toml is detected: `log_dir_path` = parent directory of pyproject.toml / "logs"
+- Location of log file: set by `log_file_layout`: `"flat"`, `"script"`, or `"run"` (default)
+  - flat:   `log_dir_path/log_file_name`
+  - script: `log_dir_path/script_stem/log_file_name`
+  - run:    `log_dir_path/script_stem/run_yyyy_mm_dd__hh_mm_ss/log_file_name`
 
-- Default log file location:
-    - log_root:
-        - If pyproject.toml is not detected: log_root = current working directory
-        - If pyproject.toml is detected: log_root = parent directory of pyproject.toml
-    - log_dir_layout (default = run) sets log file location: 
-        - run:     /log_root/logs/script_stem/run_yyyy_mm_dd__hh_mm_ss/log_file_name
-        - script:  /log_root/logs/script_stem/log_file_name
-        - flat:    /log_root/logs/log_file_name
-
-
-- If log_dir_layout = "script" or "flat", consider log_file_mode = "timestamped":
-  - script:  /log_root/logs/script_stem/log_file_name_stem_yyyy_mm_dd__hh_mm_ss.log
-  - flat:    /log_root/logs/log_file_name_stem_yyyy_mm_dd__hh_mm_ss.log
-  
-
-- Additional notes on paths:  
-  - If log_dir_path is provided, the log directory can be placed outside log_root.
-  - If log_file_path is provided, it specifies the complete log file path.
-       - log_file_path overrides log_dir_layout, log_dir_path and log_file_name
-       - log_dir_path becomes the parent of log_file_path
-       - log_file_path does not override log_file_mode ('write', 'append', 'timestamped')
-
-
-Prune Run Directories
----------------------
-If log_dir_layout = "run":
-- Run directories containing the auto-generated .logduo_marker file are eligible for pruning.
-- By default, the number of kept run directories = 10.
-- The keep value can be changed: log.configure(..., keep = 3) 
-- Directories older than the keep value are removed at the start of the session.
-
+Note:
+  - If no calling script is found, `script_stem` is set to `"session"` when `log_file_layout` = `"script"` or `"run"`
+  - If `log_file_path` is provided, it specifies the complete log file path
+    - `log_file_path` overrides `log_file_layout`, `log_dir_path`, and `log_file_name`
+    - `log_file_path` does not override `log_file_mode` (`"write"`, `"append"`, or `"timestamped"`)
+    - `log.output_dir_path` is set to the parent of `log_file_path`
     
+
 Loguru Integration
 ------------------
-- Logduo uses Loguru to provide mature file-output infrastructure, including:
-  - log rotation
-  - retention policies
-  - compression
-  - asynchronous/enqueued logging
-  - sink lifecycle management
-- Logduo performs all message formatting, wrapping, routing, session management,
-and Rich integration before messages reach Loguru.
+- Logduo uses Loguru as its underlying file-sink engine.
+
+- The following Loguru sink options can be passed through `log.configure()`:
+  - `rotation`: start a new log file when a size/time rule is met.
+      Example: `rotation="10 MB"` or `rotation="1 week"`.
+      Use `rotation="off"` for no rotation (default = `"off"`).
+  - `retention`: remove older rotated log files when a retention rule is met.
+      Example: `retention="14 days"` or `retention=5`.
+      This applies to rotated files, not to Logduo run-directory pruning (default = `"off"`).
+  - `compression`: compress rotated log files.
+      Example: `compression="zip"`.
+      This applies to rotated files, not the active log file (default = `"off"`).
+  - `enqueue`: write logs through a background queue.
+      Useful for thread/process safety (default = `True`).
+  - `catch`: catch logging errors instead of letting them crash the program (default = `True`).
+  - `backtrace`: show extended traceback context for exceptions (default = `False`).
+  - `diagnose`: include extra variable/context information in exception tracebacks (default = `False`).
+
+- Logduo performs message formatting, wrapping, routing, session management,
+  and Rich integration before messages reach Loguru.
+
+- Use `log.new_logger()` when you want a normal Logduo-managed extra log file.
+
+- Use `log.new_loguru_sink()` when you want direct Loguru control, such as:
+  - using custom Loguru filters
+  - adding extra Loguru sinks
+  - sending selected events to separate destinations
+  - passing options directly to `logger.add()`
+
+- Sinks added with `log.new_loguru_sink()` are advanced/pass-through sinks.
+  They are not managed like standard Logduo main logs or `new_logger()` files.
 
   
 Quality Assurance

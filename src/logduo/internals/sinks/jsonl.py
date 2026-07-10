@@ -108,7 +108,7 @@ SESSION_START_FIELD_ORDER = [
     "python_version",
     # --- session_config ---
     "log_file_mode",
-    "log_dir_layout",
+    "log_file_layout",
     "log_verbosity",
     "console_verbosity",
     # --- path ---
@@ -210,7 +210,7 @@ def _initialize_jsonl(duo: Duo) -> None:  # noqa: PLR0911  # many returns
                 "os_name": runtime.os_name,
                 "python_version": runtime.python_version,
                 "log_file_mode": session_config.log_file_mode,
-                "log_dir_layout": session_config.log_dir_layout,
+                "log_file_layout": session_config.log_file_layout,
                 "log_verbosity": session_config.log_verbosity,
                 "console_verbosity": session_config.console_verbosity,
                 "log_dir_path": str(runtime.log_dir_path_abs) if runtime.log_dir_path_abs else None,

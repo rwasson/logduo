@@ -25,7 +25,7 @@ def test_01_main_log_writes_inline_string(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_prefix="timestamp",
         log_wrap_width=80,
         show_pid_in_log=True,
@@ -79,7 +79,7 @@ def test_02_main_log_preserves_structured_string(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log("a\nb\nc")
@@ -104,7 +104,7 @@ def test_03_main_log_flattens_rich_text(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log(Text.from_markup("[blue]hello[/blue]"))
@@ -135,7 +135,7 @@ def test_04_main_log_wrap_off_preserves_single_line(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_wrap_width="off",
     )
 
@@ -154,7 +154,7 @@ def test_05_main_log_prefix_off(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_prefix="off",
     )
 
@@ -174,7 +174,7 @@ def test_06_main_log_prefix_level(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_prefix="level",
     )
 
@@ -193,7 +193,7 @@ def test_07_main_log_prefix_source(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_prefix="source",
     )
 
@@ -215,7 +215,7 @@ def test_08_main_log_show_pid_enabled(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         show_pid_in_log=True,
     )
 
@@ -242,7 +242,7 @@ def test_09_main_log_show_pid_disabled(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         show_pid_in_log=False,
     )
 
@@ -261,7 +261,7 @@ def test_10_main_log_header_off(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_header="off",
     )
 
@@ -280,7 +280,7 @@ def test_11_main_log_footer_off(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_footer="off",
     )
 
@@ -299,7 +299,7 @@ def test_12_main_log_custom_header(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_header=CUSTOM_HEADER,
     )
 
@@ -317,7 +317,7 @@ def test_13_main_log_custom_footer(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_footer=CUSTOM_FOOTER,
     )
 
@@ -334,7 +334,7 @@ def test_14_main_log_verbosity_zero_creates_no_log(tmp_path):
     log = Duo()
 
     log.configure(log_dir_path=str(tmp_path), console_verbosity=0,
-        log_dir_layout="script",
+        log_file_layout="script",
         log_verbosity=0,
     )
 
@@ -374,7 +374,7 @@ def test_16_main_log_file_name_override(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_name="audit.log",
     )
 
@@ -392,7 +392,7 @@ def test_17_main_log_file_mode_append(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="append",
     )
 
@@ -403,7 +403,7 @@ def test_17_main_log_file_mode_append(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="append",
     )
 
@@ -423,7 +423,7 @@ def test_18_main_log_file_mode_write(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
     )
 
@@ -434,7 +434,7 @@ def test_18_main_log_file_mode_write(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
     )
 
@@ -453,7 +453,7 @@ def test_19_initialize_main_log_is_idempotent(tmp_path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     runtime = log._runtime

@@ -23,7 +23,7 @@ CUSTOM_FOOTER = "MY CUSTOM FOOTER"
 def test_01_user_sink_writes_inline_string(tmp_path):
 
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger("audit")
     rep("hello world")
@@ -40,7 +40,7 @@ def test_01_user_sink_writes_inline_string(tmp_path):
 def test_02_user_sink_preserves_structured_string(tmp_path):
 
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger("audit")
     rep("a\nb\nc")
@@ -56,7 +56,7 @@ def test_02_user_sink_preserves_structured_string(tmp_path):
 def test_03_user_sink_flattens_rich_text(tmp_path):
 
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger("audit")
     rep(Text.from_markup("[blue]hello[/blue]"))
@@ -75,7 +75,7 @@ def test_04_user_sink_wraps_inline_string(tmp_path):
 
     log = Duo()
 
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -103,7 +103,7 @@ def test_04_user_sink_wraps_inline_string(tmp_path):
 # --- test_05_user_sink_wrap_width_off() ---------------------------------------
 def test_05_user_sink_wrap_width_off(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -122,7 +122,7 @@ def test_05_user_sink_wrap_width_off(tmp_path):
 # --- test_06_user_sink_prefix_off() -------------------------------------------
 def test_06_user_sink_prefix_off(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -142,7 +142,7 @@ def test_06_user_sink_prefix_off(tmp_path):
 # --- test_07_user_sink_show_pid_enabled() -------------------------------------
 def test_07_user_sink_show_pid_enabled(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script", show_pid_in_log=True)
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script", show_pid_in_log=True)
 
     rep = log.new_logger(
         "audit",
@@ -167,7 +167,7 @@ def test_07_user_sink_show_pid_enabled(tmp_path):
 # --- test_08_user_sink_header_footer_written() --------------------------------
 def test_08_user_sink_header_footer_written(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -188,7 +188,7 @@ def test_08_user_sink_header_footer_written(tmp_path):
 # --- test_09_user_sink_to_main_log_false() ------------------------------------
 def test_09_user_sink_to_main_log_false(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -209,7 +209,7 @@ def test_09_user_sink_to_main_log_false(tmp_path):
 # --- test_10_user_sink_to_main_log_true() -------------------------------------
 def test_10_user_sink_to_main_log_true(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(
         "audit",
@@ -230,7 +230,7 @@ def test_10_user_sink_to_main_log_true(tmp_path):
 # --- test_11_new_logger_duplicate_name_raises() -------------------------------
 def test_11_new_logger_duplicate_name_raises(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     log.new_logger("audit")
 
@@ -241,7 +241,7 @@ def test_11_new_logger_duplicate_name_raises(tmp_path):
 # --- test_12_new_logger_log_verbosity_zero_raises() ---------------------------
 def test_12_new_logger_log_verbosity_zero_raises(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     with pytest.raises(ValueError):
         log.new_logger(
@@ -256,7 +256,7 @@ def test_13_new_logger_absolute_path(tmp_path):
     target = tmp_path / "special" / "audit.log"
 
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger(target)
     rep("hello")
@@ -269,7 +269,7 @@ def test_13_new_logger_absolute_path(tmp_path):
 # --- test_14_new_logger_timestamped_mode() ------------------------------------
 def test_14_new_logger_timestamped_mode(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     log.new_logger(
         "audit.log",
@@ -287,7 +287,7 @@ def test_14_new_logger_timestamped_mode(tmp_path):
 # --- test_15_new_logger_without_extension() -----------------------------------
 def test_15_new_logger_without_extension(tmp_path):
     log = Duo()
-    log.configure(log_dir_path=str(tmp_path), log_dir_layout="script")
+    log.configure(log_dir_path=str(tmp_path), log_file_layout="script")
 
     rep = log.new_logger("audit")
     rep("hello")

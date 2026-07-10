@@ -17,7 +17,7 @@ def test_21_console_verbosity_zero_suppresses_console_output(
     print(f"str(tmp_path) = {str(tmp_path)}")
     log = Duo()
 
-    log.configure(log_dir_path=str(tmp_path), console_verbosity=0, log_dir_layout="script", log_verbosity=0)
+    log.configure(log_dir_path=str(tmp_path), console_verbosity=0, log_file_layout="script", log_verbosity=0)
 
     log("hello world")
 

@@ -19,7 +19,7 @@ def test_01_flat_layout_default_path(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="flat",
+        log_file_layout="flat",
         write_config_table=False,
     )
 
@@ -33,7 +33,7 @@ def test_02_script_layout_default_path(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         write_config_table=False,
     )
 
@@ -56,7 +56,7 @@ def test_03_timestamped_file_mode_adds_timestamp(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="flat",
+        log_file_layout="flat",
         log_file_name="audit.log",
         log_file_mode="timestamped",
         write_config_table=False,
@@ -78,7 +78,7 @@ def test_04_log_file_path_overrides_layout(tmp_path: Path):
 
     log.configure(
         log_file_path=str(explicit_path),
-        log_dir_layout="script",   # should be ignored
+        log_file_layout="script",   # should be ignored
         write_config_table=False,
     )
 

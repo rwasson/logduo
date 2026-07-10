@@ -144,7 +144,7 @@ def _create_run_dir(duo: Duo) -> None:
 
     session_config = duo.session_config
 
-    if session_config.log_dir_layout != "run":
+    if session_config.log_file_layout != "run":
         return
 
     log_dir_path = duo._runtime.main_sink_log_dir_path_abs
@@ -211,10 +211,10 @@ def _setup_prune(duo: Duo) -> None:
     deleted = 0
     runtime = duo._runtime
 
-    if duo.session_config.log_dir_layout == "run":
+    if duo.session_config.log_file_layout == "run":
         try:
             deleted = _prune_run_dirs(
-                log_dir_layout=duo.session_config.log_dir_layout,
+                log_file_layout=duo.session_config.log_file_layout,
                 keep=duo.session_config.keep,
                 current_main_path=duo._runtime.main_sink_log_file_path_abs,
             )

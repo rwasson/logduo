@@ -89,7 +89,7 @@ def test_01_default_header_footer(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
     )
     log.close()
@@ -115,7 +115,7 @@ def test_02_custom_global_header_footer(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
         log_header=CUSTOM_HEADER,
         log_footer=CUSTOM_FOOTER,
@@ -148,7 +148,7 @@ def test_03_header_off_footer_default(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
         log_header="off",
         log_footer="default",
@@ -178,7 +178,7 @@ def test_04_footer_off_header_default(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="write",
         log_footer="off",
     )
@@ -207,7 +207,7 @@ def test_05_new_logger_overrides(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     new_logger_verbosity = 2
@@ -265,7 +265,7 @@ def test_06_append_mode(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_file_mode="append",
     )
 
@@ -290,7 +290,7 @@ def test_07_log_footer_wrap_width_off(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_wrap_width="off",
     )
 
@@ -311,7 +311,7 @@ def test_08_user_sink_footer_contains_log_file_path(tmp_path: Path):
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     audit = log.new_logger(
@@ -340,7 +340,7 @@ def test_09_console_verbosity_zero_hides_startup_footer(
 
     log.configure(
         log_dir_path=str(tmp_path), console_verbosity=0,
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     log.close()
@@ -394,7 +394,7 @@ def test_11_pytest_is_not_treated_as_script(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
     )
 
     runtime = log._runtime
@@ -458,7 +458,7 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_wrap_width=80,
     )
 
@@ -495,7 +495,7 @@ def test_14_main_log_footer_uses_hanging_indent_for_paths(tmp_path: Path):
 
     log.configure(
         log_dir_path=str(tmp_path),
-        log_dir_layout="script",
+        log_file_layout="script",
         log_wrap_width=80,
     )
 

@@ -1,7 +1,7 @@
 """
 prune.py
 
-Run-directory pruning helpers for log_dir_layout="run".
+Run-directory pruning helpers for log_file_layout="run".
 
 Responsible for:
 - identifying eligible Logduo run directories
@@ -18,14 +18,14 @@ from pathlib import Path
 
 
 # --- _prune_run_dirs() --------------------------------------------------------
-def _prune_run_dirs(*, log_dir_layout: str, keep: int | str, current_main_path: Path | None) -> int:
+def _prune_run_dirs(*, log_file_layout: str, keep: int | str, current_main_path: Path | None) -> int:
     """
     Prune old Logduo run directories while preserving active sessions.
     """
 
     # --- disable pruning ---
 
-    if keep == "off" or current_main_path is None or log_dir_layout != "run":
+    if keep == "off" or current_main_path is None or log_file_layout != "run":
         deleted_file_count = 0  # no pruning performed
         return deleted_file_count
 

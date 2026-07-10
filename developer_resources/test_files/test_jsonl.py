@@ -340,7 +340,7 @@ def test_14_emit_jsonl_payload_no_path_returns(tmp_path):
             "os_name": None,
             "python_version": None,
             "log_file_mode": None,
-            "log_dir_layout": None,
+            "log_file_layout": None,
             "log_verbosity": None,
             "console_verbosity": None,
             "log_dir_path": None,
