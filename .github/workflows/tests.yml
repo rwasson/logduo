@@ -23,4 +23,15 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev]"
       - run: python -c "from pathlib import Path; Path('developer_resources/logduo_validation/logs').mkdir(parents=True, exist_ok=True)"
-      - run: python -m developer_resources.logduo_validation.master_test_runner
+
+      - name: Run pytest suite
+        run: python -m developer_resources.logduo_validation.master_test_runner
+
+      - name: Run example scripts
+        run: python -m developer_resources.logduo_validation.example_scripts_runner
+
+      - name: Test documentation export
+        run: python -m developer_resources.logduo_validation.export_logduo_docs_demo
+
+      - name: Run Ruff, mypy, and Vulture
+        run: python -m developer_resources.logduo_validation.linter_check
