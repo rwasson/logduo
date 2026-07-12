@@ -1,16 +1,18 @@
 """
 master_test_runner.py
 
-Update setup paths as needed
+Update setup paths and debug toggles as needed
 
-Last edited: 2026-06-1
+Last edited: 2026-07-11
 """
 
 from pathlib import Path
 
 from developer_resources.pytest_toolkit.pytest_harness import pytest_harness
 
-_debug_print = False
+DEBUG_PRINT = False
+INDIVIDUAL_LOGS = False
+
 
 # --- Path settings ---
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -57,7 +59,7 @@ test_file_names = [
     "test_message_prep",
     "test_new_level",
     "test_new_loguru_sink",
-    # "test_non_script_mode",
+    "test_non_script_mode",
     "test_output_paths",
     "test_path_helpers",
     "test_prune",
@@ -71,10 +73,10 @@ test_file_names = [
     "test_user_sink",
     "test_wrap_lines",
 
-    # must be manually cleaned from real log dir
+    # The test below creates log files that must be manually cleaned from real log dir,
+    # run only when needed, keep added's' so not automatically included by coverage validator
     # "tests_making_real_logs",
 ]
-
 
 
 
@@ -86,7 +88,8 @@ def main() -> None:
         log_dir=log_dir,
         source_dir=source_dir,
         test_file_names=test_file_names,
-        debug_print=_debug_print,
+        individual_logs=INDIVIDUAL_LOGS,
+        debug_print=DEBUG_PRINT,
     )
 
 

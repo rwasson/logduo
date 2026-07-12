@@ -91,7 +91,6 @@ DESCRIPTIONS: dict[str, str] = {
         "Cleanup only applies to directories containing "
         "a .logduo_marker file."
     ),
-    "write_config_table": "Write config_table.txt",
     # --- Formatting ---
     # console
     "console_verbosity": "Select level of detail in console",
@@ -113,8 +112,9 @@ DESCRIPTIONS: dict[str, str] = {
     "show_logger_name": "Show logger name in console and main-log line prefixes",
     "show_pid_in_console": "Show process id in console line prefix (for multi-process sessions)",
     "show_pid_in_log": "Show process id in log line prefix (for multi-process sessions)",
-    "write_jsonl": "Write JSONL file (event record)",
+    "write_config_table": "Write config_table.txt",
     "write_config_json": "Write config.json (machine-readable config snapshot)",
+    "write_jsonl": "Write JSONL file (event record)",
     "first_instance_owns_console": "Restrict console output to the first Logduo instance",
     # --- Loguru ---
     "rotation": "Loguru arg: start new log file when size/time rule is met",
@@ -141,7 +141,7 @@ ALLOWED_USER_INPUTS: dict[str, str] = {
     "log_file_layout": "'flat' | 'script' | 'run'",
     "log_dir_path": "str: valid abs path",
     "keep": "'off' | 'int ≥ 1'",
-    "write_config_table": "True | False",
+
     # --- Formatting ---
     # console
     "console_verbosity": "0 (disabled) | 1 (quiet) | 2 (standard) | 3 (verbose)",
@@ -163,8 +163,9 @@ ALLOWED_USER_INPUTS: dict[str, str] = {
     "show_logger_name": "True | False",
     "show_pid_in_console": "True | False",
     "show_pid_in_log": "True | False",
-    "write_jsonl": "True | False",
+    "write_config_table": "True | False",
     "write_config_json": "True | False",
+    "write_jsonl": "True | False",
     "first_instance_owns_console": "True | False",
     # === Loguru ===
     "rotation": "int (bytes) | str | 'off'",
@@ -186,7 +187,6 @@ DEFAULTS: dict[str, Any] = {
     "log_file_layout": "run",
     "log_dir_path": "auto",
     "keep": "off",
-    "write_config_table": True,
     # --- Formatting ---
     # console
     "console_verbosity": 2,
@@ -208,6 +208,7 @@ DEFAULTS: dict[str, Any] = {
     "show_logger_name": True,
     "show_pid_in_console": False,
     "show_pid_in_log": False,
+    "write_config_table": True,
     "write_config_json": False,
     "write_jsonl": False,
     "first_instance_owns_console": False,  # See Notes
@@ -255,11 +256,6 @@ CERBERUS_SCHEMA: dict[str, Any] = {
         "anyof": [{"type": "string", "allowed": ["off"]}, {"type": "integer", "min": 1}],
         "default": DEFAULTS["keep"],
         "coerce": _norm_str_lower_mixed,
-    },
-    "write_config_table": {
-        "type": "boolean",
-        "default": DEFAULTS["write_config_table"],
-        "coerce": _norm_bool,
     },
     # --- Formatting ---
     # console
@@ -334,6 +330,11 @@ CERBERUS_SCHEMA: dict[str, Any] = {
         "default": DEFAULTS["show_pid_in_log"],
         "coerce": _norm_bool,
     },
+    "write_config_table": {
+        "type": "boolean",
+        "default": DEFAULTS["write_config_table"],
+        "coerce": _norm_bool,
+    },
     "write_config_json": {
         "type": "boolean",
         "default": DEFAULTS["write_config_json"],
@@ -394,20 +395,20 @@ GROUPING = {
         "console_theme_dict",
         # log
         "log_verbosity",
-        "log_wrap_width",
         "log_prefix",
+        "log_wrap_width",
         "log_header",
         "log_footer",
     ],
     # --- Type C: Advanced Flags ---
     "advanced": [
         "show_debug_source",
-        "write_config_table",
-        "write_jsonl",
-        "write_config_json",
         "show_pid_in_console",
         "show_pid_in_log",
         "show_logger_name",
+        "write_config_table",
+        "write_config_json",
+        "write_jsonl",
         "first_instance_owns_console",
     ],
     # --- Type D: Advanced Engine & Output Control ---
@@ -509,8 +510,8 @@ def _session_config_hints(field: str, defaults: dict) -> str:  # noqa: PLR0911  
         "show_pid_in_console",
         "show_pid_in_log",
         "write_config_table",
-        "write_jsonl",
         "write_config_json",
+        "write_jsonl",
         "first_instance_owns_console",
         # --- Loguru ---
         "enqueue",

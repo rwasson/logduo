@@ -4,12 +4,12 @@
 # then in Terminal to redo new git: git add .
 # then in Terminal to confirm new git: git status
 
-# TODO
-TODO.txt
 
 # --- sub-folders ---
 deprecated/
 notes/
+    todo/
+
 
 # --- virtual environments ---
 .venv
@@ -50,6 +50,7 @@ dist/
 
 # --- coverage ---
 .coverage
+.coverage.*
 htmlcov/
 
 # --- Jupyter ---

@@ -24,18 +24,16 @@ Last edited: 2026-03-18
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any, cast
 
-from coverage import Coverage
-
-from developer_resources.pytest_toolkit.pytest_harness_classes import (
-    PytestTestFileRecord,
-    SourceFileCoverageRecord,
-)
+from developer_resources.pytest_toolkit.pytest_harness_classes import PytestTestFileRecord
 
 
 # --- pytest_wrap() ------------------------------------------------------------
@@ -44,8 +42,10 @@ def pytest_wrap(
     test_file_path: Path,
     test_log_file_path: Path,
     source_dir: Path,
+    coverage_data_file_path: Path,
     extra_pytest_args: list[str] | None = None,
-    debug_print: bool = False,
+    individual_logs: bool = True,
+    debug_print: bool = False,    # noqa  # maybe unused, but reserved for future use
 ) -> PytestTestFileRecord:
     """
     Dev-mode pytest runner using subprocess.
@@ -66,12 +66,18 @@ def pytest_wrap(
 
     log.join()
 
-    test_logger = log.new_logger(
-        test_log_file_path,
-        to_console=False,
-        to_main_log=False,
-        log_prefix="off"
-    )
+    test_logger: Callable[[str], Any] | None = None
+
+    if individual_logs:
+        test_logger = cast(
+            Callable[[str], Any],
+            log.new_logger(
+                test_log_file_path,
+                to_console=False,
+                to_main_log=False,
+                log_prefix="off",
+            ),
+        )
 
 
     # --- temporary JSON to record pass and fail count ---
@@ -80,30 +86,6 @@ def pytest_wrap(
             delete=False,
     ) as temp_file:
         test_file_report_path = Path(temp_file.name)
-
-    '''
-    alternative setup to consider
-    pytest_cmd = [
-        sys.executable,
-        "-m",
-        "pytest",
-        # "-vv",   #  only when want very verbose tracebacks
-        "-v",
-        "-rA",     # info on passed and failed test_files
-        # "-rfe"   # failed test_files only
-        "--maxfail=0",
-        "--capture=no",
-        "--tb=short",
-        "--color=yes",
-        "--cov=logduo",
-        # "--cov-test_file_report=term",   # only when want full list of covered files for each test file
-        # "--cov-test_file_report=term-missing",   # only when want above + full list of missing lines
-        "--cov-test_file_report=",
-        str(test_file_path),
-        "--json-test_file_report",
-        f"--json-test_file_report-file={test_file_report_path}",
-    ]
-    '''
 
     pytest_cmd = [
         sys.executable,
@@ -133,8 +115,13 @@ def pytest_wrap(
         # --- Coverage ---
         f"--cov={source_dir}",  # measure coverage for logduo package
         "--cov-branch",  # include branch coverage
-        # "--cov-test_file_report=",  # suppress pytest coverage table in individual test files
+        # Use "--cov-report=" instead to suppress coverage tables in individual logs.
         "--cov-report=term-missing",
+        (
+            "--cov-report=term-missing"
+            if individual_logs
+            else "--cov-report="
+        ),
 
         # --- Test file path ---
         str(test_file_path),
@@ -143,15 +130,19 @@ def pytest_wrap(
         "--json-report",  # emit machine-readable test results
         f"--json-report-file={test_file_report_path}",
     ]
-    # pytest_cmd += ["--cov-config=pyproject.toml"]  # causes crash
+
 
     if extra_pytest_args:
         pytest_cmd.extend(extra_pytest_args)
 
     start = time.time()
 
+    subprocess_env = os.environ.copy()
+    subprocess_env["COVERAGE_FILE"] = str(coverage_data_file_path)
+
     process = subprocess.Popen(
         pytest_cmd,
+        env=subprocess_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -162,110 +153,17 @@ def pytest_wrap(
     assert process.stdout is not None
 
     for line in process.stdout:
-        # print(line, end="")  # duplicates to console
         captured.append(line)
 
     process.wait()
     duration = time.time() - start
 
+    if test_logger is not None:
+        cleaned = strip_ansi("".join(captured))
+        test_logger(cleaned)
+        test_logger(f"pytest exit code: {process.returncode}")
+        test_logger(f"duration: {duration:.2f} seconds")
 
-    if debug_print:
-        print(test_file_path.name)
-        print("coverage size:", Path(".coverage").stat().st_size)
-        for p in sorted(Path(".").glob(".coverage*")):
-            print(
-                p.name,
-                p.stat().st_size,
-            )
-
-
-    cleaned = strip_ansi("".join(captured))
-    test_logger(cleaned)
-    test_logger(f"pytest exit code: {process.returncode}")
-    test_logger(f"duration: {duration:.2f} seconds")
-
-
-    # --- Store and return Coverage class info ---
-    # coverage_obj = Coverage(data_file=".coverage")  # TODO verify
-    coverage_obj = Coverage()
-    coverage_obj.load()
-
-    coverage_data = coverage_obj.get_data()
-    source_file_coverage_records: dict[str, SourceFileCoverageRecord] = {}
-
-    source_dir = source_dir.resolve()
-
-    for source_file_path in coverage_data.measured_files():
-        path_obj = Path(source_file_path).resolve()
-        if source_dir not in path_obj.parents and path_obj != source_dir:
-            continue
-        analysis = coverage_obj._analyze(source_file_path)
-
-        if debug_print:
-            print(f"test_file_name: {Path(test_file_path).name}")
-            print(f"source_file_name: {Path(source_file_path).name}")
-            print("analysis.branch_stats()")
-            print(analysis.branch_stats())
-            print("arc_possibilities:")
-            print(sorted(analysis.arc_possibilities)[:50])
-            # print("arcs_executed:")
-            # print(sorted(analysis.arcs_executed)[:50])
-            if Path(test_file_path).name == "test_non_script_mode.py":
-                print()
-                print("================================")
-                print(f"test_file_name: {Path(test_file_path).name}")
-                print(f"source_file_name: {Path(source_file_path).name}")
-                print("analysis.branch_stats()")
-                print(analysis.branch_stats())
-                print("executed lines:", len(analysis.executed))
-                print("branch stats:", len(analysis.branch_stats()))
-                print("has_arcs:", analysis.has_arcs)
-                print("statements:", len(analysis.statements))
-                print("executed:", len(analysis.executed))
-                print("missing:", len(analysis.missing))
-                print("numbers:", analysis.numbers)
-                print()
-
-
-        branch_source = {
-            (branch_line, destination_count)
-            for branch_line, (destination_count, _covered_count)
-            in analysis.branch_stats().items()
-        }
-        branch_first_lines = {
-            first_line
-            for first_line, _destination_count in branch_source
-        }
-        total_branch_pairs = {
-            pair
-            for pair in analysis.arc_possibilities_set
-            if pair[0] in branch_first_lines
-        }
-        executed_branch_pairs = {
-            pair
-            for pair in analysis.arcs_executed_set
-            if pair[0] in branch_first_lines
-        }
-
-        # Safety check
-        expected_branch_count = sum(
-            _destination_count
-            for first_line, _destination_count in branch_source
-        )
-        assert expected_branch_count == len(total_branch_pairs)
-
-
-        source_file_coverage_records[source_file_path] = (
-            SourceFileCoverageRecord(
-                source_file_path=source_file_path,
-                executed_lines=set(analysis.executed),
-                missing_lines=set(analysis.missing),
-                total_line_count=len(analysis.statements),
-                branch_source=branch_source,
-                total_branch_pairs=total_branch_pairs,
-                executed_branch_pairs=executed_branch_pairs,
-            )
-        )
 
     # --- Read pytest JSON report, then delete temporary file ---
     passed_test_function_names: list[str] = []
@@ -279,8 +177,6 @@ def pytest_wrap(
     try:
         test_file_report = json.loads(test_file_report_path.read_text())
         summary = test_file_report["summary"]
-
-
         passed_test_function_count = summary.get("passed", 0)
         failed_test_function_count = summary.get("failed", 0)
         error_test_function_count = (
@@ -291,11 +187,10 @@ def pytest_wrap(
         xfailed_test_function_count = summary.get("xfailed", 0)
         xpassed_test_function_count = summary.get("xpassed", 0)
 
-        for test_record in test_file_report.get("tests", []):  # TODO changed form test_files
+        for test_record in test_file_report.get("tests", []):
             nodeid = test_record["nodeid"]
             test_function_name = nodeid.rsplit("::", maxsplit=1)[-1]
             outcome = test_record["outcome"]
-
 
             if outcome == "passed":
                 passed_test_function_names.append(test_function_name)
@@ -315,16 +210,6 @@ def pytest_wrap(
                     f"Test: {nodeid}"
                 )
 
-            if outcome in ("error", "errors"):
-                print(f"DEBUG 328 ERROR OUTCOME: {outcome!r}")
-
-        if debug_print:
-            print("DEBUG test_log_file_path =", test_log_file_path)
-            print("DEBUG passed_test_function_count =", passed_test_function_count)
-            print("DEBUG len(passed_test_function_names) =", len(passed_test_function_names))
-            print("DEBUG passed_test_function_names:")
-            for name in passed_test_function_names:
-                print("    ", name)
 
         assert passed_test_function_count == len(passed_test_function_names)
         assert failed_test_function_count == len(failed_test_function_names)
@@ -346,7 +231,6 @@ def pytest_wrap(
         xfailed_test_function_count=xfailed_test_function_count,
         xpassed_test_function_count=xpassed_test_function_count,
         duration_seconds=duration,
-        source_file_coverage_records=source_file_coverage_records,
         passed_test_function_names=passed_test_function_names,
         failed_test_function_names=failed_test_function_names,
         error_test_function_names=error_test_function_names,

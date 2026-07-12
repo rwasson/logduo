@@ -18,13 +18,13 @@ class SourceFileCoverageRecord:
     total_line_count: int
 
     branch_source: set[tuple[int, int]]
-    # from coverage analysis.branch_stats()
+    # Derived from branch pairs in the combined Coverage.py JSON report.
 
     total_branch_pairs: set[tuple[int, int]]
-    # from subset analysis.arc_possibilities_set whose first lines are in branch_source
+    # Union of executed and missing branch pairs in the combined JSON report.
 
     executed_branch_pairs: set[tuple[int, int]]
-    # from subset of merged analysis.arcs_executed_set whose first lines are in branch_source
+    # Executed branch pairs in the combined Coverage.py JSON report.
 
     @property
     def executed_line_count(self) -> int:
@@ -79,8 +79,6 @@ class PytestTestFileRecord:
     skipped_test_function_count: int
     xfailed_test_function_count: int
     xpassed_test_function_count: int
-
-    source_file_coverage_records: dict[str, SourceFileCoverageRecord]
     passed_test_function_names: list[str]
     failed_test_function_names: list[str]
     error_test_function_names: list[str]
@@ -207,3 +205,12 @@ class ProblemTestFileRecord:
     @property
     def has_problems(self) -> bool:
         return self.problem_count > 0
+
+
+@dataclass(slots=True)
+class CombinedCoverageResult:
+    source_file_coverage_records: dict[str, SourceFileCoverageRecord]
+    executed_line_count: int
+    total_line_count: int
+    executed_branch_count: int
+    total_branch_count: int
