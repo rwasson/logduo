@@ -4,6 +4,20 @@ LOGDUO UPDATE CHECKLIST
 Use Parts 1–3 for each release.
 Part 4 contains one-time setup and workflow-maintenance instructions.
 
+Quick GitHub update (after running validation checks):
+======================================================
+git status --short --untracked-files=all
+git diff --stat
+git diff
+
+git add .
+git diff --cached --stat
+git diff --cached
+
+git commit -m "<short description of update>"
+git push origin main
+git status
+
 
 PART 1 — VERIFY CHANGES LOCALLY
 ===============================
@@ -21,7 +35,7 @@ PART 1 — VERIFY CHANGES LOCALLY
        example_scripts_runner.py
        export_logduo_docs_demo.py
        linter_check.py
-       master_test_runner.py
+       pytest_harness_runner.py
 
    Confirm:
        - all tests pass

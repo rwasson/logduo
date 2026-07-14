@@ -11,7 +11,6 @@ from pathlib import Path
 from developer_resources.pytest_harness.pytest_harness import pytest_harness
 
 # --- Toggle settings ---
-DEBUG_PRINT = False
 INDIVIDUAL_LOGS = False
 
 # Run all test_*.py files if include_file_names is None.
@@ -56,7 +55,7 @@ def main() -> None:
         include_file_names=include_file_names,
         exclude_file_names=exclude_file_names,
         individual_logs=INDIVIDUAL_LOGS,
-        debug_print=DEBUG_PRINT,
+        debug_pytest_harness=False,
     )
 
 

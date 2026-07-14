@@ -19,7 +19,7 @@ def _build_aggregate_summary_data(
     *,
     pytest_test_file_records: list[PytestTestFileRecord],
     combined_coverage_result: CombinedCoverageResult,
-    debug_print: bool,
+    debug_pytest_harness: bool,
 ) -> AggregateTestSummary:
     """
     Build aggregate test and official combined coverage summary data.
@@ -119,7 +119,7 @@ def _build_aggregate_summary_data(
     total_coverage_pct = combined_coverage_result.total_coverage_pct
 
 
-    if debug_print:
+    if debug_pytest_harness:
         print("Official combined Coverage.py counts of: executed / total")
         print(
             f"statements: {executed_line_count} / "

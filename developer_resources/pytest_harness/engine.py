@@ -45,7 +45,7 @@ def pytest_wrap(
     coverage_data_file_path: Path,
     extra_pytest_args: list[str] | None = None,
     individual_logs: bool = True,
-    debug_print: bool = False,    # noqa  # maybe unused, but reserved for future use
+    debug_pytest_harness: bool = False,    # noqa  # maybe unused, but reserved for future use
 ) -> PytestTestFileRecord:
     """
     Dev-mode pytest runner using subprocess.

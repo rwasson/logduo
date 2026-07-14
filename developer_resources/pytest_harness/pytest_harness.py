@@ -45,7 +45,7 @@ def pytest_harness(
     include_file_names: list[str] | None = None,
     exclude_file_names: list[str] | None = None,
     individual_logs: bool = True,
-    debug_print: bool = False,
+    debug_pytest_harness: bool = False,
 ) -> None:
 
     log_dir_path = log_dir
@@ -70,9 +70,9 @@ def pytest_harness(
             f"    {source_dir_path}"
         )
 
-    if debug_print:
+    if debug_pytest_harness:
         print("Settings from pytest_harness_runner.py:")
-        print("DEBUG_PRINT = True")
+        print("debug_pytest_harness = True")
         print(f"INDIVIDUAL_LOGS = {individual_logs}")
         print("LOG DIR = ")
         print(log_dir_path)
@@ -96,7 +96,7 @@ def pytest_harness(
         exclude_file_names=exclude_file_names,
     )
 
-    if debug_print:
+    if debug_pytest_harness:
         print("\nDEBUG: Exact test files pytest_harness will run:")
         for index, test_name in enumerate(test_file_names, start=1):
             print(f"    {index:>2}. {test_name}")
@@ -160,7 +160,7 @@ def pytest_harness(
             coverage_data_file_path=coverage_data_file_path,
             # extra_pytest_args=["-q"],    # "-q" already called, extra_pytest_args[] reserved for future args
             individual_logs=individual_logs,
-            debug_print=debug_print,
+            debug_pytest_harness=debug_pytest_harness,
         )
 
         results.append(result)
@@ -181,7 +181,7 @@ def pytest_harness(
     summary_data = _build_aggregate_summary_data(
         pytest_test_file_records=results,
         combined_coverage_result=combined_coverage_result,
-        debug_print=debug_print,
+        debug_pytest_harness=debug_pytest_harness,
     )
 
     summary_text = _build_summary_table(
