@@ -16,19 +16,12 @@ Quick GitHub update
 3. Confirm what will be committed:
     git diff --cached --stat
 
-   If the listed files look wrong, stop and inspect before committing.
-   Optional detailed inspection:
-
-    git diff --cached
-
-   If this opens a long scrollable view, press q to exit.
-
 4. Commit and push:
-    git commit -m "Short description of update"
+    git commit -m "Project update $(date '+%Y-%m-%d %H:%M')"
     git push origin main
 
-5. Confirm clean status:
-    git status
+5. Confirm the pushed commit:
+    git --no-pager log -1 --stat
 
 
 PART 1 — VERIFY CHANGES LOCALLY
