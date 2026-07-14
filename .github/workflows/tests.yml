@@ -52,7 +52,7 @@ jobs:
       - run: python -c "from pathlib import Path; Path('developer_resources/logduo_validation/logs').mkdir(parents=True, exist_ok=True)"
 
       - name: Run pytest suite
-        run: python -m developer_resources.logduo_validation.master_test_runner
+        run: python -m developer_resources.logduo_validation.pytest_harness_runner
 
       - name: Run example scripts
         run: python -m developer_resources.logduo_validation.example_scripts_runner
