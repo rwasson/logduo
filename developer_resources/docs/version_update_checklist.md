@@ -4,19 +4,31 @@ LOGDUO UPDATE CHECKLIST
 Use Parts 1–3 for each release.
 Part 4 contains one-time setup and workflow-maintenance instructions.
 
-Quick GitHub update (after running validation checks):
-======================================================
-git status --short --untracked-files=all
-git diff --stat
-git diff
+Quick GitHub update
+===================
+1. Check what changed:
+    git status --short --untracked-files=all
+    git diff --stat
 
-git add .
-git diff --cached --stat
-git diff --cached
+2. Stage all intended changes:
+    git add .
 
-git commit -m "<short description of update>"
-git push origin main
-git status
+3. Confirm what will be committed:
+    git diff --cached --stat
+
+   If the listed files look wrong, stop and inspect before committing.
+   Optional detailed inspection:
+
+    git diff --cached
+
+   If this opens a long scrollable view, press q to exit.
+
+4. Commit and push:
+    git commit -m "Short description of update"
+    git push origin main
+
+5. Confirm clean status:
+    git status
 
 
 PART 1 — VERIFY CHANGES LOCALLY
