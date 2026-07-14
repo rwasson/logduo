@@ -1,7 +1,7 @@
 """
 test_output_paths.py
 
-Integration test_files for output directory and log path derivation.
+Integration pytest_files for output directory and log path derivation.
 
 Last edited: 2026-06-16
 """

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from developer_resources.pytest_toolkit.test_utils import (
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _make_run_dir,
 )
 from logduo.internals.filesystem.prune import _prune_run_dirs

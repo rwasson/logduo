@@ -1,5 +1,5 @@
 """
-pytest_harness_classes.py
+classes.py
 
 Last edited: 2026-06-03
 """
@@ -138,6 +138,10 @@ class AggregateTestSummary:
     executed_branch_count: int
     total_branch_count: int
 
+    statement_coverage_pct: float
+    branch_coverage_pct: float
+    total_coverage_pct: float
+
     problem_test_files: list[ProblemTestFileRecord]
     unexecuted_test_files: list[str]
     source_file_coverage_records: list[SourceFileCoverageRecord]
@@ -214,3 +218,7 @@ class CombinedCoverageResult:
     total_line_count: int
     executed_branch_count: int
     total_branch_count: int
+
+    statement_coverage_pct: float
+    branch_coverage_pct: float
+    total_coverage_pct: float

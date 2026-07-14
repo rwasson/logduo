@@ -6,7 +6,7 @@ Last edited: 2026-06-11
 import pytest
 from rich.text import Text
 
-from developer_resources.pytest_toolkit.test_utils import (
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _find_main_log,
     _read_file,
 )

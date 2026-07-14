@@ -12,7 +12,7 @@ Checks:
     unsafe patterns, overly complex functions, style violations, and other
     configured Ruff rules.
 
-    For developer_resources/test_files, only import ordering is checked.
+    For developer_resources/pytest_files, only import ordering is checked.
 
 - Vulture:
     Checks src for likely dead or unreachable code.
@@ -111,7 +111,7 @@ def run_linter_checks() -> list[CheckResult]:
     checks = [
         ("Ruff import order fix", ["ruff", "check", "src", "developer_resources", "--select", "I", "--fix"]),
         ("Ruff", ["ruff", "check", "src"]),
-        ("Ruff import order", ["ruff", "check", "src", "developer_resources/test_files", "--select", "I"]),
+        ("Ruff import order", ["ruff", "check", "src", "developer_resources/pytest_files", "--select", "I"]),
         ("Vulture", ["vulture", "src", "--min-confidence", "80"]),
         ("mypy", ["mypy", "src/logduo"]),
     ]

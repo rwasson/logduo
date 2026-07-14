@@ -11,7 +11,7 @@ Reason:
     It calls log.join() and expects an active parent session.
 
 Intended to be called by:
-    developer_resources.test_files.master_test_runner
+    developer_resources.pytest_files.master_test_runner
 
 Last edited: 2026-07-08
 """

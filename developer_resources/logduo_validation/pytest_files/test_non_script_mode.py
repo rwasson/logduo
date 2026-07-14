@@ -7,7 +7,6 @@ Last edited: 2026-07-11
 import subprocess
 import sys
 
-
 # --- test_interactive_like_session_uses_session_name() -----------------------
 """
 test_non_script_mode.py

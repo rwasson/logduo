@@ -1,7 +1,7 @@
 """
-pytest_harness_engine.py
+engine.py
 
-A pytest-based framework for unit test_files, integration test_files,
+A pytest-based framework for unit pytest_files, integration pytest_files,
 and artifact-driven smoke/visual testing.
 
 
@@ -33,7 +33,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-from developer_resources.pytest_toolkit.pytest_harness_classes import PytestTestFileRecord
+from developer_resources.pytest_harness.classes import PytestTestFileRecord
 
 
 # --- pytest_wrap() ------------------------------------------------------------
@@ -104,10 +104,10 @@ def pytest_wrap(
         "--capture=no",  # allow test print() output
         "--tb=short",  # compact tracebacks
         # "--showlocals",  # include local variables in failures, too big
-        "--durations=10",  # show 10 slowest test_files
+        "--durations=10",  # show 10 slowest pytest_files
 
         # --- Execution policy ---
-        "--maxfail=0",  # run all test_files
+        "--maxfail=0",  # run all pytest_files
         "--strict-markers",  # reject unknown pytest markers
         "--disable-warnings",  # suppress warning summary
         "--reruns=0",  # do not rerun failures

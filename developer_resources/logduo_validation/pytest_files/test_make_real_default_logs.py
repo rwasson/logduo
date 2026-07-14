@@ -1,7 +1,7 @@
 """
 real_log_test.py
 
-These test_files need to  create real output logs
+These pytest_files need to  create real output logs
 
 This test file can be skipped most runs
 

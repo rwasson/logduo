@@ -7,7 +7,7 @@ Last edited: 2026-06-12
 import pytest
 from rich.text import Text
 
-from developer_resources.pytest_toolkit.test_utils import _find_main_log, _read_file
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import _find_main_log, _read_file
 from logduo import Duo
 from logduo.internals.session_config.session_constants import _DEFAULT_LOG_VERBOSITY
 

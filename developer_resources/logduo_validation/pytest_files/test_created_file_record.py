@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from developer_resources.pytest_toolkit.test_utils import _new_test_log
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import _new_test_log
 from logduo import Duo
 from logduo.internals.engine.runtime_classes import CreatedFileRecord, RuntimeRecord, UserSinkConfig
 from logduo.internals.filesystem.created_file_record_builders import (
@@ -75,7 +75,7 @@ def test_03_runtime_get_user_sink_record_success():
         to_console=False,
         to_main_log=False,
         log_verbosity=2,
-        sink_dir_path=Path("."),
+        sink_dir_path=Path(""),
         log_file_path=Path("audit.log"),
         log_file_mode="write",
         log_prefix="off",

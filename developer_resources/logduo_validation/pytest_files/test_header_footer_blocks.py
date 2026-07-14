@@ -17,7 +17,7 @@ from typing import cast
 
 import pytest
 
-from developer_resources.pytest_toolkit.test_utils import (
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _find_file,
     _find_main_log,
     _find_new_logger_log,
@@ -40,7 +40,7 @@ from logduo.internals.formatters.header_footer_formatters import (
 from logduo.internals.session_config.session_constants import FileKindType
 from logduo.utils.wrap.wrap_text import wrap_text
 
-# === Custom Blocks used in test_files ==============================================
+# === Custom Blocks used in pytest_files ==============================================
 
 _DEBUG_TEST_PRINT = False
 
@@ -57,7 +57,7 @@ CUSTOM_FOOTER = (
 )
 
 
-#  --- helper for test_files' CreatedFileRecord -------------------------------------
+#  --- helper for pytest_files' CreatedFileRecord -------------------------------------
 def _make_cfr(
     path: Path,
     *,
@@ -360,7 +360,7 @@ def test_10_script_mode_populates_script_path(tmp_path: Path):
     env["LOGDUO_TEST_OUTPUT_DIR"] = str(tmp_path)
 
     script_path = Path(
-        __file__).parent.parent / "test_files" / "test_file_helpers" / "script_simple.py"
+        __file__).parent.parent / "pytest_files" / "pytest_helpers" / "script_simple.py"
     print(" ")
     print("***********************************************************")
     print("test_10_script_mode_populates_script_path(tmp_path: Path) ")
@@ -411,7 +411,7 @@ def test_12_main_log_footer_wraps_script_path(tmp_path: Path):
     env["LOGDUO_TEST_OUTPUT_DIR"] = str(tmp_path)
 
     script_path = Path(
-        __file__).parent.parent / "test_files" / "test_file_helpers" / "script_simple.py"
+        __file__).parent.parent / "pytest_files" / "pytest_helpers" / "script_simple.py"
 
 
     result = subprocess.run(

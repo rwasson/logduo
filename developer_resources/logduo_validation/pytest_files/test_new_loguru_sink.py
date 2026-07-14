@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from loguru import logger as _loguru_logger
 
-from developer_resources.pytest_toolkit.test_utils import (
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _find_file,
 )
 from logduo import Duo

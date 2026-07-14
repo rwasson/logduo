@@ -1,7 +1,9 @@
 """
 pytest_harness.py
 
-Execute a configured suite of test files using pytest_harness.
+pytest_harness is an IDE-friendly pytest runner built on Logduo.
+It runs test files in isolated subprocesses, captures readable logs,
+combines coverage, and produces a compact test dashboard.
 
 Responsibilities:
 - run each test file in isolation
@@ -19,18 +21,18 @@ from pathlib import Path
 
 from coverage import Coverage
 
-from developer_resources.pytest_toolkit.build_test_summary_block import (
-    _build_test_summary_block,
+from developer_resources.pytest_harness.aggregate_summary_data_builder import (
+    _build_aggregate_summary_data,
 )
-from developer_resources.pytest_toolkit.derive_aggregate_test_summary_data import (
-    _derive_aggregate_test_summary_data,
-)
-from developer_resources.pytest_toolkit.pytest_harness_classes import (
+from developer_resources.pytest_harness.classes import (
     CombinedCoverageResult,
     PytestTestFileRecord,
     SourceFileCoverageRecord,
 )
-from developer_resources.pytest_toolkit.pytest_harness_engine import pytest_wrap
+from developer_resources.pytest_harness.engine import pytest_wrap
+from developer_resources.pytest_harness.summary_table_builder import (
+    _build_summary_table,
+)
 from logduo import log
 
 
@@ -40,7 +42,8 @@ def pytest_harness(
     test_dir: Path,
     log_dir: Path,
     source_dir: Path,
-    test_file_names: list[str] | None = None,
+    include_file_names: list[str] | None = None,
+    exclude_file_names: list[str] | None = None,
     individual_logs: bool = True,
     debug_print: bool = False,
 ) -> None:
@@ -68,7 +71,7 @@ def pytest_harness(
         )
 
     if debug_print:
-        print("Settings form master_test_runner.py:")
+        print("Settings from pytest_harness_runner.py:")
         print("DEBUG_PRINT = True")
         print(f"INDIVIDUAL_LOGS = {individual_logs}")
         print("LOG DIR = ")
@@ -87,26 +90,12 @@ def pytest_harness(
         log_prefix="off",
     )
 
-    # Check all test files named in test_file_names.
-    if test_file_names is not None:
-        for test_name in test_file_names:
-            test_file_path = test_dir_path / f"{test_name}.py"
+    test_file_names = _resolve_test_file_names(
+        test_dir_path=test_dir_path,
+        include_file_names=include_file_names,
+        exclude_file_names=exclude_file_names,
+    )
 
-            if not test_file_path.exists():
-                raise RuntimeError(
-                    "Error in master_test_runner.py\n"
-                    "Unrecognized test name in test_file_names:\n"
-                    f"    {test_name}"
-                )
-
-    if test_file_names is None:
-        test_file_names = sorted(
-            path.stem
-            for path in test_dir_path.glob("test_*.py")
-        )
-
-    if not test_file_names:
-        raise RuntimeError("No test files identified.")
     if debug_print:
         print("\nDEBUG: Exact test files pytest_harness will run:")
         for index, test_name in enumerate(test_file_names, start=1):
@@ -126,8 +115,7 @@ def pytest_harness(
 
     test_file_count = len(test_file_names)
     print(
-        f"Running {test_file_count} test files "
-        f"(each dot represents one test file started): ",
+        f"Running {test_file_count} test files: ",
         end="",
         flush=True,
     )
@@ -139,7 +127,7 @@ def pytest_harness(
 
         if not test_file_path.exists():
             raise RuntimeError(
-                "Error in master_test_runner.py\n"
+                "Error in pytest_harness_runner.py\n"
                 "Unrecognized test name in test_file_names:\n"
                 f"    {test_name}"
             )
@@ -190,13 +178,13 @@ def pytest_harness(
     print(" ")
     print(" ")
 
-    summary_data = _derive_aggregate_test_summary_data(
+    summary_data = _build_aggregate_summary_data(
         pytest_test_file_records=results,
         combined_coverage_result=combined_coverage_result,
         debug_print=debug_print,
     )
 
-    summary_text = _build_test_summary_block(
+    summary_text = _build_summary_table(
         summary_data=summary_data,
     )
     log(summary_text)
@@ -241,6 +229,20 @@ def _combine_coverage_data_files(
     total_line_count = int(totals["num_statements"])
     executed_branch_count = int(totals["covered_branches"])
     total_branch_count = int(totals["num_branches"])
+
+    statement_coverage_pct = (
+        100 * executed_line_count / total_line_count
+        if total_line_count > 0
+        else 0.0
+    )
+
+    branch_coverage_pct = (
+        100 * executed_branch_count / total_branch_count
+        if total_branch_count > 0
+        else 0.0
+    )
+
+    total_coverage_pct = float(totals["percent_covered"])
 
     source_dir = source_dir.resolve()
     records: dict[str, SourceFileCoverageRecord] = {}
@@ -320,4 +322,104 @@ def _combine_coverage_data_files(
         total_line_count=total_line_count,
         executed_branch_count=executed_branch_count,
         total_branch_count=total_branch_count,
+        statement_coverage_pct=statement_coverage_pct,
+        branch_coverage_pct=branch_coverage_pct,
+        total_coverage_pct=total_coverage_pct,
     )
+
+
+# === Internal helpers =========================================================
+
+# --- _resolve_test_file_names() -----------------------------------------------
+def _resolve_test_file_names(
+    *,
+    test_dir_path: Path,
+    include_file_names: list[str] | None,
+    exclude_file_names: list[str] | None,
+) -> list[str]:
+    """
+    Resolve the final ordered list of pytest test-file stems.
+
+    Rules
+    -----
+    If include_file_names is None:
+        Discover all files matching test_*.py in test_dir_path.
+
+    If include_file_names is provided:
+        Use only those names.
+
+    If exclude_file_names is provided:
+        Remove those names from the final list.
+
+    File names may be provided with or without the .py suffix.
+    Returned names are stems without .py.
+    """
+
+    def normalize_file_name(name: str) -> str:
+        path = Path(name)
+        if path.suffix == ".py":
+            return path.stem
+        return name
+
+    def assert_test_file_exists(test_file_name: str, *, list_name: str) -> None:
+        test_file_path = test_dir_path / f"{test_file_name}.py"
+
+        if not test_file_path.exists():
+            raise RuntimeError(
+                f"Error in pytest_harness_runner.py\n"
+                f"Unrecognized test name in {list_name}:\n"
+                f"    {test_name}\n\n"
+                f"Expected file:\n"
+                f"    {test_file_path}"
+            )
+
+    # --- include list or discovery ---
+    if include_file_names is None:
+        resolved_names = sorted(
+            path.stem
+            for path in test_dir_path.glob("test_*.py")
+            if path.is_file()
+        )
+    else:
+        resolved_names = [
+            normalize_file_name(name)
+            for name in include_file_names
+        ]
+
+        for test_name in resolved_names:
+            assert_test_file_exists(
+                test_name,
+                list_name="include_file_names",
+            )
+
+    # --- exclude list ---
+    if exclude_file_names is not None:
+        excluded_names = {
+            normalize_file_name(name)
+            for name in exclude_file_names
+        }
+
+        for test_name in excluded_names:
+            assert_test_file_exists(
+                test_name,
+                list_name="exclude_file_names",
+            )
+
+        resolved_names = [
+            test_name
+            for test_name in resolved_names
+            if test_name not in excluded_names
+        ]
+
+    if not resolved_names:
+        raise RuntimeError(
+            "No pytest test files selected.\n\n"
+            f"Test directory:\n"
+            f"    {test_dir_path}\n\n"
+            f"include_file_names:\n"
+            f"    {include_file_names}\n\n"
+            f"exclude_file_names:\n"
+            f"    {exclude_file_names}"
+        )
+
+    return resolved_names

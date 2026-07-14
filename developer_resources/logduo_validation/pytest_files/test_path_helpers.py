@@ -1,7 +1,7 @@
 """
 test_path_helpers.py
 
-test_files modules: path_finders, path_validators, callsite_utils,
+pytest_files modules: path_finders, path_validators, callsite_utils,
 
 Last edited: 2026-06-08
 """

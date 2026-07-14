@@ -3,7 +3,7 @@ export_logduo_docs_demo.py
 
 Developer validation script for log.export_logduo_docs().
 Demonstrates where Logduo exports local documentation files:
-- PYTEST_TOOLKIT_README.txt
+- PYTEST_HARNESS_README.md
 - bundled example scripts
 
 Also verifies the export message clearly reports:

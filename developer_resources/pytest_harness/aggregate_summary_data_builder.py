@@ -1,12 +1,12 @@
 """
-derive_aggregate_test_summary_data.py
+aggregate_summary_data_builder.py
 
-Last edited: 2026-07-11
+Last edited: 2026-07-14
 """
 
 from pathlib import Path
 
-from developer_resources.pytest_toolkit.pytest_harness_classes import (
+from developer_resources.pytest_harness.classes import (
     AggregateTestSummary,
     CombinedCoverageResult,
     ProblemTestFileRecord,
@@ -14,8 +14,8 @@ from developer_resources.pytest_toolkit.pytest_harness_classes import (
 )
 
 
-# --- _derive_aggregate_test_summary_data() -----------------------------------
-def _derive_aggregate_test_summary_data(
+# --- _build_aggregate_summary_data() -----------------------------------
+def _build_aggregate_summary_data(
     *,
     pytest_test_file_records: list[PytestTestFileRecord],
     combined_coverage_result: CombinedCoverageResult,
@@ -109,16 +109,20 @@ def _derive_aggregate_test_summary_data(
         key=lambda record: record.statement_coverage_pct,
     )
 
-    executed_total_line_count = combined_coverage_result.executed_line_count
+    executed_line_count = combined_coverage_result.executed_line_count
     total_line_count = combined_coverage_result.total_line_count
     executed_branch_count = combined_coverage_result.executed_branch_count
     total_branch_count = combined_coverage_result.total_branch_count
+
+    statement_coverage_pct = combined_coverage_result.statement_coverage_pct
+    branch_coverage_pct = combined_coverage_result.branch_coverage_pct
+    total_coverage_pct = combined_coverage_result.total_coverage_pct
 
 
     if debug_print:
         print("Official combined Coverage.py counts of: executed / total")
         print(
-            f"statements: {executed_total_line_count} / "
+            f"statements: {executed_line_count} / "
             f"{total_line_count}"
         )
         print(
@@ -141,13 +145,17 @@ def _derive_aggregate_test_summary_data(
         skipped_test_function_count=skipped_test_function_count,
         xfailed_test_function_count=xfailed_test_function_count,
         xpassed_test_function_count=xpassed_test_function_count,
-        executed_line_count=executed_total_line_count,
+        executed_line_count=executed_line_count,
         total_line_count=total_line_count,
         executed_branch_count=executed_branch_count,
         total_branch_count=total_branch_count,
+
+        statement_coverage_pct=statement_coverage_pct,
+        branch_coverage_pct=branch_coverage_pct,
+        total_coverage_pct=total_coverage_pct,
+
         problem_test_files=problem_test_files,
         unexecuted_test_files=unexecuted_test_files,
         source_file_coverage_records=source_file_coverage_records,
     )
-
 

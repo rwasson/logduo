@@ -120,7 +120,7 @@ def test_07_write_example_scripts_copies_examples(
     examples_dir = logduo_dir_path / "examples"
 
     source_examples_dir = (
-        Path(__file__).parents[2]
+        Path(__file__).parents[3]
         / "src"
         / "logduo"
         / "internals"
@@ -181,7 +181,7 @@ def test_09_write_readme_txt_preserves_existing_file(
     logduo_dir_path = tmp_path / "logduo_docs"
     logduo_dir_path.mkdir()
 
-    readme_file_path = logduo_dir_path / "PYTEST_TOOLKIT_README.txt"
+    readme_file_path = logduo_dir_path / "PYTEST_HARNESS_README.md"
 
     readme_file_path.write_text(
         "user modified",
