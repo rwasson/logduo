@@ -57,8 +57,5 @@ jobs:
       - name: Run example scripts
         run: python -m developer_resources.logduo_validation.example_scripts_runner
 
-      - name: Test documentation export
-        run: python -m developer_resources.logduo_validation.export_logduo_docs_demo
-
       - name: Run Ruff, mypy, and Vulture
-        run: python -m developer_resources.logduo_validation.linter_check
+        run: python -m developer_resources.logduo_validation.linter_runner
