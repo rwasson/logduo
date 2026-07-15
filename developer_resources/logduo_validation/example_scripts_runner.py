@@ -10,8 +10,8 @@ Reason:
     nested_child_script.py is intended to be run by nested_parent_script.py.
     It calls log.join() and expects an active parent session.
 
-Intended to be called by:
-    developer_resources.pytest_files.master_test_runner
+Runs automatically in macOS, Ubuntu and Windows when changes pushed to GitHub.
+    called by:  .github/workflows/tests.yml
 
 Last edited: 2026-07-08
 """
@@ -31,6 +31,16 @@ EXAMPLES_DIR = PROJECT_ROOT / "src" / "logduo" / "internals" / "artifacts" / "lo
 SKIP_EXAMPLES = {
     "__init__.py",
     "nested_child_script.py",
+}
+
+EXPECTED_EXPORTED_FILES = {
+    "README.txt",
+    "examples/first_script.py",
+    "examples/console_rendering.py",
+    "examples/data_analysis.py",
+    "examples/math_report_notation.py",
+    "examples/nested_parent_script.py",
+    "examples/nested_child_script.py",
 }
 
 
@@ -136,6 +146,38 @@ def failed_examples(results: list[ExampleResult]) -> list[ExampleResult]:
     return [result for result in results if result.returncode != 0]
 
 
+def validate_logduo_docs_export() -> None:
+    """
+    Validate log.export_logduo_docs().
+    Uses an explicit export directory inside the current validation run output
+    so the test is safe on local machines and GitHub runners.
+    """
+
+    _section("Documentation export validation")
+    docs_dir = log.output_dir_path / "logduo_docs_export_demo"
+    log("Export directory:")
+    log(str(docs_dir))
+    log("First export:")
+    log.export_logduo_docs(docs_dir)
+    log("Second export:")
+    log.export_logduo_docs(docs_dir)
+    missing_files: list[str] = []
+
+    for relative_file_path in sorted(EXPECTED_EXPORTED_FILES):
+        file_path = docs_dir / relative_file_path
+        if file_path.exists():
+            log.success(f"Found exported file: {relative_file_path}")
+        else:
+            log.error(f"Missing exported file: {relative_file_path}")
+            missing_files.append(relative_file_path)
+    if missing_files:
+        raise RuntimeError(
+            "Documentation export validation failed. "
+            f"Missing files: {missing_files}"
+        )
+    log.success("Documentation export validation passed.")
+
+
 def main() -> None:
     log.configure(
         log_dir_path=PROJECT_ROOT / "developer_resources" / "logduo_validation" / "logs",
@@ -145,6 +187,8 @@ def main() -> None:
 
     results = run_example_scripts()
     failures = failed_examples(results)
+
+    validate_logduo_docs_export()
 
     _section("Example script summary")
 

@@ -1,7 +1,10 @@
 """
 pytest_harness_runner.py
 
-Update debug toggle settings and paths as needed.
+Update file settings and paths as needed.
+
+Runs automatically in macOS, Ubuntu and Windows when changes pushed to GitHub.
+    called by:  .github/workflows/tests.yml
 
 Last edited: 2026-07-14
 """
@@ -10,15 +13,16 @@ from pathlib import Path
 
 from developer_resources.pytest_harness.pytest_harness import pytest_harness
 
-# --- Toggle settings ---
+# --- File settings ---
 INDIVIDUAL_LOGS = False
 
-# Run all test_*.py files if include_file_names is None.
-include_file_names: list[str] | None = None
+# Run all test_*.py files if include_list is None.
+include_list: list[str] | None = None
+# include_list = ["test_header_footer_blocks"]
 
 # Exclude specific test_*.py files if needed.
-# exclude_file_names: list[str] | None = None
-exclude_file_names  = ["test_make_real_default_logs"]
+# exclude_list: list[str] | None = None
+exclude_list  = ["test_make_real_default_logs"]
 
 
 
@@ -52,8 +56,8 @@ def main() -> None:
         test_dir=test_dir,
         log_dir=log_dir,
         source_dir=source_dir,
-        include_file_names=include_file_names,
-        exclude_file_names=exclude_file_names,
+        include_list=include_list,
+        exclude_list=exclude_list,
         individual_logs=INDIVIDUAL_LOGS,
         debug_pytest_harness=False,
     )

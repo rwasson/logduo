@@ -39,7 +39,7 @@ PART 1 — VERIFY CHANGES LOCALLY
 2. Run the Logduo validation scripts. Run:
        example_scripts_runner.py
        export_logduo_docs_demo.py
-       linter_check.py
+       linter_runner.py
        pytest_harness_runner.py
 
    Confirm:
@@ -359,13 +359,13 @@ The documentation-export validation can be added separately:
     - name: Test documentation export
       run: python developer_resources/logduo_validation/export_logduo_docs_demo.py
 
-Ruff, mypy, and Vulture can either run through linter_check.py or through
+Ruff, mypy, and Vulture can either run through linter_runner.py or through
 separate workflow commands.
 
 Example:
 
     - name: Run static checks
-      run: python developer_resources/logduo_validation/linter_check.py
+      run: python developer_resources/logduo_validation/linter_runner.py
 
 
 E. REVIEWING OR UPDATING tests.yml

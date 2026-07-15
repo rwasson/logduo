@@ -1,5 +1,5 @@
 """
-linter_check.py
+linter_runner.py
 
 Run Logduo code-quality checks.
 Use this script before committing meaningful source updates.
@@ -29,6 +29,9 @@ Checks:
 
 This script applies only Ruff import-order fixes automatically.
 All other findings require manual review.
+
+Runs automatically in macOS, Ubuntu and Windows when changes pushed to GitHub.
+    called by:  .github/workflows/tests.yml
 
 Last edited: 2026-07-08
 """
@@ -106,7 +109,7 @@ def _run_command(name: str, command: list[str]) -> CheckResult:
     )
 
 
-def run_linter_checks() -> list[CheckResult]:
+def run_linter_runners() -> list[CheckResult]:
     """Run all configured read-only code-quality checks."""
     checks = [
         ("Ruff import order fix", ["ruff", "check", "src", "developer_resources", "--select", "I", "--fix"]),
@@ -131,7 +134,7 @@ def main() -> None:    # noqa: PLR0915   # example scripts can have 'too many st
         log_verbosity=3,
     )
 
-    results = run_linter_checks()
+    results = run_linter_runners()
     failures = failed_checks(results)
 
     _section("Code quality summary")

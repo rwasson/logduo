@@ -181,7 +181,7 @@ def test_09_write_readme_txt_preserves_existing_file(
     logduo_dir_path = tmp_path / "logduo_docs"
     logduo_dir_path.mkdir()
 
-    readme_file_path = logduo_dir_path / "PYTEST_HARNESS_README.md"
+    readme_file_path = logduo_dir_path / "README.md"
 
     readme_file_path.write_text(
         "user modified",

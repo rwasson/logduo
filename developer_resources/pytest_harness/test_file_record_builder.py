@@ -1,5 +1,5 @@
 """
-engine.py
+test_file_record_builder.py
 
 A pytest-based framework for unit pytest_files, integration pytest_files,
 and artifact-driven smoke/visual testing.
@@ -33,20 +33,21 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-from developer_resources.pytest_harness.classes import PytestTestFileRecord
+from developer_resources.pytest_harness.classes import TestFileRecord
 
 
-# --- pytest_wrap() ------------------------------------------------------------
-def pytest_wrap(
+# --- _build_test_file_record() ------------------------------------------------------------
+def _build_test_file_record(
     *,
     test_file_path: Path,
-    test_log_file_path: Path,
+    test_file_log_path: Path,
     source_dir: Path,
     coverage_data_file_path: Path,
     extra_pytest_args: list[str] | None = None,
+    coverage_config_file_path: Path | None = None,
     individual_logs: bool = True,
     debug_pytest_harness: bool = False,    # noqa  # maybe unused, but reserved for future use
-) -> PytestTestFileRecord:
+) -> TestFileRecord:
     """
     Dev-mode pytest runner using subprocess.
 
@@ -72,7 +73,7 @@ def pytest_wrap(
         test_logger = cast(
             Callable[[str], Any],
             log.new_logger(
-                test_log_file_path,
+                test_file_log_path,
                 to_console=False,
                 to_main_log=False,
                 log_prefix="off",
@@ -114,9 +115,9 @@ def pytest_wrap(
 
         # --- Coverage ---
         f"--cov={source_dir}",  # measure coverage for logduo package
+        f"--cov-config={coverage_config_file_path}",
         "--cov-branch",  # include branch coverage
         # Use "--cov-report=" instead to suppress coverage tables in individual logs.
-        "--cov-report=term-missing",
         (
             "--cov-report=term-missing"
             if individual_logs
@@ -221,7 +222,7 @@ def pytest_wrap(
     finally:
         test_file_report_path.unlink(missing_ok=True)
 
-    return PytestTestFileRecord(
+    return TestFileRecord(
         test_file_path=str(test_file_path),
         exit_code=process.returncode,
         passed_test_function_count=passed_test_function_count,

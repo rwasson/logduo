@@ -68,7 +68,7 @@ class SourceFileCoverageRecord:
 
 
 @dataclass(slots=True)
-class PytestTestFileRecord:
+class TestFileRecord:
     test_file_path: str
     exit_code: int
     duration_seconds: float

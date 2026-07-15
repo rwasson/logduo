@@ -1,82 +1,34 @@
-TODO.txt
-
-Last edited: 2026-7-11
-
-
-
 TODO: pytest_harness standalone package
 ---------------------------------------
+High priority
+- Add tests for pytest_harness itself.
+    - Test flat and nested test discovery.
+    - Test include_list and exclude_list for files and directories.
+    - Test missing selector errors.
+    - Test ambiguous selector warning.
+    - Test bad import detection.
+    - Test failed test detection.
+    - Test zero-test-file detection.
+    - Test subprocess coverage behavior.
 
-- Keep `logduo` as a dependency.
-  - Do not rewrite logging/output management.
-  - Use Logduo for console output, run logs, summaries, and generated artifacts.
+Before packaging
+- Keep Logduo-specific validation files outside the reusable package.
+- Write a short public README.
+- Add a tiny example project.
+- Decide whether coverage warning threshold remains internal only.
 
-- Define the core package purpose clearly.
-  - PyCharm-friendly pytest runner.
-  - Runs test files separately.
-  - Captures per-file logs.
-  - Produces one readable aggregate summary.
-  - Makes import errors, failed files, skipped files, and coverage gaps easier to see.
+Already completed
+- Main entry point: pytest_harness().
+- Configurable test_dir, log_dir, and source_dir.
+- Recursive test discovery.
+- Relative test-file paths.
+- include_list and exclude_list.
+- Nested test directories.
+- Nested source directories.
+- Safe flat per-file log names.
+- Generated Coverage.py config.
+- Combined Coverage.py totals.
+- Nested subprocess coverage validated.
+- Compact dashboard with file-level and test-function outcomes.
 
-- Rename and stabilize public API.
-  - Keep one main entry function, probably `pytest_harness()`.
-  - Decide final package name.
-  - Decide final argument names before release.
 
-- Resolve test files as paths, not names.
-  - Support nested test directories.
-  - Use `Path.rglob("test_*.py")` for discovery.
-  - Store resolved test files as relative paths or absolute `Path` objects.
-  - Avoid stem-only names because duplicate names can exist in different subdirectories.
-
-- Support include/exclude cleanly.
-  - `include_files=None` means discover all `test_*.py`.
-  - `include_files=[...]` means run only those files.
-  - `exclude_files=[...]` removes files after discovery/include resolution.
-  - Accept paths with or without `.py` if practical.
-  - Fail clearly on missing include/exclude entries.
-
-- Verify subprocess coverage.
-  - Create a temporary source file/function used only by a subprocess.
-  - Run a test that calls it only through `subprocess`.
-  - Confirm whether combined Coverage.py results include that function.
-  - Test ordinary subprocess script execution separately from `python -c`.
-  - Document exactly which subprocess patterns are covered.
-
-- Decide official subprocess coverage policy.
-  - Fully support it if reliable.
-  - Otherwise document: test-file subprocesses are covered; nested subprocesses may be behaviorally tested but excluded from coverage totals.
-
-- Clean separation from Logduo-specific tests.
-  - Remove Logduo-only helper assumptions from harness core.
-  - Keep project-specific helpers outside the reusable package.
-  - Make source directory, test directory, and log directory configurable.
-
-- Polish output format.
-  - Keep readable progress dots.
-  - Keep per-file outcomes separate from individual test outcomes.
-  - Keep problem files before coverage.
-  - Use Coverage.py totals as authoritative.
-  - Keep summary compact enough for IDE console use.
-
-- Add minimal docs.
-  - Quick Start for PyCharm right-click workflow.
-  - Quick Start for terminal use.
-  - Include/exclude examples.
-  - Coverage behavior explanation.
-  - Subprocess coverage limitations.
-  - Example output block.
-
-- Add tests for the harness itself.
-  - Discovery with flat test directory.
-  - Discovery with nested test directories.
-  - Include/exclude behavior.
-  - Bad import detection.
-  - Failed test detection.
-  - Zero-test-file detection.
-  - Coverage aggregation.
-  - Subprocess coverage behavior.
-
-- Package only after stable internal use.
-  - Use it inside Logduo for a while first.
-  - Split out only when names, API, subprocess behavior, and docs feel settled.

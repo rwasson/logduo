@@ -1,23 +1,25 @@
 """
-aggregate_summary_data_builder.py
+summary_data_builder.py
 
 Last edited: 2026-07-14
 """
-
+import json
 from pathlib import Path
+from coverage import Coverage
 
 from developer_resources.pytest_harness.classes import (
     AggregateTestSummary,
     CombinedCoverageResult,
     ProblemTestFileRecord,
-    PytestTestFileRecord,
+    TestFileRecord,
+    SourceFileCoverageRecord,
 )
 
 
-# --- _build_aggregate_summary_data() -----------------------------------
-def _build_aggregate_summary_data(
+# --- _build_summary_data() -----------------------------------
+def _build_summary_data(
     *,
-    pytest_test_file_records: list[PytestTestFileRecord],
+    pytest_test_file_records: list[TestFileRecord],
     combined_coverage_result: CombinedCoverageResult,
     debug_pytest_harness: bool,
 ) -> AggregateTestSummary:
@@ -158,4 +160,142 @@ def _build_aggregate_summary_data(
         unexecuted_test_files=unexecuted_test_files,
         source_file_coverage_records=source_file_coverage_records,
     )
+
+# --- _combine_coverage_data_files() ------------------------------------------
+def _combine_coverage_data_files(
+    *,
+    coverage_dir_path: Path,
+    source_dir: Path,
+) -> CombinedCoverageResult:
+    """Combine per-test-file coverage data and return official totals."""
+
+    combined_data_file_path = coverage_dir_path / ".coverage"
+    combined_json_file_path = coverage_dir_path / "combined_coverage.json"
+
+    coverage_obj = Coverage(
+        data_file=str(combined_data_file_path),
+        branch=True,
+    )
+
+    coverage_obj.combine(
+        data_paths=[str(coverage_dir_path)],
+        strict=True,
+        keep=True,
+    )
+    coverage_obj.save()
+
+    coverage_obj.json_report(
+        outfile=str(combined_json_file_path),
+        pretty_print=False,
+    )
+
+    report = json.loads(
+        combined_json_file_path.read_text(encoding="utf-8")
+    )
+
+    # Official aggregate totals calculated by Coverage.py.
+    totals = report["totals"]
+
+    executed_line_count = int(totals["covered_lines"])
+    total_line_count = int(totals["num_statements"])
+    executed_branch_count = int(totals["covered_branches"])
+    total_branch_count = int(totals["num_branches"])
+
+    statement_coverage_pct = (
+        100 * executed_line_count / total_line_count
+        if total_line_count > 0
+        else 0.0
+    )
+
+    branch_coverage_pct = (
+        100 * executed_branch_count / total_branch_count
+        if total_branch_count > 0
+        else 0.0
+    )
+
+    total_coverage_pct = float(totals["percent_covered"])
+
+    source_dir = source_dir.resolve()
+    records: dict[str, SourceFileCoverageRecord] = {}
+
+    for reported_path, file_data in report["files"].items():
+        source_file_path = Path(reported_path)
+
+        if not source_file_path.is_absolute():
+            source_file_path = Path.cwd() / source_file_path
+
+        source_file_path = source_file_path.resolve()
+
+        if (
+            source_file_path != source_dir
+            and source_dir not in source_file_path.parents
+        ):
+            continue
+
+        executed_lines: set[int] = {
+            int(line_number)
+            for line_number in file_data["executed_lines"]
+        }
+
+        missing_lines: set[int] = {
+            int(line_number)
+            for line_number in file_data["missing_lines"]
+        }
+
+        executed_branch_pairs: set[tuple[int, int]] = {
+            (int(first_line), int(second_line))
+            for first_line, second_line
+            in file_data["executed_branches"]
+        }
+
+        missing_branch_pairs: set[tuple[int, int]] = {
+            (int(first_line), int(second_line))
+            for first_line, second_line
+            in file_data["missing_branches"]
+        }
+
+        total_branch_pairs: set[tuple[int, int]] = (
+            executed_branch_pairs
+            | missing_branch_pairs
+        )
+
+        branch_destinations: dict[int, set[int]] = {}
+
+        for first_line, second_line in total_branch_pairs:
+            branch_destinations.setdefault(
+                first_line,
+                set(),
+            ).add(second_line)
+
+        branch_source: set[tuple[int, int]] = {
+            (first_line, len(destinations))
+            for first_line, destinations
+            in branch_destinations.items()
+        }
+
+        source_file_path_str = str(source_file_path)
+
+        records[source_file_path_str] = SourceFileCoverageRecord(
+            source_file_path=source_file_path_str,
+            executed_lines=executed_lines,
+            missing_lines=missing_lines,
+            total_line_count=int(
+                file_data["summary"]["num_statements"]
+            ),
+            branch_source=branch_source,
+            total_branch_pairs=total_branch_pairs,
+            executed_branch_pairs=executed_branch_pairs,
+        )
+
+    return CombinedCoverageResult(
+        source_file_coverage_records=records,
+        executed_line_count=executed_line_count,
+        total_line_count=total_line_count,
+        executed_branch_count=executed_branch_count,
+        total_branch_count=total_branch_count,
+        statement_coverage_pct=statement_coverage_pct,
+        branch_coverage_pct=branch_coverage_pct,
+        total_coverage_pct=total_coverage_pct,
+    )
+
 
