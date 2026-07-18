@@ -14,7 +14,6 @@ Responsibilities:
 
 Last edited: 2026-07-18
 """
-import sys
 import tempfile
 from pathlib import Path
 from typing import NoReturn
