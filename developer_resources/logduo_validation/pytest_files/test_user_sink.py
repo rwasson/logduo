@@ -197,10 +197,13 @@ def test_09_user_sink_to_main_log_false(tmp_path):
 
     rep("secret")
 
+    main_log_path = log.main_log_file_path
+    assert main_log_path is not None
+
     log.close()
 
     audit_content = _read_file(tmp_path / "session" / "audit.log")
-    main_content = _read_file(_find_main_log(tmp_path))
+    main_content = _read_file(main_log_path)
 
     assert "secret" in audit_content
     assert "secret" not in main_content

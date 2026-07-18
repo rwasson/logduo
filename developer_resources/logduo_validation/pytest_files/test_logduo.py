@@ -223,13 +223,15 @@ def test_12_critical_bypasses_console_verbosity_zero(tmp_path, capsys):
         bad_kwarg=True,
     )
 
+    main_log_path = log.main_log_file_path
+    assert main_log_path is not None
+
     log.close()
 
     captured = capsys.readouterr()
     console_output = captured.out
 
-    log_file = _find_main_log(tmp_path)
-    log_text = _read_file(log_file)
+    llog_text = _read_file(main_log_path)
 
     print(" ")
     print("******************************")

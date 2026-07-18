@@ -102,25 +102,17 @@ def test_03_adds_parent_when_room_exists_no_anchor():
 
 # --- test_04_adds_multiple_parents_when_room_exists_no_anchor() ---------------
 def test_04_adds_multiple_parents_when_room_exists_no_anchor():
-
-    path = (
-        "/Users/example/project/src/module/file.py"
-    )
-    width = 80
-    result = short_path(path, width=width)
-
-    _print_test_details(
-        test_name="test_04_adds_multiple_parents_when_room_exists_no_anchor",
-        assertion="result= '/Users/example/project/src/module/file.py'",
-        expected='/Users/example/project/src/module/file.py',
-        actual=result,
-        path=path,
-        result=result,
-        width=width,
-        anchor_dir=None,
+    path = Path(
+        "Users",
+        "example",
+        "project",
+        "src",
+        "module",
+        "file.py",
     )
 
-    assert result == "/Users/example/project/src/module/file.py"
+    result = short_path(path, width=80)
+    assert result == str(path)
 
 
 # --- test_05_stops_at_anchor() ------------------------------------------------

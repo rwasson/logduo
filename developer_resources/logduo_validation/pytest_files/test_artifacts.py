@@ -42,8 +42,7 @@ def test_02_make_json_safe_path():
     result = _make_json_safe(
         {"a": Path("/tmp/test.txt")}
     )
-
-    assert result["a"] == "/tmp/test.txt"
+    assert result["a"] == str(Path("/tmp/test.txt"))
 
 
 # --- test_03_get_toml_display_value_not_found() -------------------------------

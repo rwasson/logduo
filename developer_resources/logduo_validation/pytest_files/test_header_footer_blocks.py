@@ -231,13 +231,14 @@ def test_05_new_logger_overrides(tmp_path: Path):
         f"extra_log_verbosity_value = {new_logger_verbosity}")
     log(f"DEFAULT_LOG_VERBOSITY_FOR_SECONDARY_SINKS = 2")
 
+    main_log_path = log.main_log_file_path
+    assert main_log_path is not None
+
     log.close()
 
     new_logger_log = _find_new_logger_log(tmp_path, sink_name="secondary")
-    main_log = _find_main_log(tmp_path)
-
     new_logger_text = _read_file(new_logger_log)
-    main_text = _read_file(main_log)
+    main_text = _read_file(main_log_path)
 
     _print_test_details(
         test_name="test_05_new_logger_overrides",
