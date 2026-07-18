@@ -187,9 +187,13 @@ def test_11_call_defaults_to_info(tmp_path):
     log.configure(log_dir_path=str(tmp_path), console_verbosity=0)
 
     log("hello")
+
+    log_path = log.main_log_file_path
+    assert log_path is not None
+
     log.close()
 
-    text = log._runtime.main_sink_log_file_path_abs.read_text()
+    text = log_path.read_text()
     print("")
     print("********************************")
     print("test_11_call_defaults_to_info")
@@ -294,9 +298,13 @@ def test_14_custom_label_written(tmp_path):
     )
 
     log.note("hello")
+
+    log_path = log.main_log_file_path
+    assert log_path is not None
+
     log.close()
 
-    text = log._runtime.main_sink_log_file_path_abs.read_text()
+    text = log_path.read_text()
 
     assert "NOTE" in text
     assert "hello" in text
