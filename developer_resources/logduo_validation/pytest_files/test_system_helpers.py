@@ -216,3 +216,88 @@ def test_11_safe_console_print_fallback_also_fails(tmp_path, monkeypatch):
         message="hello",
         message_kind=MessageKind.INLINE,
     )
+
+# --- test_12_reset_session_clears_console() ----------------------------------
+def test_12_reset_session_clears_console(tmp_path):
+    log = _new_test_log(tmp_path)
+
+    assert log._console is not None
+
+    _reset_session(log)
+
+    assert log._console is None
+
+
+# --- test_13_reset_session_handles_loguru_cleanup_failure() ------------------
+def test_13_reset_session_handles_loguru_cleanup_failure(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+
+    log = _new_test_log(tmp_path)
+
+    def fail_remove():
+        raise RuntimeError("simulated Loguru failure")
+
+    monkeypatch.setattr(
+        "loguru.logger.remove",
+        fail_remove,
+    )
+
+    _reset_session(log)
+
+    output = capsys.readouterr().out
+
+    assert "global Loguru cleanup failed" in output
+    assert "simulated Loguru failure" in output
+    assert log._initialized is False
+
+
+# --- test_14_reset_session_handles_runtime_cleanup_failures() ----------------
+def test_14_reset_session_handles_runtime_cleanup_failures(
+    monkeypatch,
+    capsys,
+):
+
+    class BadRegistry:
+        def clear(self):
+            raise RuntimeError("simulated registry failure")
+
+    class BadRuntime:
+        session_state = "active"
+        created_file_record_registry = BadRegistry()
+
+        def __setattr__(self, name, value):
+            if name in {
+                "main_sink_log_file_path_abs",
+                "main_sink_log_dir_path_abs",
+                "log_dir_path_abs",
+                "jsonl_path_abs",
+            }:
+                raise RuntimeError("simulated path cleanup failure")
+
+            object.__setattr__(self, name, value)
+
+    log = Duo()
+    log._runtime = BadRuntime()    # noqa # intentional
+    log._initialized = True
+    log._console = object()
+
+    monkeypatch.setattr(
+        "loguru.logger.remove",
+        lambda: None,
+    )
+
+    _reset_session(log)
+
+    output = capsys.readouterr().out
+
+    assert "CFR cleanup failed" in output
+    assert "simulated registry failure" in output
+    assert "runtime path cleanup failed" in output
+    assert "simulated path cleanup failure" in output
+
+    assert log._initialized is False
+    assert log.session_config == log._startup_config
+    assert log._console is None

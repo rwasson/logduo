@@ -710,3 +710,72 @@ def test_53_existing_directory_not_writable(
 
     assert ok is False
     assert reasons
+
+# --- test_54_log_dir_path_invalid_type_raises() -------------------------------
+def test_54_log_dir_path_invalid_type_raises():
+
+    with pytest.raises(
+        ValueError,
+        match="must be an absolute path",
+    ):
+        _raise_if_invalid_config_arg_log_dir_path(
+            123,  # type: ignore[arg-type]
+        )
+
+# --- test_55_log_file_path_invalid_type_raises() ------------------------------
+def test_55_log_file_path_invalid_type_raises():
+
+    with pytest.raises(
+        ValueError,
+        match="must be an absolute path",
+    ):
+        _raise_if_invalid_config_arg_log_file_path(
+            123,  # type: ignore[arg-type]
+        )
+
+
+# --- test_56_missing_directory_with_existing_parent_is_writable() -------------
+def test_56_missing_directory_with_existing_parent_is_writable(
+    tmp_path: Path,
+):
+
+    candidate = tmp_path / "new_directory"
+
+    ok, reasons = _is_abs_dir_path_writable(
+        candidate,
+        allow_missing_parent=False,
+        with_reasons=True,
+    )
+
+    assert ok is True
+    assert reasons == []
+    assert not candidate.exists()
+
+
+# --- test_57_missing_directory_existing_parent_not_writable() -----------------
+def test_57_missing_directory_existing_parent_not_writable(
+    tmp_path: Path,
+    monkeypatch,
+):
+
+    import tempfile
+
+    candidate = tmp_path / "new_directory"
+
+    def fail_temporary_directory(*args, **kwargs):  # noqa
+        raise OSError("simulated parent write failure")
+
+    monkeypatch.setattr(
+        tempfile,
+        "TemporaryDirectory",
+        fail_temporary_directory,
+    )
+
+    ok, reasons = _is_abs_dir_path_writable(
+        candidate,
+        allow_missing_parent=False,
+        with_reasons=True,
+    )
+
+    assert ok is False
+    assert "Cannot create in parent directory" in reasons[0]["reason"]

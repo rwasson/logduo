@@ -481,3 +481,254 @@ def test_18_emit_jsonl_payload_write_failure_warns(
         in msg
         for msg in log._runtime.unique_warning_set
     )
+
+# --- test_19_jsonl_trace_message_written() -----------------------------------
+def test_19_jsonl_trace_message_written(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+        console_verbosity=0,
+        log_verbosity=3,
+    )
+
+    jsonl_path = log._runtime.jsonl_path_abs
+
+    log.trace("trace JSONL message")
+    log.close()
+
+    records = _read_jsonl(jsonl_path)
+
+    trace_records = [
+        record
+        for record in records
+        if record.get("event_type") == "message"
+        and record.get("message") == "trace JSONL message"
+    ]
+
+    assert len(trace_records) == 1
+
+    trace_record = trace_records[0]
+
+    assert trace_record["level"] == "TRACE"
+    assert trace_record["label"] == "TRACE"
+    assert trace_record["sink_name"] == "main_sink"
+
+
+# --- test_20_emit_jsonl_missing_event_type_raises() --------------------------
+def test_20_emit_jsonl_missing_event_type_raises(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    event = _fake_emit_event(
+        event_type=None,
+        sink_name="main_sink",
+        level="INFO",
+        label="INFO",
+        message="hello",
+        output_targets=["jsonl"],
+        resolved_call_args={},
+        callsite="test.py:1",
+        warn_key=None,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="event_type missing for JSONL event",
+    ):
+        _emit_jsonl(log, event=event)
+
+
+# --- test_21_emit_jsonl_plain_message_none_returns() -------------------------
+def test_21_emit_jsonl_plain_message_none_returns(
+    tmp_path,
+    monkeypatch,
+):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    records_before = _read_jsonl(
+        log._runtime.jsonl_path_abs
+    )
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.jsonl._build_plain_message",
+        lambda message: None,
+    )
+
+    event = _fake_emit_event(
+        event_type="message",
+        sink_name="main_sink",
+        level="INFO",
+        label="INFO",
+        message="ignored",
+        output_targets=["jsonl"],
+        resolved_call_args={},
+        callsite="test.py:1",
+        warn_key=None,
+    )
+
+    _emit_jsonl(log, event=event)
+
+    records_after = _read_jsonl(
+        log._runtime.jsonl_path_abs
+    )
+
+    assert records_after == records_before
+
+# --- test_22_emit_jsonl_non_string_plain_message_raises() --------------------
+def test_22_emit_jsonl_non_string_plain_message_raises(
+    tmp_path,
+    monkeypatch,
+):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.jsonl._build_plain_message",
+        lambda message: 123,
+    )
+
+    event = _fake_emit_event(
+        event_type="message",
+        sink_name="main_sink",
+        level="INFO",
+        label="INFO",
+        message="ignored",
+        output_targets=["jsonl"],
+        resolved_call_args={},
+        callsite="test.py:1",
+        warn_key=None,
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="_build_plain_message returned non-str: int",
+    ):
+        _emit_jsonl(log, event=event)
+
+
+# --- test_23_jsonl_file_registration_includes_extra_fields() ----------------
+def test_23_jsonl_file_registration_includes_extra_fields(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    cfr = _build_artifact_created_file_record(
+        file_path=(tmp_path / "artifact.txt").resolve()
+    )
+
+    _emit_jsonl_file_registration(
+        log,
+        cfr,
+        extra={
+            "source": "test",
+            "sequence": 3,
+        },
+    )
+
+    records = _read_jsonl(
+        log._runtime.jsonl_path_abs
+    )
+
+    record = records[-1]
+
+    assert record["event_type"] == "session_file_registration"
+    assert record["file_name"] == "artifact.txt"
+    assert record["source"] == "test"
+    assert record["sequence"] == 3
+
+
+# --- test_24_emit_jsonl_payload_defaults_output_targets_to_empty_list() -------
+def test_24_emit_jsonl_payload_defaults_output_targets_to_empty_list(
+    tmp_path,
+):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    _emit_jsonl_payload(
+        log,
+        event_type="message",
+        payload={
+            "callsite": "test.py:1",
+            "level": "INFO",
+            "label": "INFO",
+            "message": "default targets",
+            "resolved_call_args": {},
+            "pid": log._runtime.pid,
+            "instance_index": log._runtime.instance_index,
+        },
+        sink_name="main_sink",
+        output_targets=None,
+    )
+
+    records = _read_jsonl(
+        log._runtime.jsonl_path_abs
+    )
+
+    record = records[-1]
+
+    assert record["message"] == "default targets"
+    assert record["output_targets"] == []
+
+
+# --- test_25_non_message_event_normalizes_jsonl_fields() ---------------------
+def test_25_non_message_event_normalizes_jsonl_fields(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        write_jsonl=True,
+    )
+
+    payload = {
+        "session_end_iso": None,
+        "duration_seconds": 1.25,
+        "duration_display": "1.25 seconds",
+        "event_count": 3,
+        "total_files_created": 0,
+        "files_created": [],
+        # Message-only fields should not be emitted for session_end.
+        "callsite": "should disappear",
+        "label": "SHOULD_DISAPPEAR",
+    }
+
+    _emit_jsonl_payload(
+        log,
+        event_type="session_end",
+        payload=payload,
+        sink_name="audit",
+        output_targets=["jsonl"],
+    )
+
+    records = _read_jsonl(
+        log._runtime.jsonl_path_abs
+    )
+
+    record = records[-1]
+
+    assert record["event_type"] == "session_end"
+    assert record["sink_name"] == "main_sink"
+    assert "callsite" not in record
+    assert "label" not in record
+
