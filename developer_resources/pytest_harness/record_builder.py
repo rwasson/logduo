@@ -172,9 +172,14 @@ def _build_test_file_record(  # noqa: PLR0915
         print("=" * 80)
         print(f"DEBUG: FAILED TEST FILE: {test_file_path}")
         print("=" * 80)
-        print("".join(captured), flush=True)
+        captured_text = "".join(captured)
+        output_encoding = sys.stdout.encoding or "utf-8"
+        safe_captured_text = captured_text.encode(
+            output_encoding,
+            errors="backslashreplace",
+        ).decode(output_encoding)
+        print(safe_captured_text, flush=True)
         print("=" * 80)
-
 
 
     if test_logger is not None:
