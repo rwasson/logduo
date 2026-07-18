@@ -114,17 +114,8 @@ type TargetKindType = Literal["console", "main_sink_log", "user_sink_log", "json
 type LogKindType = Literal["main_sink_log", "user_sink_log"]
 
 _RESERVED_SINK_STEMS = {
-    # --- core system / routing ---
-    "main_sink",
-    "main_sink_log",
-    "console",
-    "jsonl",
-    "system",
     # --- artifacts / generated ---
     "session_config",
-    # --- internal grouping (optional, but safer to keep) ---
-    "user_sink",
-    "user_sink_log",
 }
 
 

@@ -104,7 +104,7 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
     section("Regression output")
 
     try:
-        import statsmodels.api as sm    # noqa # sm not defined in except
+        import statsmodels.api as sm  # noqa # sm not defined in except
     except ImportError:
         log("Regression example skipped: statsmodels is not installed.")
         log("Install with: pip install statsmodels")

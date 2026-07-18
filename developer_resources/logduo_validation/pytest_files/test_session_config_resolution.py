@@ -402,4 +402,237 @@ def test_25_normalize_args_invalid_source():
             session_config_hints=_session_config_hints,
         )
 
+# --- test_26_load_toml_args_valid_table() ------------------------------------
+def test_26_load_toml_args_valid_table(tmp_path: Path):
+
+    toml_path = tmp_path / "pyproject.toml"
+    toml_path.write_text(
+        """
+        [tool.logduo]
+        log_verbosity = 3
+        console_color = false
+        """,
+        encoding="utf-8",
+    )
+
+    args, record = _load_toml_args(
+        toml_path_abs=toml_path,
+        project_name="logduo",
+        schema=SESSION_CONFIG_SPEC["schema"],
+    )
+
+    assert args == {
+        "log_verbosity": 3,
+        "console_color": False,
+    }
+
+    assert record["has_pyproject"] is True
+    assert record["has_tool_table"] is True
+    assert record["toml_keys"] == [
+        "console_color",
+        "log_verbosity",
+    ]
+
+
+# --- test_27_load_toml_args_invalid_syntax() ---------------------------------
+def test_27_load_toml_args_invalid_syntax(tmp_path: Path):
+
+    toml_path = tmp_path / "pyproject.toml"
+    toml_path.write_text(
+        """
+        [tool.logduo
+        log_verbosity = 3
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RuntimeError, match="pyproject.toml syntax error"):
+        _load_toml_args(
+            toml_path_abs=toml_path,
+            project_name="logduo",
+            schema=SESSION_CONFIG_SPEC["schema"],
+        )
+
+
+# --- test_28_load_toml_args_tool_entry_must_be_table() -----------------------
+def test_28_load_toml_args_tool_entry_must_be_table(tmp_path: Path):
+
+    toml_path = tmp_path / "pyproject.toml"
+    toml_path.write_text(
+        """
+        [tool]
+        logduo = "invalid"
+        """,
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"\[tool\.logduo\] must be a TOML table",
+    ):
+        _load_toml_args(
+            toml_path_abs=toml_path,
+            project_name="logduo",
+            schema=SESSION_CONFIG_SPEC["schema"],
+        )
+
+# --- test_29_console_light_theme_selected() ----------------------------------
+def test_29_console_light_theme_selected():
+
+    result = _derive_console_theme_dict(
+        theme="light",
+        console_theme_dict=None,
+        dark_console_theme_dict={
+            "info": "dark-info",
+        },
+        light_console_theme_dict={
+            "info": "light-info",
+            "warning": "light-warning",
+        },
+    )
+
+    assert result == {
+        "info": "light-info",
+        "warning": "light-warning",
+    }
+
+
+# --- test_30_console_theme_invalid_overrides_ignored() -----------------------
+def test_30_console_theme_invalid_overrides_ignored():
+
+    result = _derive_console_theme_dict(
+        theme="dark",
+        console_theme_dict={
+            "warning": "bold red",
+            123: "invalid key",
+            "info": 456,
+        },
+        dark_console_theme_dict={
+            "warning": "yellow",
+            "info": "green",
+        },
+        light_console_theme_dict={},
+    )
+
+    assert result["warning"] == "bold red"
+    assert result["info"] == "green"
+    assert 123 not in result
+
+# --- test_31_header_footer_auto_normalized() ---------------------------------
+def test_31_header_footer_auto_normalized():
+
+    assert (
+        _resolve_header_footer_value(
+            arg_name="log_header",
+            value=" AUTO ",
+        )
+        == "auto"
+    )
+
+    assert (
+        _resolve_header_footer_value(
+            arg_name="console_footer",
+            value=" auto ",
+        )
+        == "auto"
+    )
+
+
+# --- test_32_matching_log_paths_not_marked_forced() --------------------------
+def test_32_matching_log_paths_not_marked_forced(duo):
+
+    arg_source_record = ArgSourceRecord()
+
+    config = dict(DEFAULTS)
+    config["log_file_path"] = "/tmp/logs/session.log"
+    config["log_file_layout"] = "flat"
+    config["log_dir_path"] = "/tmp/logs"
+    config["log_file_name"] = "session.log"
+
+    resolved = _resolve_path_conflicts(
+        duo,
+        normalized_session_config=config,
+        arg_source_record=arg_source_record,
+    )
+
+    assert resolved["log_file_layout"] == "flat"
+
+    assert "log_file_layout" not in arg_source_record.arg_source_dict
+    assert "log_dir_path" not in arg_source_record.arg_source_dict
+    assert "log_file_name" not in arg_source_record.arg_source_dict
+
+
+# --- test_33_configure_rejects_explicit_auto() -------------------------------
+def test_33_configure_rejects_explicit_auto(duo):
+
+    with pytest.raises(
+        ValueError,
+        match="auto.*reserved for internal use",
+    ):
+        duo.configure(
+            log_dir_path="auto",
+        )
+
+
+# --- test_34_session_config_hints_specific_fields() --------------------------
+@pytest.mark.parametrize(
+    ("field", "expected_text"),
+    [
+        ("log_file_name", "valid file name"),
+        ("log_dir_path", "absolute path"),
+        ("console_verbosity", "0 (off)"),
+        ("console_prefix", "timestamp"),
+        ("console_header", "non-empty string"),
+        ("console_footer", "non-empty string"),
+        ("console_theme", "dark"),
+        ("console_theme_dict", "dict"),
+        ("log_verbosity", "0 (off)"),
+        ("log_prefix", "timestamp"),
+        ("log_wrap_width", "80"),
+        ("log_header", "non-empty string"),
+        ("log_footer", "non-empty string"),
+        ("rotation", "integer"),
+        ("retention", "duration string"),
+    ],
+)
+def test_34_session_config_hints_specific_fields(
+    field: str,
+    expected_text: str,
+):
+    result = _session_config_hints(
+        field,
+        DEFAULTS,
+    )
+
+    assert expected_text in result
+
+# --- test_35_session_config_hints_boolean_fields() ---------------------------
+@pytest.mark.parametrize(
+    "field",
+    [
+        "console_color",
+        "show_debug_source",
+        "show_logger_name",
+        "show_pid_in_console",
+        "show_pid_in_log",
+        "write_config_table",
+        "write_config_json",
+        "write_jsonl",
+        "first_instance_owns_console",
+        "enqueue",
+        "catch",
+        "backtrace",
+        "diagnose",
+    ],
+)
+def test_35_session_config_hints_boolean_fields(field: str):
+
+    result = _session_config_hints(
+        field,
+        DEFAULTS,
+    )
+
+    assert isinstance(result, str)
+    assert result
+    assert "True" in result or "False" in result
 

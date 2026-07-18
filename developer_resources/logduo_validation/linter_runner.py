@@ -112,9 +112,9 @@ def _run_command(name: str, command: list[str]) -> CheckResult:
 def run_linter_runners() -> list[CheckResult]:
     """Run all configured read-only code-quality checks."""
     checks = [
-        ("Ruff import order fix", ["ruff", "check", "src", "developer_resources", "--select", "I", "--fix"]),
+        ("Ruff import order fix", ["ruff", "check", "src", "developer_resources", "--select", "I", "--fix",  "--ignore-noqa",]),
         ("Ruff", ["ruff", "check", "src"]),
-        ("Ruff import order", ["ruff", "check", "src", "developer_resources/pytest_files", "--select", "I"]),
+        ("Ruff import order", ["ruff", "check", "src",  "developer_resources/logduo_validation/pytest_files", "--select", "I",  "--ignore-noqa",]),
         ("Vulture", ["vulture", "src", "--min-confidence", "80"]),
         ("mypy", ["mypy", "src/logduo"]),
     ]

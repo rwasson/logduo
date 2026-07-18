@@ -14,14 +14,12 @@ Last edited: 2026-5-27
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from logduo import Duo
 
 from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import _resolve_call_console_style
-from logduo.internals.engine.level_entry import _level_entry
 from logduo.internals.engine.runtime_warning import _runtime_warning
 from logduo.internals.session_config.session_constants import (
     _NOT_GIVEN,
@@ -40,7 +38,7 @@ def _create_custom_level_label(
     *,
     console_style: str | _NotGiven = _NOT_GIVEN,
     level: str = "INFO",
-) -> Callable[[object], None]:
+) -> None:
     """
     Register a custom display label mapped onto an existing severity level.
     """
@@ -69,11 +67,6 @@ def _create_custom_level_label(
 
     duo._runtime.new_levels[label_key] = (label, resolved_console_style, level)
 
-    # --- create callable ---
-    def _log(msg: object, **kwargs: Any) -> None:
-        _level_entry(duo, message=msg, level=level, label=label, **kwargs)
-
-    return _log
 
 
 # === Internal helpers =========================================================

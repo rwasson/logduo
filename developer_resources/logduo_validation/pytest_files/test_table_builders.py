@@ -649,3 +649,106 @@ def test_47_sequence_explicit_header_labels():
     assert "Years" in result
     assert "alice" in result
     assert "30" in result
+
+
+# --- test_48_text_table_global_exact_col_width() ------------------------------
+def test_48_text_table_global_exact_col_width():
+    result = text_table(
+        rows=[{"a": "hello", "b": "world"}],
+        exact_col_widths=10,
+    )
+
+    assert "hello" in result
+    assert "world" in result
+
+
+# --- test_49_text_table_global_max_col_width() --------------------------------
+def test_49_text_table_global_max_col_width():
+    result = text_table(
+        rows=[{"a": "a very long value"}],
+        max_col_widths=8,
+    )
+
+    assert "a very" in result
+
+
+# --- test_50_text_table_widths_invalid_container_raises()
+@pytest.mark.parametrize(
+    "argument_name, value",
+    [
+        ("exact_col_widths", (10, 20)),
+        ("max_col_widths", (10, 20)),
+    ],
+)
+def test_50_text_table_widths_invalid_container_raises(argument_name, value):
+    with pytest.raises(ValueError, match=rf"{argument_name} must be"):
+        text_table(
+            rows=[{"a": 1}],
+            **{argument_name: value},
+        )
+
+# --- test_51_text_table_invalid_general_argument_raises() ---------------------
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"first_row_is_header": "yes"},
+        {"wrap_table": "yes"},
+        {"padding": -1},
+        {"indent": -1},
+        {"max_cell_lines": 0},
+        {"wrap_table_width": 4},
+    ],
+)
+def test_51_text_table_invalid_general_argument_raises(kwargs):
+    with pytest.raises(ValueError):
+        text_table(
+            rows=[{"a": 1}],
+            **kwargs,
+        )
+
+
+# --- test_52_text_table_invalid_column_selector_type_raises() -----------------
+def test_52_text_table_invalid_column_selector_type_raises():
+    with pytest.raises(ValueError, match=r"columns\[0\] must be str or int"):
+        text_table(
+            rows=[{"a": 1}],
+            columns=[1.5],   # noqa intentional
+        )
+
+
+# --- test_53_text_table_invalid_title_or_header_raises() ----------------------
+@pytest.mark.parametrize(
+    "kwargs, match",
+    [
+        ({"title": 123}, "title must be a string"),
+        ({"title": "line 1\nline 2"}, "title must be a single line"),
+        ({"subtitle": 123}, "subtitle must be a string"),
+        ({"subtitle": "line 1\nline 2"}, "subtitle must be a single line"),
+        ({"header_labels": []}, "header_labels cannot be empty"),
+        ({"header_labels": ("A",)}, r"header_labels must be a list"),
+        ({"header_labels": ["A", 2]}, r"header_labels\[1\] must be a string"),
+    ],
+)
+def test_53_text_table_invalid_title_or_header_raises(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        text_table(
+            rows=[{"a": 1}],
+            **kwargs,
+        )
+
+
+# --- test_54_text_table_exact_width_count_mismatch_raises() -------------------
+def test_54_text_table_exact_width_count_mismatch_raises():
+    with pytest.raises(ValueError, match="exact_col_widths must have either"):
+        text_table(
+            rows=[{"a": 1, "b": 2}],
+            exact_col_widths=[5, 5, 5],
+        )
+
+# --- test_55_text_table_max_width_count_mismatch_raises() ---------------------
+def test_55_text_table_max_width_count_mismatch_raises():
+    with pytest.raises(ValueError, match="max_col_widths must have either"):
+        text_table(
+            rows=[{"a": 1, "b": 2}],
+            max_col_widths=[5, 5, 5],
+        )

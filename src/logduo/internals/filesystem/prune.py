@@ -26,19 +26,19 @@ def _prune_run_dirs(*, log_file_layout: str, keep: int | str, current_main_path:
     # --- disable pruning ---
 
     if keep == "off" or current_main_path is None or log_file_layout != "run":
-        deleted_file_count = 0  # no pruning performed
-        return deleted_file_count
+        deleted_run_dir_count = 0  # no pruning performed
+        return deleted_run_dir_count
 
     if not isinstance(keep, int) or keep <= 0:
-        deleted_file_count = 0
-        return deleted_file_count
+        deleted_run_dir_count = 0
+        return deleted_run_dir_count
 
     try:
         session_runs_dir = current_main_path.parent.parent
         entries = list(session_runs_dir.iterdir())
     except (FileNotFoundError, PermissionError, NotADirectoryError, OSError):
-        deleted_file_count = 0  # no pruning performed
-        return deleted_file_count
+        deleted_run_dir_count = 0  # no pruning performed
+        return deleted_run_dir_count
 
     run_dirs = [
         p
@@ -47,8 +47,8 @@ def _prune_run_dirs(*, log_file_layout: str, keep: int | str, current_main_path:
     ]
 
     if not run_dirs:
-        deleted_file_count = 0  # no pruning performed
-        return deleted_file_count
+        deleted_run_dir_count = 0  # no pruning performed
+        return deleted_run_dir_count
 
     # newest first
     run_dirs.sort(key=lambda p: p.name, reverse=True)
@@ -75,14 +75,14 @@ def _prune_run_dirs(*, log_file_layout: str, keep: int | str, current_main_path:
             continue
         keep_dirs.append(p)
 
-    deleted_file_count = 0  # initialize
+    deleted_run_dir_count = 0  # initialize
 
     for p in run_dirs:
         if p not in keep_dirs:
             try:
                 shutil.rmtree(p)
-                deleted_file_count += 1
+                deleted_run_dir_count += 1
             except OSError:
                 continue
 
-    return deleted_file_count
+    return deleted_run_dir_count
