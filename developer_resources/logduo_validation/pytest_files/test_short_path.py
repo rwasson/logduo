@@ -5,7 +5,7 @@ Tests simplified short_path() behavior.
 
 Last edited: 2026-06-04
 """
-
+import os
 from pathlib import Path
 
 import pytest
@@ -145,10 +145,19 @@ def test_05_stops_at_anchor(tmp_path: Path):
         anchor_dir=anchor,
     )
 
+
+    expected = str(
+        Path(os.sep)
+        / "project"
+        / "src"
+        / "module"
+        / "file.py"
+    )
+
     _print_test_details(
         test_name="test_05_stops_at_anchor",
-        assertion="result= '/project/src/module/file.py'",
-        expected='/project/src/module/file.py',
+        assertion=f"result= {expected}",
+        expected=expected,
         actual=result,
         path=path,
         result=result,
@@ -157,7 +166,7 @@ def test_05_stops_at_anchor(tmp_path: Path):
     )
 
 
-    assert result == "/project/src/module/file.py"
+    assert result == expected
 
 
 # --- test_06_outside_anchor_uses_normal_path() --------------------------------
@@ -279,15 +288,15 @@ def test_09_short_path_list_count(tmp_path: Path):
 
 # --- test_10_windows_path() ---------------------------------------------------
 def test_10_windows_path():
-    path = "C:\project\src\module\file.py"
+    path = r"C:\project\src\module\file.py"
     width = 80
 
     result = short_path(path, width=width)
 
     _print_test_details(
         test_name="test_10_windows_path",
-        assertion="result= 'C:\project\src\module\file.py'",
-        expected='C:\project\src\module\file.py',
+        assertion=f"result= {path}",
+        expected=path,
         actual=result,
         path=path,
         result=result,
@@ -295,7 +304,7 @@ def test_10_windows_path():
         anchor_dir=None,
     )
 
-    assert result == "C:\project\src\module\file.py"
+    assert result == path
 
 
 # --- test_11_max_parents_limits_path_depth() ----------------------------------
@@ -340,10 +349,18 @@ def test_12_anchor_stops_before_max_parents(tmp_path: Path):
         max_parents=20,
     )
 
+    expected = str(
+        Path(os.sep)
+        / "project"
+        / "src"
+        / "module"
+        / "file.py"
+    )
+
     _print_test_details(
         test_name="test_12_anchor_stops_before_max_parents",
-        assertion="result == '/project/src/module/file.py'",
-        expected="/project/src/module/file.py",
+        assertion=f"result == {expected}",
+        expected=expected,
         actual=result,
         path=path,
         result=result,
@@ -351,7 +368,7 @@ def test_12_anchor_stops_before_max_parents(tmp_path: Path):
         anchor_dir=anchor,
     )
 
-    assert result == "/project/src/module/file.py"
+    assert result == expected
 
 
 # --- test_13_max_parents_stops_before_anchor() --------------------------------
@@ -371,10 +388,16 @@ def test_13_max_parents_stops_before_anchor(tmp_path: Path):
         max_parents=1,
     )
 
+    expected = str(
+        Path(os.sep)
+        / "module"
+        / "file.py"
+    )
+
     _print_test_details(
         test_name="test_13_max_parents_stops_before_anchor",
-        assertion="result == '/module/file.py'",
-        expected="/module/file.py",
+        assertion=f"result == {expected}",
+        expected=expected,
         actual=result,
         path=path,
         result=result,
@@ -382,7 +405,7 @@ def test_13_max_parents_stops_before_anchor(tmp_path: Path):
         anchor_dir=anchor,
     )
 
-    assert result == "/module/file.py"
+    assert result == expected
 
 
 # --- test_14_max_parents_zero_returns_filename_only ---------------------------

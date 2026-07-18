@@ -283,6 +283,7 @@ def _attach_logduo_log_sink(
             str(sink_path),
             format="{message}",
             filter=_build_logduo_filter(log_file_kind=log_file_kind, sink_name=sink_name),
+            level="TRACE",
             colorize=False,
             **sink_kwargs,
         )
