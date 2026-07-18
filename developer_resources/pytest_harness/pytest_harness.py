@@ -363,7 +363,7 @@ def pytest_harness(
         '''
         if (
                 result.exit_code != 0
-                and relative_test_file_path.name == "test_logduo.py"
+                and relative_test_file_path.name == "test_header_footer_blocks.py"
                 and test_file_log_path.exists()
         ):
             test_log_text = test_file_log_path.read_text(
