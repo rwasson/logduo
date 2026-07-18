@@ -163,15 +163,11 @@ def _build_test_file_record(  # noqa: PLR0915
     # DEBUG SECTION TODO DELETE
     if process.returncode != 0:
         print()
-        print(
-            f"FAILED TEST FILE: {test_file_path}",
-            flush=True,
-        )
-
-        print(
-            "".join(captured),
-            flush=True,
-        )
+        print("=" * 80)
+        print(f"DEBUG: FAILED TEST FILE: {test_file_path}")
+        print("=" * 80)
+        print("".join(captured), flush=True)
+        print("=" * 80)
 
 
 

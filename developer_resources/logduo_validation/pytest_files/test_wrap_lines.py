@@ -134,3 +134,32 @@ def test_08_wrap_text_rejects_newlines():
             "hello\nworld",
             width=20,
         )
+
+# --- test_09_break_character_at_width_plus_one() ------------------------------
+def test_09_break_character_at_width_plus_one():
+
+    text = ("a" * 80) + "-remainder"
+
+    lines = wrap_text(
+        text,
+        width=80,
+    )
+
+    assert all(len(strip_ansi(line)) <= 80 for line in lines)
+    assert "".join(lines) == text
+
+
+# --- test_10_path_break_character_at_width_plus_one() ------------------------
+def test_10_path_break_character_at_width_plus_one():
+
+    prefix = "/" + ("a" * 78) + "/"
+    text = prefix + "pytest-remainder"
+
+    lines = wrap_text(
+        text,
+        width=80,
+        hanging_indent=4,
+    )
+
+    assert all(len(strip_ansi(line)) <= 80 for line in lines)
+    assert "".join(line.lstrip() for line in lines) == text

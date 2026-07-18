@@ -68,10 +68,10 @@ def wrap_text(
         raise ValueError("wrap_text expects a single-line string (no '\\n')")
 
     if width < _MIN_WRAP_WIDTH:
-        raise ValueError("wrap_text expects a width >= {_MIN_WRAP_WIDTH}")
+        raise ValueError(f"wrap_text expects a width >= {_MIN_WRAP_WIDTH}")
 
     if continuation_width is not None and continuation_width < _MIN_WRAP_WIDTH:
-        raise ValueError("wrap_text expects a continuation width >= _MIN_WRAP_WIDTH")
+        raise ValueError(f"wrap_text expects a continuation width >= {_MIN_WRAP_WIDTH}")
 
     continuation_wrap_width = continuation_width if continuation_width is not None else width
 
@@ -185,7 +185,8 @@ def _wrap_text_with_ansi(
             character_position_index += 1
             visible_line_len += 1
 
-            if char in break_chars:
+            # if char in break_chars: TODO delete if passes tests
+            if char in break_chars and visible_line_len <= width:
                 last_safe_break_count = len(line_item_list)
 
             if visible_line_len > width:

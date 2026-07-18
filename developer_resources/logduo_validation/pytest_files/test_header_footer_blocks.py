@@ -475,6 +475,7 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     print()
     print(log_content)
     print("**********************************************")
+    print(" ")
 
     marker = "Logduo-managed files created this run:"
     assert marker in log_content
