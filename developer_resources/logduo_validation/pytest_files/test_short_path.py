@@ -279,15 +279,15 @@ def test_09_short_path_list_count(tmp_path: Path):
 
 # --- test_10_windows_path() ---------------------------------------------------
 def test_10_windows_path():
-    path = "C:/project/src/module/file.py"
+    path = "C:\project\src\module\file.py"
     width = 80
 
     result = short_path(path, width=width)
 
     _print_test_details(
         test_name="test_10_windows_path",
-        assertion="result= 'C:/project/src/module/file.py'",
-        expected='C:/project/src/module/file.py',
+        assertion="result= 'C:\project\src\module\file.py'",
+        expected='C:\project\src\module\file.py',
         actual=result,
         path=path,
         result=result,
@@ -295,7 +295,7 @@ def test_10_windows_path():
         anchor_dir=None,
     )
 
-    assert result == "C:/project/src/module/file.py"
+    assert result == "C:\project\src\module\file.py"
 
 
 # --- test_11_max_parents_limits_path_depth() ----------------------------------

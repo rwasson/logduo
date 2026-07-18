@@ -43,34 +43,28 @@ def short_path(
             • max_parents is reached
          ↓
         return last fit
+
+
     """
     was_windows_path = False
-
     if width < _min_width_short_path:
-        raise ValueError(f"width must be >= {_min_width_short_path}")
+        raise ValueError("width must be >= {_min_width_short_path}")
 
     if max_parents is not None and max_parents < 0:
         raise ValueError("max_parents must be >= 0")
 
     # --- Build path parts ---
     path_str = str(path)
-
     if is_windows_path(path_str):
         was_windows_path = True
-        separator = "\\"
-
         parts = path_str.replace("\\", "/").split("/")
-
         if anchor_dir is not None:
             anchor_parts = str(anchor_dir).replace("\\", "/").split("/")
 
             # if Path is inside anchor_dir; collapse anchor prefix to anchor name.
             if parts[: len(anchor_parts)] == anchor_parts:
                 parts = [anchor_parts[-1], *parts[len(anchor_parts) :]]
-
     else:
-        separator = "/"
-
         path_abs = Path(path).expanduser().resolve(strict=False)
 
         if anchor_dir is not None:
@@ -107,23 +101,21 @@ def short_path(
     for parent in reversed(parts[:-1]):
         if max_parents is not None and parents_added >= max_parents:
             break
-
         if best_fit == filename:
-            candidate = f"{separator}{parent}{separator}{filename}"
+            candidate = f"/{parent}/{filename}"
         else:
-            candidate = f"{separator}{parent}{best_fit}"
-
+            candidate = f"/{parent}{best_fit}"
         if len(candidate) > width:
             return best_fit
 
         best_fit = candidate
         parents_added += 1
 
-    # Remove leading separator if inserted in front of C: in Windows paths.
+    # remove leading / if inserted in front of C: in initial Windows paths
     if (
         was_windows_path
         and len(best_fit) >= _MIN_WIDTH_WINDOWS_DRIVE
-        and best_fit[0] == separator
+        and best_fit[0] == "/"
         and best_fit[1].isalpha()
         and best_fit[2] == ":"
     ):
@@ -132,7 +124,7 @@ def short_path(
     return best_fit
 
 
-# --- short_path_list() --------------------------------------------------------
+# --- short_path_list() -------------------------------------------------------
 def short_path_list(
     paths: Sequence[str | Path],
     *,
@@ -154,13 +146,12 @@ def short_path_list(
 
     for path in paths:
         path_abs = Path(path).expanduser().resolve(strict=False)
-        long_path = str(path_abs)
+        long_path = path_abs.as_posix()
         short_label = short_path(
-            path_abs,
-            width=width,
-            anchor_dir=anchor_dir,
-            max_parents=max_parents,
+            path_abs, width=width, anchor_dir=anchor_dir, max_parents=max_parents
         )
         results.append((long_path, short_label))
 
     return results
+
+
