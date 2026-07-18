@@ -231,7 +231,7 @@ def test_12_critical_bypasses_console_verbosity_zero(tmp_path, capsys):
     captured = capsys.readouterr()
     console_output = captured.out
 
-    llog_text = _read_file(main_log_path)
+    log_text = _read_file(main_log_path)
 
     print(" ")
     print("******************************")
