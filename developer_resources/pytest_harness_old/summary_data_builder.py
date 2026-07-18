@@ -5,26 +5,22 @@ Last edited: 2026-07-14
 """
 import json
 from pathlib import Path
-
 from coverage import Coverage
-from coverage.exceptions import NoDataError
 
-from developer_resources.pytest_harness.constants_and_classes import (
+from developer_resources.pytest_harness.classes import (
     AggregateTestSummary,
     CombinedCoverageResult,
     ProblemTestFileRecord,
-    SourceFileCoverageRecord,
     TestFileRecord,
-    TestFileStatus,
+    SourceFileCoverageRecord,
 )
 
 
 # --- _build_summary_data() -----------------------------------
-def _build_summary_data(  # noqa: PLR0915
+def _build_summary_data(
     *,
     pytest_test_file_records: list[TestFileRecord],
     combined_coverage_result: CombinedCoverageResult,
-    show_skipped_and_xfailed: bool,
     debug_pytest_harness: bool,
 ) -> AggregateTestSummary:
     """
@@ -48,32 +44,50 @@ def _build_summary_data(  # noqa: PLR0915
     xpassed_test_file_count = 0
 
     problem_test_files: list[ProblemTestFileRecord] = []
-    not_processed_test_files: list[str] = []
-    no_tests_collected_test_files: list[str] = []
+    unexecuted_test_files: list[str] = []
 
     for test_file_record in pytest_test_file_records:
-        passed_test_function_count += test_file_record.passed_test_function_count
-        failed_test_function_count += test_file_record.failed_test_function_count
-        error_test_function_count += test_file_record.error_test_function_count
-        skipped_test_function_count += test_file_record.skipped_test_function_count
-        xfailed_test_function_count += test_file_record.xfailed_test_function_count
-        xpassed_test_function_count += test_file_record.xpassed_test_function_count
+        passed_test_function_count += (
+            test_file_record.passed_test_function_count
+        )
+        failed_test_function_count += (
+            test_file_record.failed_test_function_count
+        )
+        error_test_function_count += (
+            test_file_record.error_test_function_count
+        )
+        skipped_test_function_count += (
+            test_file_record.skipped_test_function_count
+        )
+        xfailed_test_function_count += (
+            test_file_record.xfailed_test_function_count
+        )
+        xpassed_test_function_count += (
+            test_file_record.xpassed_test_function_count
+        )
 
-        test_file_name = Path(test_file_record.test_file_path).name
-
-        if test_file_record.status is TestFileStatus.NO_TESTS_COLLECTED:
-            no_tests_collected_test_files.append(test_file_name)
-
-        elif test_file_record.status is TestFileStatus.NOT_PROCESSED:
-            not_processed_test_files.append(test_file_name)
+        if test_file_record.total_test_function_count == 0:
+            unexecuted_test_files.append(
+                Path(test_file_record.test_file_path).name
+            )
 
         problem_record = ProblemTestFileRecord(
-            test_file_name=test_file_name,
-            failed_test_function_names=test_file_record.failed_test_function_names,
-            error_test_function_names=test_file_record.error_test_function_names,
-            skipped_test_function_names=test_file_record.skipped_test_function_names,
-            xfailed_test_function_names=test_file_record.xfailed_test_function_names,
-            xpassed_test_function_names=test_file_record.xpassed_test_function_names,
+            test_file_name=Path(test_file_record.test_file_path).name,
+            failed_test_function_names=(
+                test_file_record.failed_test_function_names
+            ),
+            error_test_function_names=(
+                test_file_record.error_test_function_names
+            ),
+            skipped_test_function_names=(
+                test_file_record.skipped_test_function_names
+            ),
+            xfailed_test_function_names=(
+                test_file_record.xfailed_test_function_names
+            ),
+            xpassed_test_function_names=(
+                test_file_record.xpassed_test_function_names
+            ),
         )
 
         if problem_record.has_failures:
@@ -87,25 +101,9 @@ def _build_summary_data(  # noqa: PLR0915
         if problem_record.has_xpasses:
             xpassed_test_file_count += 1
 
-        # SHOW_ALL_PROBLEMS is toggle to display details for Skips and XFails
-        has_displayed_problems = (
-                problem_record.has_failures
-                or problem_record.has_errors
-                or problem_record.has_xpasses
-                or (show_skipped_and_xfailed and (problem_record.has_skips or problem_record.has_xfails)
-                )
-        )
-
-        if has_displayed_problems:
+        if problem_record.has_problems:
             problem_test_files.append(problem_record)
-
-        all_tests_passed = (
-                test_file_record.status is TestFileStatus.PROCESSED
-                and 0 < test_file_record.total_test_function_count == test_file_record.passed_test_function_count
-        )
-
-
-        if all_tests_passed:
+        else:
             passed_test_file_count += 1
 
     source_file_coverage_records = sorted(
@@ -159,8 +157,7 @@ def _build_summary_data(  # noqa: PLR0915
         total_coverage_pct=total_coverage_pct,
 
         problem_test_files=problem_test_files,
-        no_tests_collected_test_files=no_tests_collected_test_files,
-        not_processed_test_files=not_processed_test_files,
+        unexecuted_test_files=unexecuted_test_files,
         source_file_coverage_records=source_file_coverage_records,
     )
 
@@ -173,33 +170,18 @@ def _combine_coverage_data_files(
     """Combine per-test-file coverage data and return official totals."""
 
     combined_data_file_path = coverage_dir_path / ".coverage"
-    combined_json_file_path = (
-        coverage_dir_path / "combined_coverage.json"
-    )
+    combined_json_file_path = coverage_dir_path / "combined_coverage.json"
 
     coverage_obj = Coverage(
         data_file=str(combined_data_file_path),
         branch=True,
     )
 
-    try:
-        coverage_obj.combine(
-            data_paths=[str(coverage_dir_path)],
-            strict=True,
-            keep=True,
-        )
-    except NoDataError:
-        return CombinedCoverageResult(
-            source_file_coverage_records={},
-            executed_line_count=0,
-            total_line_count=0,
-            executed_branch_count=0,
-            total_branch_count=0,
-            statement_coverage_pct=0.0,
-            branch_coverage_pct=0.0,
-            total_coverage_pct=0.0,
-        )
-
+    coverage_obj.combine(
+        data_paths=[str(coverage_dir_path)],
+        strict=True,
+        keep=True,
+    )
     coverage_obj.save()
 
     coverage_obj.json_report(
@@ -208,27 +190,16 @@ def _combine_coverage_data_files(
     )
 
     report = json.loads(
-        combined_json_file_path.read_text(
-            encoding="utf-8",
-        )
+        combined_json_file_path.read_text(encoding="utf-8")
     )
 
+    # Official aggregate totals calculated by Coverage.py.
     totals = report["totals"]
 
-    executed_line_count = int(
-        totals["covered_lines"]
-    )
-    total_line_count = int(
-        totals["num_statements"]
-    )
-
-    # Coverage.py omits these fields when no branches exist.
-    executed_branch_count = int(
-        totals.get("covered_branches", 0)
-    )
-    total_branch_count = int(
-        totals.get("num_branches", 0)
-    )
+    executed_line_count = int(totals["covered_lines"])
+    total_line_count = int(totals["num_statements"])
+    executed_branch_count = int(totals["covered_branches"])
+    total_branch_count = int(totals["num_branches"])
 
     statement_coverage_pct = (
         100 * executed_line_count / total_line_count
@@ -242,24 +213,16 @@ def _combine_coverage_data_files(
         else 0.0
     )
 
-    total_coverage_pct = float(
-        totals["percent_covered"]
-    )
+    total_coverage_pct = float(totals["percent_covered"])
 
     source_dir = source_dir.resolve()
-
-    records: dict[
-        str,
-        SourceFileCoverageRecord,
-    ] = {}
+    records: dict[str, SourceFileCoverageRecord] = {}
 
     for reported_path, file_data in report["files"].items():
         source_file_path = Path(reported_path)
 
         if not source_file_path.is_absolute():
-            source_file_path = (
-                Path.cwd() / source_file_path
-            )
+            source_file_path = Path.cwd() / source_file_path
 
         source_file_path = source_file_path.resolve()
 
@@ -271,54 +234,32 @@ def _combine_coverage_data_files(
 
         executed_lines: set[int] = {
             int(line_number)
-            for line_number
-            in file_data["executed_lines"]
+            for line_number in file_data["executed_lines"]
         }
 
         missing_lines: set[int] = {
             int(line_number)
-            for line_number
-            in file_data["missing_lines"]
+            for line_number in file_data["missing_lines"]
         }
 
-        # Coverage.py omits these fields when no branches exist.
-        executed_branch_pairs: set[
-            tuple[int, int]
-        ] = {
-            (
-                int(first_line),
-                int(second_line),
-            )
+        executed_branch_pairs: set[tuple[int, int]] = {
+            (int(first_line), int(second_line))
             for first_line, second_line
-            in file_data.get(
-                "executed_branches",
-                [],
-            )
+            in file_data["executed_branches"]
         }
 
-        missing_branch_pairs: set[
-            tuple[int, int]
-        ] = {
-            (
-                int(first_line),
-                int(second_line),
-            )
+        missing_branch_pairs: set[tuple[int, int]] = {
+            (int(first_line), int(second_line))
             for first_line, second_line
-            in file_data.get(
-                "missing_branches",
-                [],
-            )
+            in file_data["missing_branches"]
         }
 
-        total_branch_pairs = (
+        total_branch_pairs: set[tuple[int, int]] = (
             executed_branch_pairs
             | missing_branch_pairs
         )
 
-        branch_destinations: dict[
-            int,
-            set[int],
-        ] = {}
+        branch_destinations: dict[int, set[int]] = {}
 
         for first_line, second_line in total_branch_pairs:
             branch_destinations.setdefault(
@@ -326,37 +267,24 @@ def _combine_coverage_data_files(
                 set(),
             ).add(second_line)
 
-        branch_source: set[
-            tuple[int, int]
-        ] = {
-            (
-                first_line,
-                len(destinations),
-            )
+        branch_source: set[tuple[int, int]] = {
+            (first_line, len(destinations))
             for first_line, destinations
             in branch_destinations.items()
         }
 
-        source_file_path_str = str(
-            source_file_path
-        )
+        source_file_path_str = str(source_file_path)
 
-        records[
-            source_file_path_str
-        ] = SourceFileCoverageRecord(
+        records[source_file_path_str] = SourceFileCoverageRecord(
             source_file_path=source_file_path_str,
             executed_lines=executed_lines,
             missing_lines=missing_lines,
             total_line_count=int(
-                file_data["summary"][
-                    "num_statements"
-                ]
+                file_data["summary"]["num_statements"]
             ),
             branch_source=branch_source,
             total_branch_pairs=total_branch_pairs,
-            executed_branch_pairs=(
-                executed_branch_pairs
-            ),
+            executed_branch_pairs=executed_branch_pairs,
         )
 
     return CombinedCoverageResult(
@@ -369,3 +297,5 @@ def _combine_coverage_data_files(
         branch_coverage_pct=branch_coverage_pct,
         total_coverage_pct=total_coverage_pct,
     )
+
+
