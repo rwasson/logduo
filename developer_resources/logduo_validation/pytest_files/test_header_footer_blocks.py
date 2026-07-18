@@ -476,12 +476,10 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     print(log_content)
     print("**********************************************")
 
-    assert "Logduo-managed files created this run:" in log_content
+    marker = "Logduo-managed files created this run:"
+    assert marker in log_content
 
-    footer = log_content.split(
-        "Logduo-managed files created this run:",
-        maxsplit=1,
-    )[1]
+    footer = log_content.split(marker, maxsplit=1)[1]
 
     footer_lines = [
         line
@@ -490,7 +488,20 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     ]
 
     assert footer_lines
-    assert all(len(line) <= 80 for line in footer_lines)
+
+    too_long_lines = [
+        (len(line), line)
+        for line in footer_lines
+        if len(line) > 80
+    ]
+
+    assert not too_long_lines, (
+        "Footer contains lines longer than 80 characters:\n"
+        + "\n".join(
+            f"{length}: {line!r}"
+            for length, line in too_long_lines
+        )
+    )
 
 
 # --- test_14_main_log_footer_uses_hanging_indent_for_paths() ------------------

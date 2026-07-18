@@ -14,7 +14,7 @@ from pathlib import Path
 from developer_resources.pytest_harness.pytest_harness import pytest_harness
 
 # --- File settings ---
-INDIVIDUAL_LOGS = False
+INDIVIDUAL_LOGS = True
 
 # Run all test_*.py files if include_list is None.
 include_list: list[str] | None = None
@@ -59,6 +59,7 @@ def main() -> None:
         include_list=include_list,
         exclude_list=exclude_list,
         individual_logs=INDIVIDUAL_LOGS,
+        log_keep=3,
         debug_pytest_harness=False,
     )
 
