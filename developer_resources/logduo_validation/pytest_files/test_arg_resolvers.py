@@ -10,16 +10,21 @@ from logduo import Duo
 from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import (
     _assert_no_none,
     _assert_no_not_given,
-    _resolve_int_arg,
-    _resolve_log_prefix,
-    _resolve_new_logger_target_arg, _resolve_call_no_prefix, _resolve_bool_arg,
-    _resolve_to_main_sink_log, _resolve_log_verbosity, _resolve_log_file_mode, _resolve_log_header,
-    _resolve_log_footer, _resolve_log_wrap_width, _resolve_call_console_style,
     _precheck_auto_and_none,
+    _resolve_bool_arg,
+    _resolve_call_console_style,
+    _resolve_call_no_prefix,
+    _resolve_int_arg,
+    _resolve_log_file_mode,
+    _resolve_log_footer,
+    _resolve_log_header,
+    _resolve_log_prefix,
+    _resolve_log_verbosity,
+    _resolve_log_wrap_width,
+    _resolve_new_logger_target_arg,
+    _resolve_to_main_sink_log,
 )
 from logduo.internals.api_arg_resolvers.level_call_args_resolver import _resolve_level_call_args
-
-
 from logduo.internals.session_config.cerberus_utils import (
     _norm_bool,
     _norm_log_file_mode,

@@ -18,19 +18,13 @@ Last edited: 2026-07-11
 import tempfile
 from pathlib import Path
 
-
-from developer_resources.pytest_harness.summary_data_builder import (
-    _build_summary_data,
-    _combine_coverage_data_files
-)
-from developer_resources.pytest_harness_old.classes import TestFileRecord
-from developer_resources.pytest_harness_old.test_file_record_builder import _build_test_file_record
-from developer_resources.pytest_harness.resolve_test_file_paths import (
-    _resolve_test_file_paths
-)
+from developer_resources.pytest_harness.resolve_test_file_paths import _resolve_test_file_paths
+from developer_resources.pytest_harness.summary_data_builder import _build_summary_data, _combine_coverage_data_files
 from developer_resources.pytest_harness.summary_table_builder import (
     _build_summary_table,
 )
+from developer_resources.pytest_harness_old.classes import TestFileRecord
+from developer_resources.pytest_harness_old.test_file_record_builder import _build_test_file_record
 from logduo import log
 
 COVERAGE_WARNING_THRESHOLD = .85

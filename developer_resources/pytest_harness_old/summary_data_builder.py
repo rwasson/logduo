@@ -5,14 +5,15 @@ Last edited: 2026-07-14
 """
 import json
 from pathlib import Path
+
 from coverage import Coverage
 
 from developer_resources.pytest_harness_old.classes import (
     AggregateTestSummary,
     CombinedCoverageResult,
     ProblemTestFileRecord,
-    TestFileRecord,
     SourceFileCoverageRecord,
+    TestFileRecord,
 )
 
 
