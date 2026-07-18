@@ -333,50 +333,8 @@ def pytest_harness(
 
         results.append(result)
 
-        # ================================================================
-        # DEBUG: TEMPORARY GITHUB ACTIONS DIAGNOSTIC
-        # print(
-        #    f"    completed: {relative_test_file_path} "
-        #    f"(exit_code={result.exit_code})",
-        #    flush=True,
-        #)
-        '''
-        if result.exit_code != 0:
-            print(
-                f"    FAILURE RECORD: {result!r}",
-                flush=True,
-            )
 
-        if result.exit_code != 0 and test_file_log_path.exists():
-            test_log_text = test_file_log_path.read_text(
-                encoding="utf-8",
-                errors="replace",
-            )
 
-            sys.stdout.reconfigure(
-                encoding="utf-8",
-                errors="replace",
-            )
-
-            print(test_log_text, flush=True)
-            
-        '''
-        if (
-                result.exit_code != 0
-                and relative_test_file_path.name == "test_header_footer_blocks.py"
-                and test_file_log_path.exists()
-        ):
-            test_log_text = test_file_log_path.read_text(
-                encoding="utf-8",
-                errors="replace",
-            )
-
-            sys.stdout.reconfigure(
-                encoding="utf-8",
-                errors="replace",
-            )
-            print(test_log_text, flush=True)
-        # ================================================================
 
     # Combine the separate per-test-file data files once.
     combined_coverage_result = _combine_coverage_data_files(

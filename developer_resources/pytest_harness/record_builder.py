@@ -160,6 +160,21 @@ def _build_test_file_record(  # noqa: PLR0915
     process.wait()
     duration = time.time() - start
 
+    # DEBUG SECTION TODO DELETE
+    if process.returncode != 0:
+        print()
+        print(
+            f"FAILED TEST FILE: {test_file_path}",
+            flush=True,
+        )
+
+        print(
+            "".join(captured),
+            flush=True,
+        )
+
+
+
     if test_logger is not None:
         cleaned = strip_ansi("".join(captured))
         test_logger(cleaned)
