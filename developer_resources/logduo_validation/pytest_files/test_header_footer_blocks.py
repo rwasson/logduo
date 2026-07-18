@@ -469,32 +469,28 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
 
     log_content = log_path.read_text(encoding="utf-8")
 
-    assert "Logduo-managed files created this run" in log_content
-
-    lines = log_content.splitlines()
-
-    file_lines = [
-        line
-        for line in lines
-        if "config_table.txt" in line
-           or "config.json" in line
-    ]
-
-    assert file_lines
-
-    print(" ")
-
+    print()
     print("**********************************************")
     print("test_13_main_log_footer_wraps_created_files")
-    print("\nFULL LOG:")
-    print(repr(log_content))
-    print("\nFILE LINES:")
-
-    for line in file_lines:
-        print(repr(line))
+    print()
+    print(log_content)
     print("**********************************************")
 
-    assert file_lines
+    assert "Logduo-managed files created this run:" in log_content
+
+    footer = log_content.split(
+        "Logduo-managed files created this run:",
+        maxsplit=1,
+    )[1]
+
+    footer_lines = [
+        line
+        for line in footer.splitlines()
+        if line.strip()
+    ]
+
+    assert footer_lines
+    assert all(len(line) <= 80 for line in footer_lines)
 
 
 # --- test_14_main_log_footer_uses_hanging_indent_for_paths() ------------------
