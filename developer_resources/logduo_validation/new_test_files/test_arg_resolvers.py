@@ -10,16 +10,21 @@ from logduo import Duo
 from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import (
     _assert_no_none,
     _assert_no_not_given,
-    _resolve_int_arg,
-    _resolve_log_prefix,
-    _resolve_new_logger_target_arg, _resolve_call_no_prefix, _resolve_bool_arg,
-    _resolve_to_main_sink_log, _resolve_log_verbosity, _resolve_log_file_mode, _resolve_log_header,
-    _resolve_log_footer, _resolve_log_wrap_width, _resolve_call_console_style,
     _precheck_auto_and_none,
+    _resolve_bool_arg,
+    _resolve_call_console_style,
+    _resolve_call_no_prefix,
+    _resolve_int_arg,
+    _resolve_log_file_mode,
+    _resolve_log_footer,
+    _resolve_log_header,
+    _resolve_log_prefix,
+    _resolve_log_verbosity,
+    _resolve_log_wrap_width,
+    _resolve_new_logger_target_arg,
+    _resolve_to_main_sink_log,
 )
 from logduo.internals.api_arg_resolvers.level_call_args_resolver import _resolve_level_call_args
-
-
 from logduo.internals.session_config.cerberus_utils import (
     _norm_bool,
     _norm_log_file_mode,
@@ -256,7 +261,7 @@ def test_20_assert_no_none_list_nested():
 def test_21_resolve_new_logger_target_default_extension():
 
     result = _resolve_new_logger_target_arg(
-        duo=fake_duo,  # noqa
+        duo=fake_duo,    # noqa intentional
         value="audit",
     )
 
@@ -267,7 +272,7 @@ def test_21_resolve_new_logger_target_default_extension():
 def test_22_resolve_new_logger_target_lowercases_name():
 
     result = _resolve_new_logger_target_arg(
-        duo=fake_duo,   # noqa
+        duo=fake_duo,  # noqa intentional
         value="Audit.LOG",
     )
 
@@ -279,7 +284,7 @@ def test_23_resolve_new_logger_target_empty_string():
 
     with pytest.raises(ValueError):
         _resolve_new_logger_target_arg(
-            duo=fake_duo,  # noqa
+            duo=fake_duo, # noqa intentional
             value="   ",
         )
 
@@ -302,7 +307,7 @@ def test_26_resolve_new_logger_target_absolute_path(tmp_path: Path):
     path = tmp_path / "audit.log"
 
     result = _resolve_new_logger_target_arg(
-        duo=fake_duo,  # noqa
+        duo=fake_duo, # noqa intentional
         value=path,
     )
 
@@ -316,7 +321,7 @@ def test_27_resolve_new_logger_target_directory_path(tmp_path: Path):
 
     with pytest.raises(ValueError):
         _resolve_new_logger_target_arg(
-            duo=fake_duo,  # noqa
+            duo=fake_duo,  # noqa intentional
             value=tmp_path,
         )
 
@@ -325,7 +330,7 @@ def test_28_resolve_new_logger_target_auto():
 
     with pytest.raises(ValueError):
         _resolve_new_logger_target_arg(
-            duo=fake_duo,  # noqa
+            duo=fake_duo,   # noqa intentional
             value="auto",
         )
 
@@ -335,8 +340,8 @@ def test_29_resolve_new_logger_target_bad_type():
 
     with pytest.raises(ValueError):
         _resolve_new_logger_target_arg(
-            duo=fake_duo,  # noqa
-            value=123,                         # noqa intentional
+            duo=fake_duo,     # noqa intentional
+            value=123,        # noqa intentional
         )
 
 
@@ -369,6 +374,7 @@ def test_32_norm_theme_passthrough():
     assert _norm_theme("custom_theme") == "custom_theme"
 
 
+
 # --- test_33_resolve_log_prefix_rejects_time() -------------------------------
 def test_33_resolve_log_prefix_rejects_time():
     class FakeSessionConfig3:
@@ -379,7 +385,7 @@ def test_33_resolve_log_prefix_rejects_time():
 
     with pytest.raises(ValueError):
         _resolve_log_prefix(
-            duo=FakeDuo3(),   # noqa
+            duo=FakeDuo3(),     # noqa intentional
             log_prefix="time",
         )
 
@@ -395,7 +401,7 @@ def test_34_resolve_log_prefix_timestamp():
 
     assert (
         _resolve_log_prefix(
-            duo=FakeDuo2(),  # noqa
+            duo=FakeDuo2(),    # noqa intentional
             log_prefix="timestamp",
         )
         == "timestamp"
@@ -817,5 +823,4 @@ def test_68_call_no_prefix_for_file_sink():
             sink_config=sink_config,  # noqa, intentional test double
             no_prefix="yes",  # noqa, intentional invalid value
         )
-
 

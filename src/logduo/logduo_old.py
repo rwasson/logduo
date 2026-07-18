@@ -56,20 +56,18 @@ _PID_INSTANCE_COUNTER: defaultdict[int, int] = defaultdict(int)
 
 class Duo:
     """
-    Create an independent Logduo logger instance.
-
     Most users should use the shared instance:
         from logduo import log
 
-    Independent instances are useful when separate session state is required:
+    Independent Duo instances may also be created:
         from logduo import Duo
         metrics = Duo()
 
     Notes
     -----
-    - Each Duo instance maintains independent session state.
-    - All Duo instances share the global Loguru backend.
-    - Process IDs may be included in logging output when enabled.
+        - Each Duo instance maintains independent session state.
+        - All Duo instances share the global Loguru backend.
+        - Process IDs may be included in logging output when enabled.
     """
 
     def __init__(self) -> None:
@@ -132,7 +130,7 @@ class Duo:
             log_dir_path = "/absolute/path/to/logs"
             log.configure(
                 log_dir_path=log_dir_path,   # set custom path to log dir
-                write_config_table=False,    # no config_table.txt
+                write_config_table=False,      # no config_table.txt
             )
             log("hello world")
 
@@ -172,6 +170,7 @@ class Duo:
         - To view the active session configuration:
                 - open config_table.txt (which also displays descriptions and allowed values)
                 - log(text_table(log.session_config))
+
 
         """
         if self._initialized:
@@ -241,20 +240,14 @@ class Duo:
 
         Example
         -------
-            from pathlib import Path
             from logduo import log
-
-            # Write to <project_root>/logduo_docs.
             log.export_logduo_docs()
+            log.export_logduo_docs("~/Desktop/logduo_docs")
 
-            # Write beside the current script.
-            docs_path = Path(__file__).parent.resolve()
-            log.export_logduo_docs(docs_path)
-
-        Notes
-        -----
-        Documentation files are not included in the main log session footer
-        and are not tracked as session-generated artifacts.
+        Note
+        ----
+        Documentation files are not included in the session footer and
+        are not tracked as session-generated artifacts.
         """
 
         _export_logduo_docs(self, path=path)
@@ -287,7 +280,8 @@ class Duo:
 
         Notes
         -----
-        - To run or rerun an imported or nested script after editing it:
+        - Imported scripts execute only once per Python session.
+        - To rerun an imported script after editing it:
                 from logduo import run
                 run("my_imported_script")
         - For additional details:
@@ -335,13 +329,12 @@ class Duo:
             report = log.new_logger("assignment_1", to_console=True, to_main_log=True)
             report("Question 1 answer:")
 
-        2. Create a dedicated log file for an imported/nested child script
+        2. Create a dedicated log file for an imported or nested script.
 
-                # inside the child script
                 child_log = log.new_logger("child")
                 child_log("Processing dataset A")
+                child.log contains only messages from the child script.
 
-            child.log only contains messages generated in the child script.
             This is useful when a parent script or interactive session
             calls a child script and the child script should maintain
             its own log file.
@@ -364,9 +357,9 @@ class Duo:
         Optional arguments
         ------------------
         to_console : bool
-            Also display messages in console output. Default is True.
+            Also display messages in console output.
         to_main_log : bool
-            Also mirror messages in the session's main log file. Default is True.
+            Also mirror messages in the session's main log file.
         log_verbosity : Literal[1, 2, 3]
             Override main log's verbosity level for new log file:
                 - 1 = quiet       (Levels in log: ERROR, CRITICAL, WARNING)
@@ -374,7 +367,7 @@ class Duo:
                 - 3 = verbose     (Levels in log: standard + DEBUG, TRACE)
             - If not specified, log_verbosity inherits the session setting.
             - If the session setting uses log_verbosity=0, new_logger()
-                falls back to default log_verbosity=2.
+                falls back to log_verbosity=2.
 
 
         Additional per-logger overrides
@@ -456,7 +449,7 @@ class Duo:
                 level="DEBUG",
             )
 
-        2. Capture INFO+ messages from the "report" sink only (no DEBUG or TRACE messages):
+        2. Capture INFO+ messages from the "report" sink only (no DEBUG or TRACE):.
             log.new_loguru_sink(
                 "report_summary.log",
                 level="INFO",
@@ -519,12 +512,12 @@ class Duo:
             label: str,
             *,
             console_style: str | _NotGiven = _NOT_GIVEN,
-            level: str = "INFO",
-    ) -> None:
+            level: str  = "INFO",
+    ) -> Callable[..., None]:
         """
         Purpose
         -------
-        Create a custom logging label (e.g., TIP, NOTE).
+        Create a custom labeled logging function (e.g., TIP, NOTE).
 
         Example
         -------
@@ -545,7 +538,7 @@ class Duo:
                 "Uses CRITICAL gating behavior for verbosity filtering"
             )
 
-        3. Conditional usage (note underscore in log_note)
+        3. Conditional usage
             SHOW_NOTES = True
             log.new_level(
                 "NOTE",
@@ -561,12 +554,12 @@ class Duo:
         label : str
             Display label shown in console and log output.
 
+        console_style:
+            Rich style string.
+            Example: "italic blue", "bold red", "underline"
+
         Optional arguments
         ------------------
-         console_style: Rich style string.
-            Example: "italic blue", "bold red", "underline"
-            Default: "bold"
-
         level : str
             Controls verbosity gating and Loguru level routing.
             Default: "INFO"
@@ -578,7 +571,7 @@ class Duo:
             - Custom labels behave like their assigned level for
               verbosity filtering and Loguru integration.
         """
-        _create_custom_level_label(
+        return _create_custom_level_label(
             self,
             label,
             level=level,
@@ -606,7 +599,6 @@ class Duo:
         -------
         Path | None
 
-        Returns None before session initialization and after session reset.
         """
         return self._runtime.main_sink_log_file_path_abs
 
@@ -636,8 +628,6 @@ class Duo:
         Path | None
             Path to the current session's output directory.
 
-        Returns None before session initialization and after session reset.
-
         Notes
         -----
             - Does not create directories.
@@ -658,8 +648,7 @@ class Duo:
         """
         Purpose
         -------
-        Close the logging session.
-        Optional in scripts, required in interactive sessions.
+        Optionally manually close the logging session.
 
         Example
         -------
@@ -705,7 +694,6 @@ class Duo:
         Purpose
         -------
         Log an error message and the active traceback.
-        Call log.exception() inside an except block to include the current traceback.
 
         Displays:
             - the user-provided error message
@@ -758,8 +746,7 @@ class Duo:
         Purpose
         -------
         Log a critical error message.
-        Shown if verbosity level >= 1,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >=  1.
 
         Example
         -------
@@ -804,8 +791,7 @@ class Duo:
         Purpose
         -------
         Log an error message.
-        Shown if verbosity level >= 1,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 1 .
 
         Example
         -------
@@ -850,8 +836,7 @@ class Duo:
         Purpose
         -------
         Log a warning message.
-        Shown if verbosity level >= 1,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 1.
 
         Example
         -------
@@ -896,8 +881,7 @@ class Duo:
         Purpose
         -------
         Log an information message.
-        Shown if verbosity level >= 2,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 2.
 
         Example
         -------
@@ -942,8 +926,7 @@ class Duo:
         Purpose
         -------
         Log a success message.
-        Shown if verbosity level >= 2,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 2.
 
         Example
         -------
@@ -988,8 +971,7 @@ class Duo:
         Purpose
         -------
         Log a debug message.
-        Shown if verbosity level >= 3,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 3.
 
         If show_debug_source is enabled in the config, and if the message was generated
         in a script (i.e., not in interactive session), then the prefix of
@@ -1036,8 +1018,7 @@ class Duo:
         Purpose
         -------
         Log a trace message.
-        Shown if verbosity level >= 3,
-        independently for console_verbosity and log_verbosity.
+        Shown if verbosity level >= 3.
 
 
         Example
