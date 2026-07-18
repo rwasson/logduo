@@ -3,6 +3,7 @@ test_console.py
 
 Last edited: 2026-06-11
 """
+import os
 
 import pytest
 from rich.panel import Panel
@@ -15,6 +16,7 @@ from logduo.internals.formatters.message_prep import MessageKind
 # === Fakes ===================================================================
 from logduo.internals.sinks.console import (
     _build_console_message,
+    _emit_console_end,
     _emit_console_payload,
     _initialize_console,
 )
@@ -709,3 +711,231 @@ def test_25_multiple_ansi_segments_with_wrap(tmp_path):
     assert "[31m" not in log_content
     assert "[34m" not in log_content
     assert "[0m" not in log_content
+
+
+# --- test_26_build_console_message_unprintable_object() ----------------------
+def test_26_build_console_message_unprintable_object():
+
+    class Unprintable:
+        def __str__(self):
+            raise ValueError("cannot convert")
+
+    result = _build_console_message(
+        message=Unprintable(),
+        console_style=None,
+    )
+
+    assert result == "<unprintable object>"
+
+
+# --- test_27_build_console_message_text_is_copied() --------------------------
+def test_27_build_console_message_text_is_copied():
+
+    original = Text("hello")
+
+    result = _build_console_message(
+        message=original,
+        console_style="bold red",
+    )
+
+    assert isinstance(result, Text)
+    assert result is not original
+    assert result.plain == "hello"
+
+
+# --- test_28_emit_structured_string_without_prefix() -------------------------
+def test_28_emit_structured_string_without_prefix(monkeypatch):
+
+    duo = Duo()
+    printed = []
+
+    def fake_print(_duo, **kwargs):
+        printed.append(
+            (
+                kwargs["message"],
+                kwargs["message_kind"],
+            )
+        )
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.console._safe_console_print",
+        fake_print,
+    )
+
+    _emit_console_payload(
+        duo,
+        prefix=Text("PREFIX"),
+        payload="line one\nline two",
+        message_kind=MessageKind.STRUCTURED,
+        console_style=None,
+        no_prefix=True,
+    )
+
+    assert len(printed) == 1
+    assert isinstance(printed[0][0], Text)
+    assert printed[0][0].plain == "line one\nline two"
+    assert printed[0][1] == MessageKind.STRUCTURED
+
+
+# --- test_29_emit_rich_text_with_prefix() -----------------------------------
+def test_29_emit_rich_text_with_prefix(monkeypatch):
+
+    duo = Duo()
+    printed = []
+
+    def fake_print(_duo, **kwargs):
+        printed.append(
+            (
+                kwargs["message"],
+                kwargs["message_kind"],
+            )
+        )
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.console._safe_console_print",
+        fake_print,
+    )
+
+    payload = Text("hello")
+
+    _emit_console_payload(
+        duo,
+        prefix=Text("PREFIX"),
+        payload=payload,
+        message_kind=MessageKind.RICH_TEXT,
+        console_style=None,
+        no_prefix=False,
+    )
+
+    assert len(printed) == 2
+
+    assert printed[0][0].plain == "PREFIX"
+    assert printed[0][1] == MessageKind.RICH_TEXT
+
+    assert printed[1][0] is payload
+    assert printed[1][1] == MessageKind.RICH_TEXT
+
+
+# --- test_30_emit_rich_text_with_console_style_warns() ----------------------
+def test_30_emit_rich_text_with_console_style_warns(monkeypatch):
+
+    duo = Duo()
+    warning_messages = []
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.console._safe_console_print",
+        lambda *args, **kwargs: None,
+    )
+
+    monkeypatch.setattr(
+        "logduo.internals.sinks.console._runtime_warning",
+        lambda _duo, *, warn_msg: warning_messages.append(warn_msg),
+    )
+
+    _emit_console_payload(
+        duo,
+        prefix=Text(),
+        payload=Text("hello"),
+        message_kind=MessageKind.RICH_TEXT,
+        console_style="blue",
+        no_prefix=True,
+    )
+
+    assert warning_messages == [
+        "console_style ignored for Rich Text; apply style inside the Text object"
+    ]
+
+# --- test_31_emit_unsupported_payload_type_raises() --------------------------
+def test_31_emit_unsupported_payload_type_raises():
+
+    duo = Duo()
+
+    with pytest.raises(
+        RuntimeError,
+        match="unsupported console payload type",
+    ):
+        _emit_console_payload(
+            duo,
+            prefix=Text(),
+            payload=object(),
+            message_kind=MessageKind.OBJECT,
+            console_style=None,
+            no_prefix=True,
+        )
+
+# --- test_32_initialize_console_success() ------------------------------------
+def test_32_initialize_console_success(tmp_path):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        console_header="off",
+        console_footer="off",
+    )
+
+    assert log._console is not None
+    assert log._runtime.console_continuation_prefix_len >= 0
+
+    log.close()
+
+# --- test_33_first_instance_claims_console_owner() ---------------------------
+def test_33_first_instance_claims_console_owner(
+    tmp_path,
+    monkeypatch,
+):
+
+    monkeypatch.delenv(
+        "LOGDUO_CONSOLE_OWNER",
+        raising=False,
+    )
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        first_instance_owns_console=True,
+        console_header="off",
+        console_footer="off",
+    )
+
+    assert (
+        os.environ["LOGDUO_CONSOLE_OWNER"]
+        == str(log._runtime.pid)
+    )
+
+    log.close()
+
+
+# --- test_34_emit_console_end_without_console() ------------------------------
+def test_34_emit_console_end_without_console():
+
+    duo = Duo()
+    duo._console = None
+
+    _emit_console_end(duo)
+
+
+# --- test_35_console_footer_is_emitted() ------------------------------------
+def test_35_console_footer_is_emitted(
+    tmp_path,
+    capsys,
+):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        console_header="off",
+        console_footer="CUSTOM FOOTER",
+    )
+
+    log("hello")
+    log.close()
+
+    output = capsys.readouterr().out
+
+    assert "CUSTOM FOOTER" in output

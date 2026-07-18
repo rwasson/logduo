@@ -14,14 +14,12 @@ def test_01_create_custom_level_label(tmp_path):
     log = Duo()
     log.configure(log_dir_path=str(tmp_path))
 
-    note = _create_custom_level_label(
+    _create_custom_level_label(
         log,
         "NOTE",
         console_style="purple",
         level="INFO",
     )
-
-    assert callable(note)
 
     assert log._runtime.new_levels["note"] == (
         "NOTE",

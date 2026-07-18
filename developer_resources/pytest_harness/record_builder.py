@@ -166,20 +166,20 @@ def _build_test_file_record(  # noqa: PLR0915
     process.wait()
     duration = time.time() - start
 
-    # DEBUG SECTION TODO DELETE
-    if process.returncode != 0:
-        print()
-        print("=" * 80)
-        print(f"DEBUG: FAILED TEST FILE: {test_file_path}")
-        print("=" * 80)
-        captured_text = "".join(captured)
-        output_encoding = sys.stdout.encoding or "utf-8"
-        safe_captured_text = captured_text.encode(
-            output_encoding,
-            errors="backslashreplace",
-        ).decode(output_encoding)
-        print(safe_captured_text, flush=True)
-        print("=" * 80)
+    if debug_pytest_harness:
+        if process.returncode != 0:
+            print()
+            print("=" * 80)
+            print(f"DEBUG: FAILED TEST FILE: {test_file_path}")
+            print("=" * 80)
+            captured_text = "".join(captured)
+            output_encoding = sys.stdout.encoding or "utf-8"
+            safe_captured_text = captured_text.encode(
+                output_encoding,
+                errors="backslashreplace",
+            ).decode(output_encoding)
+            print(safe_captured_text, flush=True)
+            print("=" * 80)
 
 
     if test_logger is not None:

@@ -340,14 +340,12 @@ def test_16_output_dir_path_matches_runtime(tmp_path):
     )
 
 
-
-
 # --- test_17_register_close_on_exit_only_once() ------------------------------
 def test_17_register_close_on_exit_only_once(monkeypatch):
 
     calls = []
 
-    def fake_register(*args, **kwargs):
+    def fake_register(*args, **kwargs):  # noqa
         calls.append(True)
 
     monkeypatch.setattr(
@@ -363,3 +361,141 @@ def test_17_register_close_on_exit_only_once(monkeypatch):
     log._register_close_on_exit()
 
     assert len(calls) == 1
+
+# --- test_18_join_returns_active_duo() ----------------------------------------
+def test_18_join_returns_active_duo(monkeypatch):
+
+    active_log = Duo()
+
+    monkeypatch.setattr(
+        logduo_module,
+        "_get_active_duo",
+        lambda: active_log,
+    )
+
+    result = Duo().join()
+
+    assert result is active_log
+
+
+# --- test_19_call_rejects_extra_positional_arguments() ------------------------
+def test_19_call_rejects_extra_positional_arguments():
+
+    log = Duo()
+
+    with pytest.raises(
+        TypeError,
+        match="single positional message argument",
+    ):
+        log("hello", "extra")
+
+
+# --- test_20_main_log_file_path_matches_runtime(tmp_path) ---------------------
+def test_20_main_log_file_path_matches_runtime(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+    )
+
+    assert (
+        log.main_log_file_path
+        == log._runtime.main_sink_log_file_path_abs
+    )
+    assert log.main_log_file_path is not None
+    assert log.main_log_file_path.exists()
+    log.close()
+
+
+# --- test_21_explicit_level_methods_write_expected_labels() ------------------
+def test_21_explicit_level_methods_write_expected_labels(tmp_path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        console_verbosity=0,
+        log_verbosity=3,
+    )
+
+    log.critical("critical message")
+    log.error("error message")
+    log.warning("warning message")
+    log.success("success message")
+    log.info("info message")
+    log.debug("debug message")
+    log.trace("trace message")
+
+    log.close()
+
+    log_text = _read_file(_find_main_log(tmp_path))
+
+    print("")
+    print("************************************************")
+    print("test_21_explicit_level_methods_write_expected_labels")
+    print("log_text:")
+    print(log_text)
+    print("************************************************")
+
+    assert "CRITICAL" in log_text
+    assert "critical message" in log_text
+
+    assert "ERROR" in log_text
+    assert "error message" in log_text
+
+    assert "WARNING" in log_text
+    assert "warning message" in log_text
+
+    assert "SUCCESS" in log_text
+    assert "success message" in log_text
+
+    assert "INFO" in log_text
+    assert "info message" in log_text
+
+    assert "DEBUG" in log_text
+    assert "debug message" in log_text
+
+    assert "TRACE" in log_text
+    assert "trace message" in log_text
+
+
+
+# --- test_22_invalid_custom_level_registry_entry_raises() --------------------
+def test_22_invalid_custom_level_registry_entry_raises(tmp_path):
+    log = Duo()
+    log.configure(log_dir_path=tmp_path)
+
+    try:
+        log._runtime.new_levels["broken"] = (
+            "invalid",
+        )  # type: ignore[assignment]
+        with pytest.raises(
+            RuntimeError,
+            match="Invalid new_levels entry",
+        ):
+            getattr(log, "broken")
+
+    finally:
+        log.close()
+
+
+# --- test_23_refresh_pid_after_pid_change() -----------------------------------
+def test_23_refresh_pid_after_pid_change(monkeypatch):
+
+    log = Duo()
+    log._runtime.pid = -1
+
+    monkeypatch.setattr(
+        logduo_module.os,
+        "getpid",
+        lambda: 123456,
+    )
+
+    log._refresh_pid()
+
+    assert log._runtime.pid == 123456
+    assert log._runtime.instance_index >= 1
+
+
+
