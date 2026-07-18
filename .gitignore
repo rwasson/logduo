@@ -1,18 +1,11 @@
 # .gitignore
-# to force clear old git,
-# in Terminal: (.venv) renyawasson@Renyas-MacBook-Air logduo_project: git rm -r -f  --cached .
-# then in Terminal to redo new git: git add .
-# then in Terminal to confirm new git: git status
-
 
 # --- sub-folders ---
 deprecated/
-notes/
-    todo/
+docs/todo/
 
 
 # --- virtual environments ---
-.venv
 .venv/
 venv/
 env/

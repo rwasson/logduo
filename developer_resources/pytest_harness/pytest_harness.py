@@ -12,7 +12,7 @@ Responsibilities:
 - combine per-test-file coverage data
 - build aggregate coverage and test summaries
 
-Last edited: 2026-07-11
+Last edited: 2026-07-18
 """
 import sys
 import tempfile
@@ -195,6 +195,7 @@ def pytest_harness(
         - Temporary coverage files are removed after summary data is built.
         - The function raises SystemExit rather than returning normally.
     """
+    results: list[TestFileRecord] = []
 
     args = _resolve_harness_args(
         test_dir=test_dir,
@@ -225,15 +226,19 @@ def pytest_harness(
     output_dir_path = log.output_dir_path
     if output_dir_path is None:
         raise RuntimeError(
-
             "Logduo did not create an output directory."
-
         )
 
     relative_test_file_paths = _resolve_test_file_paths(
         test_dir_path=args.test_dir,
         include_list=args.include_list,
         exclude_list=args.exclude_list,
+    )
+    test_file_count = len(relative_test_file_paths)
+    print(
+        f"Running {test_file_count} test files: ",
+        end="",
+        flush=True,
     )
 
     if debug_pytest_harness:
@@ -251,129 +256,115 @@ def pytest_harness(
         dir=output_dir_path,
     )
     coverage_dir_path = Path(coverage_temp_dir.name)
+    try:
+        for relative_test_file_path in relative_test_file_paths:
+            print(".", end="", flush=True)
 
-    # --- Run test files ---
-    results: list[TestFileRecord] = []
+            test_file_path = args.test_dir / relative_test_file_path
 
-    test_file_count = len(relative_test_file_paths)
-    print(
-        f"Running {test_file_count} test files: ",
-        end="",
-        flush=True,
-    )
+            if not test_file_path.exists():
+                raise RuntimeError(
+                    "Error in pytest_harness_runner.py\n"
+                    "Unrecognized test file:\n"
+                    f"    {relative_test_file_path}"
+                )
 
-    for relative_test_file_path in relative_test_file_paths:
-        print(".", end="", flush=True)
-        # print(f"\n    {relative_test_file_path}", flush=True) # TODO delete
+            if not test_file_path.is_file():
+                raise RuntimeError(
+                    "Expected file but found something else:\n"
+                    f"    {test_file_path}"
+                )
 
-        test_file_path = args.test_dir / relative_test_file_path
+            try:
+                test_file_path.read_text(encoding="utf-8")
+            except OSError as e:
+                raise RuntimeError(
+                    "Unable to read test file:\n"
+                    f"    {test_file_path}\n"
+                    f"    {e}"
+                ) from e
 
-        if not test_file_path.exists():
-            raise RuntimeError(
-                "Error in pytest_harness_runner.py\n"
-                "Unrecognized test file:\n"
-                f"    {relative_test_file_path}"
+            # Keep generated logs flat while preserving nested test-file identity.
+            test_file_safe_stem = (
+                str(relative_test_file_path.with_suffix(""))
+                .replace("/", "__")
+                .replace("\\", "__")
             )
 
-        if not test_file_path.is_file():
-            raise RuntimeError(
-                "Expected file but found something else:\n"
-                f"    {test_file_path}"
+            test_file_log_path = output_dir_path / f"{test_file_safe_stem}.log"
+            coverage_data_file_path = (
+                coverage_dir_path / f".coverage.{test_file_safe_stem}"
             )
 
-        try:
-            test_file_path.read_text(encoding="utf-8")
-        except OSError as e:
-            raise RuntimeError(
-                "Unable to read test file:\n"
-                f"    {test_file_path}\n"
-                f"    {e}"
-            ) from e
+            # Create temporary coverage config file - do not rely on pyproject.toml
+            coverage_config_file_path = coverage_dir_path / "pytest_harness_coveragerc"
+            coverage_config_file_path.write_text(
+                "[run]\n"
+                "branch = true\n"
+                f"source = {args.source_dir}\n"
+                "relative_files = false\n"
+                "parallel = true\n"
+                "concurrency = multiprocessing\n"
+                "patch = subprocess\n"
+                "\n"
+                "[report]\n"
+                "skip_empty = true\n"
+                "show_missing = true\n"
+                "precision = 2\n",
+                encoding="utf-8",
+            )
 
-        # Keep generated logs flat while preserving nested test-file identity.
-        test_file_safe_stem = (
-            str(relative_test_file_path.with_suffix(""))
-            .replace("/", "__")
-            .replace("\\", "__")
-        )
+            result = _build_test_file_record(
+                test_file_path=test_file_path,
+                test_file_log_path=test_file_log_path,
+                source_dir=args.source_dir,
+                coverage_data_file_path=coverage_data_file_path,
+                # extra_pytest_args=["-q"],    # "-q" already called, extra_pytest_args[] reserved for future args
+                coverage_config_file_path=coverage_config_file_path,
+                individual_logs=individual_logs,
+                debug_pytest_harness=debug_pytest_harness,
+            )
 
-        test_file_log_path = output_dir_path / f"{test_file_safe_stem}.log"
-        coverage_data_file_path = (
-            coverage_dir_path / f".coverage.{test_file_safe_stem}"
-        )
+            results.append(result)
 
-        # Create temporary coverage config file - do not rely on pyproject.toml
-        coverage_config_file_path = coverage_dir_path / "pytest_harness_coveragerc"
-        coverage_config_file_path.write_text(
-            "[run]\n"
-            "branch = true\n"
-            f"source = {args.source_dir}\n"
-            "relative_files = false\n"
-            "parallel = true\n"
-            "concurrency = multiprocessing\n"
-            "patch = subprocess\n"
-            "\n"
-            "[report]\n"
-            "skip_empty = true\n"
-            "show_missing = true\n"
-            "precision = 2\n",
-            encoding="utf-8",
-        )
 
-        result = _build_test_file_record(
-            test_file_path=test_file_path,
-            test_file_log_path=test_file_log_path,
+        # Combine the separate per-test-file data files once.
+        combined_coverage_result = _combine_coverage_data_files(
+            coverage_dir_path=coverage_dir_path,
             source_dir=args.source_dir,
-            coverage_data_file_path=coverage_data_file_path,
-            # extra_pytest_args=["-q"],    # "-q" already called, extra_pytest_args[] reserved for future args
-            coverage_config_file_path=coverage_config_file_path,
-            individual_logs=individual_logs,
-            debug_pytest_harness=debug_pytest_harness,
         )
 
-        results.append(result)
+        print(" done", end="", flush=True)
+        print(" ")
+        print(" ")
 
+        summary_data = _build_summary_data(
+            pytest_test_file_records=results,
+            combined_coverage_result=combined_coverage_result,
+            show_skipped_and_xfailed=args.show_skipped_and_xfailed,
+            debug_pytest_harness=args.debug_pytest_harness,
+        )
 
+        summary_text = _build_summary_table(
+            summary_data=summary_data,
+            coverage_warning_threshold=args.coverage_warning_threshold,
+            show_skipped_and_xfailed=args.show_skipped_and_xfailed,
+            show_source_file_coverage=args.show_source_file_coverage,
+        )
+        log(summary_text)
 
+        run_failed = (
+                summary_data.failed_test_function_count > 0
+                or summary_data.error_test_function_count > 0
+                or summary_data.xpassed_test_function_count > 0
+                or summary_data.not_processed_test_file_count > 0
+                or summary_data.no_tests_collected_test_file_count > 0
+        )
 
-    # Combine the separate per-test-file data files once.
-    combined_coverage_result = _combine_coverage_data_files(
-        coverage_dir_path=coverage_dir_path,
-        source_dir=args.source_dir,
-    )
+        exit_code = 1 if run_failed else 0
 
-    # All combined data is now stored in normal Python records.
-    coverage_temp_dir.cleanup()
-
-    print(" done", end="", flush=True)
-    print(" ")
-    print(" ")
-
-    summary_data = _build_summary_data(
-        pytest_test_file_records=results,
-        combined_coverage_result=combined_coverage_result,
-        show_skipped_and_xfailed=args.show_skipped_and_xfailed,
-        debug_pytest_harness=args.debug_pytest_harness,
-    )
-
-    summary_text = _build_summary_table(
-        summary_data=summary_data,
-        coverage_warning_threshold=args.coverage_warning_threshold,
-        show_skipped_and_xfailed=args.show_skipped_and_xfailed,
-        show_source_file_coverage=args.show_source_file_coverage,
-    )
-    log(summary_text)
-
-    run_failed = (
-            summary_data.failed_test_function_count > 0
-            or summary_data.error_test_function_count > 0
-            or summary_data.xpassed_test_function_count > 0
-            or summary_data.not_processed_test_file_count > 0
-            or summary_data.no_tests_collected_test_file_count > 0
-    )
-
-
-    exit_code = 1 if run_failed else 0
-    log.close()  # TODO recent change
+    finally:
+        coverage_temp_dir.cleanup()
+        log.close()
 
     raise SystemExit(exit_code)

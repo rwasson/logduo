@@ -199,7 +199,9 @@ def _build_test_file_record(  # noqa: PLR0915
 
 
     try:
-        test_file_report = json.loads(test_file_report_path.read_text())
+        test_file_report = json.loads(
+            test_file_report_path.read_text(encoding="utf-8")
+        )
         summary = test_file_report["summary"]
         passed_test_function_count = summary.get("passed", 0)
         failed_test_function_count = summary.get("failed", 0)

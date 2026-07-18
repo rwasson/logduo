@@ -11,4 +11,5 @@ It is not part of Logduo's public API.
 - Edits should not be required in this directory. To run tests, right click on 
 
      `pytest_harness_runner.py'` in the `developer_resources\logduo_validation` directory.
+
 - See docstring in pytest_harness.py for more details

@@ -178,9 +178,6 @@ Message Rendering
 - Other Rich objects, such as `Panel`, are rendered on the console but displayed as placeholders in log files. 
     - For more examples, use `log.export_logduo_docs()` and see `console_rendering.py`. 
 
-
-
-
   
 Log File Name and Location
 --------------------------
@@ -253,7 +250,7 @@ Console compatibility
 Quality Assurance
 -----------------
 Logduo is validated using:
-- pytest, with over 500 individual tests
+- pytest, with over 90% coverage on over 600 individual tests
 - Ruff
 - mypy
 - Vulture

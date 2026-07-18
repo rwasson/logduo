@@ -246,10 +246,18 @@ Loguru Integration
   They are not managed like standard Logduo main logs or new_logger() files.
 
 
+Console compatibility
+--------------------------
+- Logduo supports modern Unicode-capable terminals on Windows, macOS, and Linux.
+- Full Rich console output requires a Unicode-capable output stream.
+- Restricted legacy encodings such as Windows-1252 may not support all Rich formatting.
+- Log files are written as UTF-8.
+
+
 Quality Assurance
 -----------------
 Logduo is validated using:
-- pytest, with over 500 individual tests
+- pytest, with over 90% coverage on over 600 individual tests
 - Ruff
 - mypy
 - Vulture
