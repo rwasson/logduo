@@ -10,8 +10,13 @@ import pytest
 from rich.panel import Panel
 from rich.text import Text
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import \
-    _find_main_log, _read_file, _emit_all_levels, _LEVEL_MESSAGES, _VERBOSITY_EXPECTATIONS
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+    _emit_all_levels,
+    _find_main_log,
+    _LEVEL_MESSAGES,
+    _read_file,
+    _VERBOSITY_EXPECTATIONS,
+)
 from logduo import Duo
 from logduo.internals.formatters.message_prep import MessageKind
 

@@ -8,8 +8,9 @@ from logduo.internals.engine.runtime_classes import MessageKind
 from logduo.internals.formatters.message_prep import (
     _build_plain_message,
     _message_kind,
+    _prepare_log_payload,
     _prepare_text_block,
-    _to_plain_log_text, _prepare_log_payload,
+    _to_plain_log_text,
 )
 
 
