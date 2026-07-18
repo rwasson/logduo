@@ -178,6 +178,9 @@ Message Rendering
 - Other Rich objects, such as `Panel`, are rendered on the console but displayed as placeholders in log files. 
     - For more examples, use `log.export_logduo_docs()` and see `console_rendering.py`. 
 
+
+
+
   
 Log File Name and Location
 --------------------------
@@ -237,6 +240,14 @@ Loguru Integration
 
 - Sinks added with `log.new_loguru_sink()` are advanced/pass-through sinks.
   They are not managed like standard Logduo main logs or `new_logger()` files.
+
+
+Console compatibility
+--------------------------
+- Logduo supports modern Unicode-capable terminals on Windows, macOS, and Linux. 
+- Full Rich console output requires a Unicode-capable output stream. 
+- Restricted legacy encodings such as Windows-1252 may not support all Rich formatting. 
+- Log files are written as UTF-8.
 
   
 Quality Assurance

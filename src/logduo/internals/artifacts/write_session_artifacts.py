@@ -7,6 +7,10 @@ Build and write session artifacts:
 
 Coordinates artifact generation from validated runtime/config state.
 
+Note:
+    paths are stored as Path objects and converted to str(path) for display,
+    preserving native OS separators.
+
 Last edited: 2026-05-27
 """
 from __future__ import annotations

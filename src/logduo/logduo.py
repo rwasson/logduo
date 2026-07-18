@@ -86,9 +86,9 @@ class Duo:
         self._arg_source_record: ArgSourceRecord = ArgSourceRecord()
 
         # --- RuntimeRecord ---
-        # Contains fields populated during runtime
-        # (e.g., event_count, paths, session state).
-        # See runtime_classes.py for RuntimeRecord and related runtime classes.
+        # Contains fields populated during runtime (paths and session state).
+        # paths are stored as Path objects and converted to str(path) for display,
+        # preserving native OS separators.
         self._runtime: RuntimeRecord = RuntimeRecord()
 
         # --- Lifecycle flags ---

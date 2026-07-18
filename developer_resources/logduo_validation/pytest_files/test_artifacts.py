@@ -35,7 +35,9 @@ def test_01_session_artifacts_written(tmp_path):
 
 
 # --- test_02_make_json_safe_path() --------------------------------------------
-def test_make_json_safe_path():
+def test_02_make_json_safe_path():
+    # paths are stored as Path objects and converted to str(path) for display,
+    # preserving native OS separators.
 
     result = _make_json_safe(
         {"a": Path("/tmp/test.txt")}

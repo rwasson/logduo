@@ -142,12 +142,18 @@ def _build_test_file_record(  # noqa: PLR0915
     subprocess_env = os.environ.copy()
     subprocess_env["COVERAGE_FILE"] = str(coverage_data_file_path)
 
+    # The harness captures child-process output as text.
+    # Use UTF-8 on both ends so Unicode test output is transported consistently
+    # across Windows, macOS, and Linux.
+    subprocess_env["PYTHONIOENCODING"] = "utf-8"
+
     process = subprocess.Popen(
         pytest_cmd,
         env=subprocess_env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding="utf-8",
     )
 
     captured: list[str] = []
