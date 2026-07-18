@@ -8,6 +8,62 @@ Last edited: 2026-06-12
 
 from pathlib import Path
 
+import pytest
+
+from logduo import Duo
+
+_VERBOSITY_EXPECTATIONS = [
+    pytest.param(
+        0,
+        set(),
+        id="verbosity-0",
+    ),
+    pytest.param(
+        1,
+        {"critical", "error", "warning"},
+        id="verbosity-1",
+    ),
+    pytest.param(
+        2,
+        {"critical", "error", "warning", "success", "info"},
+        id="verbosity-2",
+    ),
+    pytest.param(
+        3,
+        {
+            "critical",
+            "error",
+            "warning",
+            "success",
+            "info",
+            "debug",
+            "trace",
+        },
+        id="verbosity-3",
+    ),
+]
+
+
+_LEVEL_MESSAGES = {
+    "critical": "LEVEL_TEST_CRITICAL",
+    "error": "LEVEL_TEST_ERROR",
+    "warning": "LEVEL_TEST_WARNING",
+    "success": "LEVEL_TEST_SUCCESS",
+    "info": "LEVEL_TEST_INFO",
+    "debug": "LEVEL_TEST_DEBUG",
+    "trace": "LEVEL_TEST_TRACE",
+}
+
+# --- _emit_all_levels() -------------------------------------------------------
+def _emit_all_levels(log: Duo) -> None:
+    log.critical("LEVEL_TEST_CRITICAL")
+    log.error("LEVEL_TEST_ERROR")
+    log.warning("LEVEL_TEST_WARNING")
+    log.success("LEVEL_TEST_SUCCESS")
+    log.info("LEVEL_TEST_INFO")
+    log.debug("LEVEL_TEST_DEBUG")
+    log.trace("LEVEL_TEST_TRACE")
+
 
 # --- read_file() --------------------------------------------------------------
 def _read_file(path: Path) -> str:

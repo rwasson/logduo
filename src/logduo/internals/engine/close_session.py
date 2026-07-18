@@ -40,6 +40,94 @@ def _close_session(duo: Duo) -> None:
     runtime = duo._runtime
     runtime.session_state = "closing"
 
+    try:
+        try:
+            _finalize_timing(runtime)
+        except Exception as e:
+            fallback_end_time = datetime.now()
+
+            runtime.end_time = fallback_end_time
+            runtime.end_time_display = fallback_end_time.strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            runtime.duration_seconds = None
+            runtime.duration_display = None
+
+            print(
+                "LOGDUO WARNING: _finalize_timing failed; "
+                "using fallback end time "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+        try:
+            _emit_user_sink_end(duo)
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: _emit_user_sink_end failed "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+        try:
+            _emit_main_sink_log_end(duo)
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: _emit_main_sink_log_end failed "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+        try:
+            _emit_console_end(duo)
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: _emit_console_end failed "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+        try:
+            if runtime.jsonl_path_abs is not None:
+                _emit_jsonl_end(duo)
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: _emit_jsonl_end failed "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+        try:
+            _, missing = _build_auto_footer_created_file_lists(
+                runtime=runtime,
+            )
+            if missing:
+                print(
+                    "LOGDUO WARNING: Declared but not created:\n"
+                    f"{missing}",
+                    file=sys.stderr,
+                )
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: footer file check failed "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+    finally:
+        _reset_session(duo)
+
+
+
+'''
+TODO delete
+def _close_session(duo: Duo) -> None:
+    if not duo._initialized:
+        return
+
+    runtime = duo._runtime
+    runtime.session_state = "closing"
+
     # --- Finalize timing ---
     _finalize_timing(runtime)
 
@@ -82,7 +170,7 @@ def _close_session(duo: Duo) -> None:
 
     # --- Reset session ---
     _reset_session(duo)
-
+'''
 
 # === Internal helpers =========================================================
 

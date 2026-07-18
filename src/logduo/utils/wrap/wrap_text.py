@@ -185,7 +185,6 @@ def _wrap_text_with_ansi(
             character_position_index += 1
             visible_line_len += 1
 
-            # if char in break_chars: TODO delete if passes tests
             if char in break_chars and visible_line_len <= width:
                 last_safe_break_count = len(line_item_list)
 

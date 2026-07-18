@@ -222,7 +222,7 @@ def test_14_user_sink_end_failure_printed(
 
     err = capsys.readouterr().err
 
-    assert "_emit_user_sink_end crashed unexpectedly" in err
+    assert "_emit_user_sink_end failed" in err
     assert "forced failure" in err
 
 

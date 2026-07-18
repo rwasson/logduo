@@ -1,7 +1,7 @@
 """
 safe_console_print.py
 
-This little helper must be isolated in its own file to prevent circular dependencies
+This helper must be isolated in its own file to prevent circular dependencies
 
 Last edited: 2026-4-25
 """
@@ -24,11 +24,18 @@ def _safe_console_print(
         message_kind: MessageKind,
 ) -> None:
     """
-    Final console emitter.
+    Print the final message safely to the console.
 
-    Behavior:
-    - Rich renderables (Panel, Table, etc.) are printed as-is.
-    - Markup strings are treated as plain text.
+    Rich Text, Panels, Tables, Matplotlib figures, and other display objects retain
+    their normal presentation in the console. Regular strings are displayed exactly
+    as supplied.
+
+    For file output, Rich Text is converted to plain text. Objects that cannot be
+    meaningfully represented in a text log, such as Panels, Tables, and Matplotlib
+    figures, are replaced with descriptive placeholders.
+
+    If the console cannot encode a character, it is safely escaped rather than
+    causing the logging call to fail.
     """
 
     console = duo._console

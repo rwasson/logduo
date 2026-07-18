@@ -13,7 +13,7 @@ import pytest
 
 from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _find_main_log,
-    _read_file,
+    _read_file, _LEVEL_MESSAGES, _VERBOSITY_EXPECTATIONS, _emit_all_levels,
 )
 from logduo.logduo import Duo
 
@@ -467,7 +467,7 @@ def test_22_invalid_custom_level_registry_entry_raises(tmp_path):
     log.configure(log_dir_path=tmp_path)
 
     try:
-        log._runtime.new_levels["broken"] = (
+        log._runtime.new_levels["broken"] = (   # noqa
             "invalid",
         )  # type: ignore[assignment]
         with pytest.raises(
@@ -498,4 +498,55 @@ def test_23_refresh_pid_after_pid_change(monkeypatch):
     assert log._runtime.instance_index >= 1
 
 
+# --- test_24_log_verbosity_writes_expected_levels() ---------------------------
+@pytest.mark.parametrize(
+    ("log_verbosity", "expected_levels"),
+    _VERBOSITY_EXPECTATIONS,
+)
+def test_24_log_verbosity_writes_expected_levels(
+    tmp_path: Path,
+    log_verbosity: int,
+    expected_levels: set[str],
+) -> None:
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        console_verbosity=0,
+        log_verbosity=log_verbosity,
+        log_prefix="level",
+    )
 
+    main_log_file_path = log.main_log_file_path
+    assert main_log_file_path is not None
+
+    _emit_all_levels(log)
+    log.close()
+
+    print()
+    print("=" * 80)
+    print(
+        "test_24_log_verbosity_writes_expected_levels "
+        f"(log_verbosity={log_verbosity})"
+    )
+    print(f"log file: {main_log_file_path}")
+    print("-" * 80)
+
+    if log_verbosity == 0:
+        print("No log file created, as expected.")
+        print("=" * 80)
+
+        assert not main_log_file_path.exists()
+        assert expected_levels == set()
+        return
+
+    log_text = _read_file(main_log_file_path)
+
+    print(log_text)
+    print("=" * 80)
+
+    for level_name, message in _LEVEL_MESSAGES.items():
+        if level_name in expected_levels:
+            assert message in log_text
+        else:
+            assert message not in log_text

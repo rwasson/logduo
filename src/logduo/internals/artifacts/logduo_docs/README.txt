@@ -49,7 +49,7 @@ Key default settings:
 
 Configure (Optional)
 --------------------
-Recommendation: Place all regularly used configuration settings in pyproject.toml under [tool.logduo]
+Recommendation: Place regularly used configuration settings in pyproject.toml under [tool.logduo]
 
     from pathlib import Path
     from logduo import log
@@ -247,11 +247,10 @@ Loguru Integration
 
 
 Console compatibility
---------------------------
+---------------------
 - Logduo supports modern Unicode-capable terminals on Windows, macOS, and Linux.
-- Full Rich console output requires a Unicode-capable output stream.
-- Restricted legacy encodings such as Windows-1252 may not support all Rich formatting.
-- Log files are written as UTF-8.
+- Some older or restricted terminals may not display every Rich character correctly.
+- Log files are always written as UTF-8.
 
 
 Quality Assurance

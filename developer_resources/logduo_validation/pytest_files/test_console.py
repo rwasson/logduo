@@ -4,12 +4,14 @@ test_console.py
 Last edited: 2026-06-11
 """
 import os
+from pathlib import Path
 
 import pytest
 from rich.panel import Panel
 from rich.text import Text
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import _find_main_log, _read_file
+from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import \
+    _find_main_log, _read_file, _emit_all_levels, _LEVEL_MESSAGES, _VERBOSITY_EXPECTATIONS
 from logduo import Duo
 from logduo.internals.formatters.message_prep import MessageKind
 
@@ -939,3 +941,45 @@ def test_35_console_footer_is_emitted(
     output = capsys.readouterr().out
 
     assert "CUSTOM FOOTER" in output
+
+
+# --- test_36_console_verbosity_emits_expected_levels() ------------------------
+@pytest.mark.parametrize(
+    ("console_verbosity", "expected_levels"),
+    _VERBOSITY_EXPECTATIONS,
+)
+def test_36_console_verbosity_emits_expected_levels(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    console_verbosity: int,
+    expected_levels: set[str],
+) -> None:
+    log = Duo()
+    log.configure(
+        log_dir_path=tmp_path,
+        log_file_layout="script",
+        console_verbosity=console_verbosity,
+        log_verbosity=0,
+        console_prefix="level",
+    )
+
+    _emit_all_levels(log)
+    log.close()
+
+    console_text = capsys.readouterr().out
+
+    print()
+    print("=" * 80)
+    print(
+        "test_36_console_verbosity_emits_expected_levels "
+        f"(console_verbosity={console_verbosity})"
+    )
+    print("-" * 80)
+    print(console_text)
+    print("=" * 80)
+
+    for level_name, message in _LEVEL_MESSAGES.items():
+        if level_name in expected_levels:
+            assert message in console_text
+        else:
+            assert message not in console_text
