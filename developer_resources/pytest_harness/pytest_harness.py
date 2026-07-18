@@ -416,4 +416,6 @@ def pytest_harness(
 
 
     exit_code = 1 if run_failed else 0
+    log.close()  # TODO recent change
+
     raise SystemExit(exit_code)

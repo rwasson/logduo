@@ -462,10 +462,12 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
         log_wrap_width=80,
     )
 
+    log_path = log.main_log_file_path
+    assert log_path is not None
+
     log.close()
 
-    log_file = _find_main_log(tmp_path)
-    log_content = _read_file(log_file)
+    log_content = log_path.read_text(encoding="utf-8")
 
     assert "Logduo-managed files created this run" in log_content
 
@@ -481,11 +483,18 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     assert file_lines
 
     print(" ")
-    print("*************************************************************************")
+
+    print("**********************************************")
     print("test_13_main_log_footer_wraps_created_files")
+    print("\nFULL LOG:")
+    print(repr(log_content))
     print("\nFILE LINES:")
+
     for line in file_lines:
         print(repr(line))
+    print("**********************************************")
+
+    assert file_lines
 
 
 # --- test_14_main_log_footer_uses_hanging_indent_for_paths() ------------------

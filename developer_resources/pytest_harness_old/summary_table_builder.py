@@ -6,7 +6,7 @@ Last edited: 2026-06-11
 
 from pathlib import Path
 
-from developer_resources.pytest_harness.classes import AggregateTestSummary
+from developer_resources.pytest_harness_old.classes import AggregateTestSummary
 
 
 # --- _build_summary_table() ----------------------------------------------

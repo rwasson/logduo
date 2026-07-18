@@ -33,7 +33,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, cast
 
-from developer_resources.pytest_harness.classes import TestFileRecord
+from developer_resources.pytest_harness_old.classes import TestFileRecord
 
 
 # --- _build_test_file_record() ------------------------------------------------------------

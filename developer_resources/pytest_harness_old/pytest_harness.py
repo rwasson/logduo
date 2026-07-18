@@ -23,8 +23,8 @@ from developer_resources.pytest_harness.summary_data_builder import (
     _build_summary_data,
     _combine_coverage_data_files
 )
-from developer_resources.pytest_harness.classes import TestFileRecord
-from developer_resources.pytest_harness.test_file_record_builder import _build_test_file_record
+from developer_resources.pytest_harness_old.classes import TestFileRecord
+from developer_resources.pytest_harness_old.test_file_record_builder import _build_test_file_record
 from developer_resources.pytest_harness.resolve_test_file_paths import (
     _resolve_test_file_paths
 )

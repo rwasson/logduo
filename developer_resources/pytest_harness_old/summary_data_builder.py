@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from coverage import Coverage
 
-from developer_resources.pytest_harness.classes import (
+from developer_resources.pytest_harness_old.classes import (
     AggregateTestSummary,
     CombinedCoverageResult,
     ProblemTestFileRecord,
