@@ -1,5 +1,16 @@
 LOGDUO UPDATE CHECKLIST
 =======================
+minor updates on GitHub:
+
+STAMP=$(date +%Y-%m-%d_%H-%M)
+
+git status --short --untracked-files=all
+git add .
+git diff --cached --stat
+git commit -m "Update $STAMP"
+git push origin main
+git status
+
 
 1. Final validation
 -------------------
@@ -28,10 +39,11 @@ PyPI versions cannot be replaced after publication.
 ------------------
 Run:
 
+    VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
     git status --short --untracked-files=all
     git add .
     git diff --cached --stat
-    git commit -m "Release X.Y.Z"
+    git commit -m "Release $VERSION"
     git push origin main
     git status
 
@@ -65,6 +77,7 @@ Confirm the wheel contains:
 Install the wheel in a clean virtual environment
 - Delete logduo from temp_project then reinstall using:
 
+    python -m pip uninstall -y logduo
     python -m pip install "/Users/renyawasson/Local/PycharmProjects_local/logduo_project/dist/"logduo-*.whl
 
 Confirm:

@@ -35,6 +35,15 @@ If a message is logged before `log.configure()` is called, the logging session s
 Key default settings:
   - `console_verbosity = 3` and `log_verbosity = 3`
     - All messages (including TRACE and DEBUG) are sent to both the console and the main log file.
+  - `console_prefix = "level"` and `log_prefix = "timestamp"`
+    - Console messages show the logging level without a timestamp.
+    - Log-file messages include the timestamp and logging level.
+    - Set `console_prefix="timestamp"` to include timestamps in console output, or 
+      `console_prefix="off"` to omit the prefix entirely.
+  - `log_file_mode = "write"`
+    - Existing log files are overwritten.
+    - Set `log_file_mode="append"` to preserve existing contents.
+    - Set `log_file_mode="timestamped"` to add a timestamp to the filename.
   - `log_dir_path = "auto"`
     - The `logs` directory is placed in the project root if identified; otherwise, in the current working directory.
   - `log_file_layout = "run"`
@@ -45,6 +54,22 @@ Key default settings:
   - `write_config_table = True`
     - `config_table.txt` is written with configuration values, descriptions, and allowed values.
 
+
+Example Output
+--------------
+    logging started:  2026-07-20 10:10:28
+    running script :  main.py
+    pruned run directories: 1 (keep=3)
+
+    | INFO     | hello world
+    ───────────────────────────────────────────────────────
+    logging ended   :  2026-07-20 10:10:28 (duration 00 sec)
+    script path     :  temp_project/main.py
+    output directory:  temp_project/logs/main/run_2026_07_20__10_10_28
+
+    files created this logging session in output directory:
+        config_table.txt
+        main.log
 
 Configure (Optional)
 --------------------
