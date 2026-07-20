@@ -192,7 +192,7 @@ def _initialize_jsonl(duo: Duo) -> None:  # noqa: PLR0911  # many returns
 
     # --- build + register file record ---
     _register_created_file_record(
-        duo, _build_jsonl_created_file_record(file_path=jsonl_path_abs, display_order=0)
+        duo, _build_jsonl_created_file_record(file_path=jsonl_path_abs)
     )
 
     try:

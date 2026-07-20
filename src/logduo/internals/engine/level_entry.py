@@ -35,6 +35,7 @@ import re
 import sys
 import traceback
 from linecache import getline
+from pathlib import Path
 from textwrap import wrap
 from typing import Any, TYPE_CHECKING
 
@@ -52,10 +53,7 @@ from logduo.internals.session_config.session_constants import (
     _MAX_VERBOSITY_LEVEL,
     _NOT_GIVEN,
     _NotGiven,
-    _TRACEBACK_MAX_PARENTS,
-    _TRACEBACK_PATH_WIDTH,
 )
-from logduo.utils.short_path.short_path import short_path
 
 
 # --- _level_entry() -----------------------------------------------------------
@@ -176,12 +174,9 @@ def _filter_level_kwargs(duo: Duo, *, label: str, kwargs: dict[str, Any]) -> Non
     filepath, lineno = _get_caller()
 
     # Use project directory as the shortening anchor.
-    anchor_dir_path_abs = duo._runtime.project_dir_path_abs
-    display_path = short_path(
+    display_path = _build_path_display_label(
         filepath,
-        width=_TRACEBACK_PATH_WIDTH,
-        anchor_dir=anchor_dir_path_abs,
-        max_parents=_TRACEBACK_MAX_PARENTS,
+        anchor_dir=duo._runtime.project_dir_path_abs,
     )
 
     raw_line = getline(filepath, lineno).rstrip("\n")
@@ -221,11 +216,9 @@ def _emit_traceback_block(
         r'File "([^"]+)"',
         lambda match: (
             f'File "{
-                short_path(
+                _build_path_display_label(
                     match.group(1),
-                    width=_TRACEBACK_PATH_WIDTH,
                     anchor_dir=anchor_dir,
-                    max_parents=_TRACEBACK_MAX_PARENTS,
                 )
             }"'
         ),
@@ -324,3 +317,18 @@ def _raise_if_none(
 
     if console_style is None:
         raise ValueError("console_style does not accept None; omit the argument instead")
+
+
+# --- _build_path_display_label() ---------------------------------------------
+def _build_path_display_label(
+    path: str | Path,
+    *,
+    anchor_dir: Path | None,
+) -> str:
+    path_abs = Path(path)
+    if anchor_dir is not None:
+        try:
+            return str(path_abs.relative_to(anchor_dir.parent))
+        except ValueError:
+            pass
+    return str(path_abs)

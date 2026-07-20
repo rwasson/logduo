@@ -17,18 +17,14 @@ from pathlib import Path
 from typing import Any
 
 from logduo.internals.engine.runtime_classes import RuntimeRecord
-from logduo.internals.formatters.header_footer_formatters import (
-    _build_shortened_file_path_display_label,
-)
 from logduo.internals.session_config.session_config_classes import SessionConfig
 from logduo.internals.session_config.session_constants import (
     _DARK_THEME_COLORS,
-    _DEFAULT_SHORT_PATH_MAX_PARENTS,
-    _DEFAULT_SHORT_PATH_WIDTH,
+    _DEFAULT_CONFIG_TABLE_WIDTH,
     _LIGHT_THEME_COLORS,
 )
 from logduo.utils.table.text_table import text_table
-from logduo.utils.wrap.wrap_text import strip_ansi
+from logduo.utils.wrap.wrap_text import strip_ansi, wrap_text
 
 _CONFIG_TABLE_WRAP_WIDTH = 120
 _CONFIG_TABLE_DEFAULT_MAX_CELL_LINES = 5
@@ -333,33 +329,60 @@ def _build_footnote_list(
     path_lines: list[str] = []
     path_fields = ["log_dir_path", "log_file_path"]
 
+    project_dir_path_abs = runtime.project_dir_path_abs
+
+    if project_dir_path_abs is None:
+        raise RuntimeError(
+            "LOGDUO INTERNAL ERROR: project_dir_path_abs not set."
+        )
+    path_anchor_dir = project_dir_path_abs.parent
+
     for field in path_fields:
         raw_val = _get_runtime_path_value(field, runtime)
         if raw_val is None:
             display_value = "None"
         else:
-            display_value = _build_shortened_file_path_display_label(
-                raw_val,
-                anchor_dir=runtime.project_dir_path_abs,
-                path_display_width=_DEFAULT_SHORT_PATH_WIDTH - _CONFIG_TABLE_PATH_INDENT,
-                max_parents=_DEFAULT_SHORT_PATH_MAX_PARENTS,
+            try:
+                display_value = str(
+                    raw_val.relative_to(path_anchor_dir)
+                )
+            except ValueError:
+                display_value = str(raw_val)
+        path_line = f"{field:<{field_width}} = {display_value}"
+        path_lines.extend(
+            wrap_text(
+                path_line,
+                width=_DEFAULT_CONFIG_TABLE_WIDTH - _CONFIG_TABLE_PATH_INDENT,
+                continuation_width=_DEFAULT_CONFIG_TABLE_WIDTH - _CONFIG_TABLE_PATH_INDENT,
+                hanging_indent=field_width + len(" = ") + 2,
             )
-        path_lines.append(f"{field:<{field_width}} = {display_value}")
+        )
 
     footnotes.append(f"{k}. Paths*:")
     footnotes.extend(f"    {line}" for line in path_lines)
 
     # toml_info contains toml status (str) if path not found, or args not used
     toml_info = _get_toml_display_value(toml_record)
-    display_toml_value = toml_info
+    toml_prefix = "    toml_file_path = "
+
     if isinstance(toml_info, Path):
-        display_toml_value = _build_shortened_file_path_display_label(
-            toml_info,
-            anchor_dir=runtime.project_dir_path_abs,
-            path_display_width=_DEFAULT_SHORT_PATH_WIDTH - _CONFIG_TABLE_PATH_INDENT,
-            max_parents=_DEFAULT_SHORT_PATH_MAX_PARENTS,
+        try:
+            display_toml_value = str(
+                toml_info.relative_to(path_anchor_dir)
+            )
+        except ValueError:
+            display_toml_value = str(toml_info)
+
+        footnotes.extend(
+            wrap_text(
+                toml_prefix + display_toml_value,
+                width=_DEFAULT_CONFIG_TABLE_WIDTH,
+                continuation_width=_DEFAULT_CONFIG_TABLE_WIDTH,
+                hanging_indent=len(toml_prefix) + 2,
+            )
         )
-    footnotes.append(f"    toml_file_path = {display_toml_value}")
+    else:
+        footnotes.append(toml_prefix + str(toml_info))
 
     # --- Theme colors (if custom) ---
     k += 1

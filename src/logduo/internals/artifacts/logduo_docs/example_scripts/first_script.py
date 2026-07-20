@@ -30,9 +30,8 @@ LOG_DIR = Path.cwd() / "logs"
 # verbosity=3 so DEBUG and TRACE messages are visible in example_scripts
 log.configure(
     log_dir_path=LOG_DIR,
-    log_verbosity=3,
-    console_verbosity=3,
     console_wrap_width=150,
+    log_wrap_width=80,
 )
 
 log("hello world")

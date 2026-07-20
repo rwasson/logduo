@@ -96,7 +96,7 @@ def test_07_close_footer_lists_created_files(tmp_path):
 
     content = _read_file(_find_main_log(tmp_path))
 
-    assert "Logduo-managed files created this run" in content
+    assert "files created this logging session in output directory" in content
 
 
 # --- test_08_close_respects_log_verbosity_zero() -----------------------------
@@ -210,7 +210,7 @@ def test_14_user_sink_end_failure_printed(
         log_dir_path=str(tmp_path),
     )
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):  # noqa
         raise RuntimeError("forced failure")
 
     monkeypatch.setattr(
@@ -239,7 +239,7 @@ def test_15_main_sink_end_failure_printed(
         log_dir_path=str(tmp_path),
     )
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):  # noqa
         raise RuntimeError("forced failure")
 
     monkeypatch.setattr(
@@ -268,7 +268,7 @@ def test_16_console_end_failure_printed(
         log_dir_path=str(tmp_path),
     )
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):  # noqa
         raise RuntimeError("forced failure")
 
     monkeypatch.setattr(
@@ -298,7 +298,7 @@ def test_17_jsonl_end_failure_printed(
         write_jsonl=True,
     )
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):   # noqa
         raise RuntimeError("forced failure")
 
     monkeypatch.setattr(
@@ -329,7 +329,12 @@ def test_18_missing_files_warning(
 
     monkeypatch.setattr(
         "logduo.internals.engine.close_session._build_auto_footer_created_file_lists",
-        lambda runtime: ([], "missing.txt"),
+        lambda runtime: (
+            [],  # output-directory files
+            [],  # project files
+            [],  # external files
+            ["missing.txt"],  # missing files
+        )
     )
 
     _close_session(log)

@@ -41,7 +41,7 @@ def section(title: str) -> None:
     log(title)
     log("=" * 87)
 
-def spaces(num: int, *, char: str= " ") -> str:
+def spaces(num: int, *, char: str = " ") -> str:
     spaces_str = char * num
     return spaces_str
 

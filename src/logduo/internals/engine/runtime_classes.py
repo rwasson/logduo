@@ -100,7 +100,6 @@ class CreatedFileRecord:
 
     # display metadata
     continuation_prefix_len: int
-    display_order: int = 0
 
 
 # --- class RuntimeRecord ------------------------------------------------------
@@ -149,7 +148,7 @@ class RuntimeRecord:
     # dir/file paths - saved in _resolve_session_config()
     log_dir_path_abs: Path | None = None
     main_sink_log_dir_path_abs: Path | None = None
-    main_sink_log_file_path_abs: Path | None = None
+    main_sink_log_file_path_abs: Path | None = None   # user facing, output_dir_path
 
     # JSONL file path saved in - _initialize_jsonl()
     jsonl_path_abs: Path | None = None

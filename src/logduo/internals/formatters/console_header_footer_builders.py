@@ -4,8 +4,7 @@ console_header_footer_builders.py
 # "_build_auto_*" helpers generate auto-generated info subcomponents
 
 Note: in scrolling console output window environments, line dividers look heavy.
-Line dividers are currently commented out in console, but still displayed in logs.
-
+Line dividers are not displayed in console, but still are displayed in logs.
 
 Last edited: 2026-5-27
 """
@@ -21,11 +20,10 @@ from logduo.internals.formatters.header_footer_formatters import (
     _build_auto_footer_created_file_lists,
     _build_auto_footer_info_rows,
     _build_auto_header_info_rows,
-    _build_shortened_file_path_display_label,
+    _build_wrapped_lines,
     _derive_label_pad,
 )
 from logduo.internals.session_config.session_constants import (
-    _DEFAULT_SHORT_PATH_MAX_PARENTS,
     _DIVIDER_WIDTH,
     _RULE_CHAR,
 )
@@ -104,131 +102,234 @@ def _build_console_header(
     return Text("\n").join(lines)
 
 
+
 # --- _build_console_footer() --------------------------------------------------
-def _build_console_footer(
+def _build_console_footer(  # noqa: PLR0915
     *,
     runtime: RuntimeRecord,
     console_footer: str,
     console_wrap_width: int,
     styles: Mapping[str, str],
-    show_created_files: bool,
 ) -> Text | None:
     """
-    Build the resolved footer payload for console output.
-
-    Returns:
-        Text: Fully prepared console footer payload.
-        None: No footer should be emitted.
-
-    Notes
-    -----
-    This function ONLY builds payload text.
-    Actual emission is handled later through:
-        _safe_console_print()
-    Supports:
-        - explicit custom footers
-        - auto-generated footers
-        - disabled footers ("off")
-        - different footer depending on whether session is interactive or script
+    Build the resolved console footer payload.
     """
 
-    # --- resolve console_footer policy ---
+    # --- disabled footer handling ---
     console_footer_arg = console_footer.strip().lower()
-
-    # --- disabled ---
     if console_footer_arg == "off":
         return None
 
-    # --- explicit custom footer ---
+    # --- custom footer handling ---
     if console_footer_arg != "auto":
         try:
-            footer_text = Text.from_markup(console_footer.rstrip("\n"))
+            footer_text = Text.from_markup(
+                console_footer.rstrip("\n")
+            )
         except MarkupError:
-            footer_text = Text(console_footer.rstrip("\n"))
+            footer_text = Text(
+                console_footer.rstrip("\n")
+            )
 
-        return Text("\n").join([footer_text, Text("")])
+        return Text("\n").join(
+            [
+                footer_text,
+                Text(""),
+            ]
+        )
 
-    # --- Auto-generated console footer ---
+    # --- console wrap width ---
+    line_display_width = console_wrap_width
 
-    # --- created/missing file lists ---
-    created_files, missing_files = _build_auto_footer_created_file_lists(runtime)
-    created_files = sorted(created_files, key=lambda cf: cf.display_order)
-    missing_files = sorted(missing_files, key=lambda cf: cf.display_order)
-
-    # --- formatting ---
-    full_line_width = console_wrap_width
-
-    # info block path values begin after padded labels
-    info_row_path_display_width = console_wrap_width - len("pyproject.toml path:  ")
-
-    # subtracted from available line width for created and missing file lists
-    len_append_suffix = len(" (append)")
-
+    # --- styles ---
     label_style = styles.get("header_label") or "blue"
     value_style = styles.get("header_value") or "black"
     divider_style = styles.get("divider") or "blue"
 
-    divider_line = _RULE_CHAR * _DIVIDER_WIDTH
-    divider_text = Text(divider_line, style=divider_style)
+    # --- created/missing files ---
+    (
+        output_dir_files,
+        project_files,
+        external_files,
+        missing_files,
+    ) = _build_auto_footer_created_file_lists(
+        runtime=runtime
+    )
 
-    rows = _build_auto_footer_info_rows(
+    output_dir_path = runtime.main_sink_log_dir_path_abs
+    project_dir_path = runtime.project_dir_path_abs
+
+    assert output_dir_path is not None
+    assert project_dir_path is not None
+
+    # --- auto footer info rows ---
+    auto_footer_info_rows = _build_auto_footer_info_rows(
         runtime=runtime,
-        path_display_width=info_row_path_display_width,
-        anchor_dir=runtime.project_dir_path_abs,
-        max_parents=_DEFAULT_SHORT_PATH_MAX_PARENTS,
         is_main_sink=True,
     )
-    label_pad = _derive_label_pad(rows)
-    lines: list[Text] = [divider_text]
 
-    # --- info footer rows ---
-    for label, value in rows:
-        lines.append(
-            _render_rich_label_value_row(
-                label, value, label_style=label_style, value_style=value_style, label_pad=label_pad
+    # Include output-directory label in alignment calculation.
+    label_pad = _derive_label_pad(
+        auto_footer_info_rows,
+        len("output directory"),
+    )
+
+    divider_line = _RULE_CHAR * _DIVIDER_WIDTH
+
+    lines: list[Text] = [
+        Text(divider_line, style=divider_style)
+    ]
+
+    # --- logging ended / script path ---
+    for label, value in auto_footer_info_rows:
+        lines.extend(
+            _build_wrapped_rich_label_value_lines(
+                label=label,
+                value=value,
+                label_pad=label_pad,
+                line_display_width=line_display_width,
+                label_style=label_style,
+                value_style=value_style,
             )
         )
 
-    # --- append created files list ---
-    if show_created_files and created_files:
-        lines.append(Text(""))
-        lines.append(Text("Logduo-managed files created this run:", style=label_style))
+    # --- output directory ---
+    try:
+        output_dir_display_label = str(output_dir_path.relative_to(project_dir_path.parent))
+    except ValueError:
+        output_dir_display_label = str(output_dir_path)
 
-        # created file block's path values are displayed flush left
-        # created_file_path_display_width = full_line_path_display_width
-        for cfr in created_files:
-            display_anchor_dir = runtime.project_dir_path_abs or cfr.path.parent
-            label = _build_shortened_file_path_display_label(
-                cfr.path,
-                path_display_width=full_line_width - len_append_suffix,
-                anchor_dir=display_anchor_dir,
-                max_parents=_DEFAULT_SHORT_PATH_MAX_PARENTS,
+
+    lines.extend(
+        _build_wrapped_rich_label_value_lines(
+            label="output directory",
+            value=output_dir_display_label,
+            label_pad=label_pad,
+            line_display_width=line_display_width,
+            label_style=label_style,
+            value_style=value_style,
+        )
+    )
+
+    # --- files created in output directory ---
+    if output_dir_files:
+        lines.append(Text(""))
+        lines.append(
+            Text(
+                "files created this logging session in output directory:",
+                style=label_style,
+            )
+        )
+
+        for file in output_dir_files:
+            file_path_display_label = (
+                "    "
+                + str(file.path.relative_to(output_dir_path))
             )
 
-            if cfr.log_file_mode == "append":
-                label = f"{label} (append)"
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
 
-            lines.append(Text(label, style=value_style))
+            wrapped_lines = _build_wrapped_lines(
+                value=file_path_display_label,
+                width=line_display_width,
+                continuation_width=line_display_width,
+                hanging_indent=6,
+            )
 
-    # --- append missing files ---
+            lines.extend(
+                Text(line, style=value_style)
+                for line in wrapped_lines
+            )
+
+    # --- files created in project directory ---
+    if project_files:
+        lines.append(Text(""))
+        lines.append(
+            Text(
+                "files created this logging session in project directory:",
+                style=label_style,
+            )
+        )
+
+        for file in project_files:
+            file_path_display_label = (
+                "    "
+                + str(
+                    file.path.relative_to(project_dir_path.parent)
+                )
+            )
+
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
+
+            wrapped_lines = _build_wrapped_lines(
+                value=file_path_display_label,
+                width=line_display_width,
+                continuation_width=line_display_width,
+                hanging_indent=6,
+            )
+
+            lines.extend(
+                Text(line, style=value_style)
+                for line in wrapped_lines
+            )
+
+    # --- files created outside project directory ---
+    if external_files:
+        lines.append(Text(""))
+        lines.append(
+            Text(
+                "files created this logging session outside project directory:",
+                style=label_style,
+            )
+        )
+
+        for file in external_files:
+            file_path_display_label = "    " + str(file.path)
+
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
+
+            wrapped_lines = _build_wrapped_lines(
+                value=file_path_display_label,
+                width=line_display_width,
+                continuation_width=line_display_width,
+                hanging_indent=6,
+            )
+
+            lines.extend(
+                Text(line, style=value_style)
+                for line in wrapped_lines
+            )
+
+    # --- missing registered files ---
     if missing_files:
         lines.append(Text(""))
-        lines.append(Text("WARNING: Some registered files were missing on disk:", style="bold red"))
+        lines.append(
+            Text(
+                "WARNING: Registered Logduo-managed files missing on disk:",
+                style="bold red",
+            )
+        )
 
-        # missing file block's path values are displayed flush left
-        # missing_file_path_display_width = full_line__width
+        for file in missing_files:
+            file_path_display_label = "    " + str(file.path)
 
-        for cfr in missing_files:
-            display_anchor_dir = runtime.project_dir_path_abs or cfr.path.parent
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
 
-            label = _build_shortened_file_path_display_label(
-                cfr.path,
-                path_display_width=full_line_width - len_append_suffix,
-                anchor_dir=display_anchor_dir,
-                max_parents=_DEFAULT_SHORT_PATH_MAX_PARENTS,
+            wrapped_lines = _build_wrapped_lines(
+                value=file_path_display_label,
+                width=line_display_width,
+                continuation_width=line_display_width,
+                hanging_indent=6,
             )
 
-            lines.append(Text(f"  - {label}", style="red"))
+            lines.extend(
+                Text(line, style="red")
+                for line in wrapped_lines
+            )
 
     lines.append(Text(""))
 
@@ -236,7 +337,6 @@ def _build_console_footer(
 
 
 # === Internal helpers =========================================================
-
 
 # --- _render_rich_label_value_row() ---------------------------------------------------------
 def _render_rich_label_value_row(
@@ -261,3 +361,49 @@ def _render_rich_label_value_row(
         t.append(label.strip(), style=label_style)
 
     return t
+
+
+# --- _build_wrapped_rich_label_value_lines() ---------------------------------
+def _build_wrapped_rich_label_value_lines(
+    *,
+    label: str,
+    value: str,
+    label_pad: int,
+    line_display_width: int,
+    label_style: str | None,
+    value_style: str | None,
+) -> list[Text]:
+    """
+    Render and wrap one Rich label/value row.
+
+    Continuation lines begin two spaces beyond the start of the value.
+    """
+    label_prefix = f"{label:<{label_pad}}:  "
+    rendered_line = label_prefix + value
+
+    wrapped_lines = _build_wrapped_lines(
+        value=rendered_line,
+        width=line_display_width,
+        continuation_width=line_display_width,
+        hanging_indent=label_pad + 5,
+    )
+
+    rich_lines: list[Text] = []
+
+    for line_index, wrapped_line in enumerate(wrapped_lines):
+        if line_index == 0:
+            rich_line = Text()
+            rich_line.append(label_prefix, style=label_style)
+            rich_line.append(
+                wrapped_line[len(label_prefix):],
+                style=value_style,
+            )
+        else:
+            rich_line = Text(
+                wrapped_line,
+                style=value_style or "",
+            )
+
+        rich_lines.append(rich_line)
+
+    return rich_lines

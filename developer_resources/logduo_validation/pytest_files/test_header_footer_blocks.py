@@ -13,9 +13,6 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import cast
-
-import pytest
 
 from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
     _find_file,
@@ -34,7 +31,6 @@ from logduo.internals.formatters.header_footer_formatters import (
     _build_auto_footer_created_file_lists,
     _build_auto_footer_info_rows,
     _build_auto_header_info_rows,
-    _build_shortened_file_path_display_label,
     _derive_label_pad,
 )
 from logduo.internals.session_config.session_constants import FileKindType
@@ -79,9 +75,7 @@ def _make_cfr(
         log_footer="off",
         show_pid_in_log=False,
         continuation_prefix_len=0,
-        display_order=0,
     )
-
 
 
 # --- test_01_default_header_footer() ------------------------------------------
@@ -303,7 +297,7 @@ def test_07_log_footer_wrap_width_off(tmp_path: Path):
     # no script path should be found
     assert "script path" not in log_content
     assert "logging ended" in log_content
-    assert "Logduo-managed files created this run" in log_content
+    assert "files created this logging session in output directory:" in log_content
     assert "config_table.txt" in log_content
 
 
@@ -478,7 +472,7 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     print("**********************************************")
     print(" ")
 
-    marker = "Logduo-managed files created this run:"
+    marker = "files created this logging session in output directory:"
     assert marker in log_content
 
     footer = log_content.split(marker, maxsplit=1)[1]
@@ -625,7 +619,6 @@ def test_20_build_console_footer_off():
         console_footer="off",
         console_wrap_width=100,
         styles={},
-        show_created_files=False,
     )
 
     assert result is None
@@ -640,7 +633,6 @@ def test_21_build_console_footer_custom_markup():
         console_footer="[green]GOODBYE[/green]",
         console_wrap_width=100,
         styles={},
-        show_created_files=False,
     )
 
     assert result is not None
@@ -656,7 +648,6 @@ def test_22_build_console_footer_invalid_markup():
         console_footer="[green",
         console_wrap_width=100,
         styles={},
-        show_created_files=False,
     )
 
     assert result is not None
@@ -724,81 +715,29 @@ def test_26_build_auto_header_info_rows_console():
     assert ("running script", "demo.py") in rows
 
 
-# --- test_27_build_auto_footer_info_rows_user_sink(tmp_path) ------------------
-def test_27_build_auto_footer_info_rows_user_sink(tmp_path):
-    path = tmp_path / "audit.log"
-    cfr = _make_cfr(
-        path,
-        file_kind="user_sink_log",
-    )
-    runtime = RuntimeRecord(
-        end_time_display="11:00",
-    )
+# --- test_27_build_auto_footer_info_rows_duration() ---------------------------
+def test_27_build_auto_footer_info_rows_duration(tmp_path):
 
-    rows = _build_auto_footer_info_rows(
-        runtime=runtime,
-        cfr=cfr,
-        path_display_width="off",
-        is_main_sink=False,
-    )
-
-    assert ("log file path", str(path)) in rows
-
-
-# --- test_28_build_auto_footer_info_rows_duration() ---------------------------
-def test_28_build_auto_footer_info_rows_duration():
     runtime = RuntimeRecord(
         end_time_display="11:00",
         duration_display="5 sec",
+        project_dir_path_abs=tmp_path / "project",
     )
 
     rows = _build_auto_footer_info_rows(
         runtime=runtime,
-        path_display_width="off",
         is_main_sink=True,
     )
 
-    assert "duration 5 sec" in rows[0][1]
-
-
-# --- test_29_shortened_file_path_display_label_off(tmp_path) ------------------
-def test_29_shortened_file_path_display_label_off(tmp_path):
-    path = tmp_path / "test.log"
-
-    result = _build_shortened_file_path_display_label(
-        path,
-        anchor_dir=None,
-        path_display_width="off",
+    assert rows[0] == (
+        "logging ended",
+        "11:00 (duration 5 sec)",
     )
 
-    assert result == str(path)
 
 
-# --- test_30_shortened_file_path_display_label_bool_raises(tmp_path) ----------
-def test_30_shortened_file_path_display_label_bool_raises(tmp_path):
-    path = tmp_path / "test.log"
-
-    with pytest.raises(RuntimeError):
-        _build_shortened_file_path_display_label(
-            path,
-            anchor_dir=None,
-            path_display_width=True,
-        )
-
-
-# --- test_31_shortened_file_path_display_label_invalid_type_raises(tmp_path) --
-def test_31_shortened_file_path_display_label_invalid_type_raises(tmp_path):
-    path = tmp_path / "test.log"
-    with pytest.raises(RuntimeError):
-        _build_shortened_file_path_display_label(
-            path,
-            anchor_dir=None,
-            path_display_width=cast(object, []),   # noqa, intentional
-        )
-
-
-# --- test_32_derive_label_pad_ignores_none() ----------------------------------
-def test_32_derive_label_pad_ignores_none():
+# --- test_28_derive_label_pad_ignores_none() ----------------------------------
+def test_28_derive_label_pad_ignores_none():
     rows = [
         (None, "title"),
         ("short", "x"),
@@ -808,9 +747,11 @@ def test_32_derive_label_pad_ignores_none():
     assert _derive_label_pad(rows) == len("longest label")
 
 
-# --- test_33_build_auto_footer_created_file_lists_missing(tmp_path) -----------
-def test_33_build_auto_footer_created_file_lists_missing(tmp_path):
+# --- test_29_build_auto_footer_created_file_lists_missing(tmp_path) -----------
+def test_29_build_auto_footer_created_file_lists_missing(tmp_path):
     runtime = RuntimeRecord()
+    runtime.main_sink_log_dir_path_abs = tmp_path
+    runtime.project_dir_path_abs = tmp_path / "project"
 
     cfr = _make_cfr(
         tmp_path / "missing.log",
@@ -818,58 +759,47 @@ def test_33_build_auto_footer_created_file_lists_missing(tmp_path):
     )
 
     runtime.created_file_record_registry[cfr.path] = cfr
-    existing, missing = _build_auto_footer_created_file_lists(runtime)
 
-    assert existing == []
-    assert missing == [cfr]
+    (
+        output_dir_files,
+        project_files,
+        external_files,
+        missing_files,
+    ) = _build_auto_footer_created_file_lists(
+        runtime=runtime,
+    )
+
+    assert output_dir_files == []
+    assert missing_files == [cfr]
 
 
-# --- test_34_build_auto_footer_created_file_lists_jsonl_included(tmp_path) ---
-def test_34_build_auto_footer_created_file_lists_jsonl_included(tmp_path):
+# --- test_30_build_auto_footer_created_file_lists_jsonl_included(tmp_path) ---
+def test_30_build_auto_footer_created_file_lists_jsonl_included(tmp_path):
     runtime = RuntimeRecord()
+    runtime.main_sink_log_dir_path_abs = tmp_path
+    runtime.project_dir_path_abs = tmp_path / "project"
+
+    path = tmp_path / "events.jsonl"
+    path.write_text("", encoding="utf-8")
     jsonl_cfr = _make_cfr(
-        tmp_path / "events.jsonl",
+        path,
         file_kind="jsonl",
     )
 
-    runtime.created_file_record_registry[jsonl_cfr.path] = jsonl_cfr
-    existing, missing = _build_auto_footer_created_file_lists(runtime)
+    runtime.created_file_record_registry[path] = jsonl_cfr
+    (
+        output_dir_files,
+        project_files,
+        external_files,
+        missing_files,
+    ) = _build_auto_footer_created_file_lists(runtime=runtime)
 
-    assert jsonl_cfr in existing
-    assert missing == []
-
-
-# --- test_35_build_auto_footer_created_file_lists_jsonl_excluded(tmp_path) ---
-def test_35_build_auto_footer_created_file_lists_jsonl_excluded(tmp_path):
-    runtime = RuntimeRecord()
-
-    jsonl_cfr = _make_cfr(
-        tmp_path / "events.jsonl",
-        file_kind="jsonl",
-    )
-
-    runtime.created_file_record_registry[jsonl_cfr.path] = jsonl_cfr
-    existing, missing = _build_auto_footer_created_file_lists(
-        runtime,
-        include_jsonl=False,
-    )
-
-    assert jsonl_cfr not in existing
+    assert jsonl_cfr in output_dir_files
+    assert missing_files == []
 
 
-# --- test_36_build_auto_footer_created_file_lists_existing(tmp_path) ----------
-def test_36_build_auto_footer_created_file_lists_existing(tmp_path):
-    runtime = RuntimeRecord()
-    path = tmp_path / "exists.log"
-    path.write_text("hello")
-    cfr = _make_cfr(path)
 
-    runtime.created_file_record_registry[path] = cfr
-    existing, missing = _build_auto_footer_created_file_lists(runtime)
-
-    assert existing == [cfr]
-    assert missing == []
-
+# ==+ Internal helper ==========================================================
 
 # --- _print_test_details() ----------------------------------------------------
 def _print_test_details(

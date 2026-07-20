@@ -100,10 +100,18 @@ def test_05_build_session_config_class_instance_table_rows(tmp_path):
 def test_06_write_example_scripts_creates_examples_dir(
     tmp_path: Path,
 ) -> None:
+    duo = Duo()
+
+    duo.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="script",
+        console_header="off",
+        console_footer="off",
+    )
 
     logduo_dir_path = tmp_path / "logduo_docs"
 
-    _write_example_scripts(logduo_dir_path=logduo_dir_path)
+    _write_example_scripts(duo=duo, logduo_dir_path=logduo_dir_path)
 
     assert (logduo_dir_path / "examples").is_dir()
 
@@ -112,11 +120,19 @@ def test_06_write_example_scripts_creates_examples_dir(
 def test_07_write_example_scripts_copies_examples(
     tmp_path: Path,
 ) -> None:
+    duo = Duo()
+
+    duo.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="script",
+        console_header="off",
+        console_footer="off",
+    )
+
+
     logduo_dir_path = tmp_path / "logduo_docs"
 
-    _write_example_scripts(
-        logduo_dir_path=logduo_dir_path,
-    )
+    _write_example_scripts(duo=duo, logduo_dir_path=logduo_dir_path)
 
     examples_dir = logduo_dir_path / "examples"
 
@@ -146,6 +162,15 @@ def test_08_write_example_scripts_preserves_existing_file(
     tmp_path: Path,
 ) -> None:
 
+    duo = Duo()
+
+    duo.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="script",
+        console_header="off",
+        console_footer="off",
+    )
+
     logduo_dir_path = tmp_path / "logduo_docs"
     examples_dir = logduo_dir_path / "examples"
 
@@ -162,6 +187,7 @@ def test_08_write_example_scripts_preserves_existing_file(
     )
 
     _write_example_scripts(
+        duo=duo,
         logduo_dir_path=logduo_dir_path,
     )
 
@@ -176,8 +202,8 @@ def test_09_write_readme_txt_preserves_existing_file(
     tmp_path: Path,
 ) -> None:
 
-    log = Duo()
-    log.configure(log_dir_path=tmp_path)
+    duo = Duo()
+    duo.configure(log_dir_path=tmp_path)
 
     logduo_dir_path = tmp_path / "logduo_docs"
     logduo_dir_path.mkdir()
@@ -190,9 +216,11 @@ def test_09_write_readme_txt_preserves_existing_file(
     )
 
     _write_readme_txt(
-        runtime=log._runtime,
+        duo=duo,
+        runtime=duo._runtime,
         logduo_dir_path=logduo_dir_path,
     )
+
 
     assert (
         readme_file_path.read_text(encoding="utf-8")
@@ -206,13 +234,13 @@ def test_10_write_readme_txt_contains_generated_timestamp(
 
 ) -> None:
 
-    log = Duo()
-    log.configure(log_dir_path=tmp_path)
+    duo = Duo()
+    duo.configure(log_dir_path=tmp_path)
 
     logduo_dir_path = tmp_path / "logduo_docs"
     logduo_dir_path.mkdir()
 
-    _write_readme_txt(runtime=log._runtime, logduo_dir_path=logduo_dir_path)
+    _write_readme_txt(duo=duo, runtime=duo._runtime, logduo_dir_path=logduo_dir_path)
 
     text = (logduo_dir_path / "README.txt").read_text(encoding="utf-8")
 
@@ -260,6 +288,14 @@ def test_12_export_logduo_docs_is_idempotent(
 def test_13_write_example_scripts_preserves_existing_example(
     tmp_path: Path,
 ) -> None:
+    duo = Duo()
+
+    duo.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="script",
+        console_header="off",
+        console_footer="off",
+    )
 
     logduo_dir_path = tmp_path / "logduo_docs"
     examples_dir = (logduo_dir_path / "examples")
@@ -268,7 +304,7 @@ def test_13_write_example_scripts_preserves_existing_example(
     target_file = (examples_dir / "first_script.py")
     target_file.write_text("user modified", encoding="utf-8")
 
-    _write_example_scripts(logduo_dir_path=logduo_dir_path)
+    _write_example_scripts(duo=duo, logduo_dir_path=logduo_dir_path)
 
     assert (target_file.read_text(encoding="utf-8") == "user modified")
 

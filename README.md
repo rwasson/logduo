@@ -14,11 +14,13 @@ Key Capabilities
 - Provides extensive `help()` documentation and actionable error messages
 - Validates arguments to all Logduo methods and functions to prevent unexpected behavior
 - Safely prunes old run directories containing a Logduo marker file
-- Generates session artifacts: config_table.txt, config.json
+- Generates optional session artifacts: `config_table.txt`, `config.json`
 - Captures JSONL event streams
 - Creates dedicated log files via `new_logger()`
+- Creates advanced pass-through Loguru sinks via `new_loguru_sink()`
 - Creates custom logging labels via `new_level()`
 - Supports nested scripts via `log.join()` and `run()`
+- Reports files created during the logging session in console and log footers
 
 
 Quick Start (in script or interactive session)
@@ -31,8 +33,8 @@ Quick Start (in script or interactive session)
 If a message is logged before `log.configure()` is called, the logging session starts automatically using Logduo defaults and `pyproject.toml` settings.
 
 Key default settings:
-  - `console_verbosity = 2` and `log_verbosity = 2`
-    - Messages (other than TRACE and DEBUG) are sent to both the console and the main log file.
+  - `console_verbosity = 3` and `log_verbosity = 3`
+    - All messages (including TRACE and DEBUG) are sent to both the console and the main log file.
   - `log_dir_path = "auto"`
     - The `logs` directory is placed in the project root if identified; otherwise, in the current working directory.
   - `log_file_layout = "run"`
@@ -53,7 +55,7 @@ Recommendation: Place regularly used configuration settings in pyproject.toml un
 
     my_log_dir = Path("/absolute/path/to/my_log_dir")
 
-    log.configure(log_dir_path=my_log_dir, keep=3, console_verbosity=3, log_verbosity=3)
+    log.configure(log_dir_path=my_log_dir, keep=3)
     log("hello world")
 
 
@@ -84,12 +86,15 @@ Help
     
 Typical Workflows
 -----------------
-- Debug session: By default, log.debug() includes the calling file name and line number at the start of each message. Disable with: log.configure(..., show_debug_source=False)
+- Debug session: By default, `log.debug()` includes the calling filename and
+  line number at the start of each message.
+  - Disable source information with `log.configure(show_debug_source=False)`.
+  - Debug messages are displayed when the corresponding verbosity setting is 3.
+    Both `console_verbosity` and `log_verbosity` default to 3.
+  
+        from logduo import log
 
-       from logduo import log
-       log.configure(log_verbosity=3, console_verbosity=3)
-
-       log.debug(f"made it here: var = {var}")
+        log.debug(f"made it here: var = {var}")
 
 - Create additional log files for dedicated output. Messages logged with `rep` are recorded in report.log and optionally mirrored to the console and/or main log file.
 
@@ -100,7 +105,9 @@ Typical Workflows
 
        myplot_output_path = log.output_dir_path / "myplot.png"
 
-- Close the session (required in interactive sessions, optional in scripts)
+- Close the session explicitly in interactive sessions. Logging sessions in scripts are closed 
+  automatically at interpreter shutdown, with best-effort cleanup during abnormal shutdown. 
+  Explicit `log.close()` is still supported. 
 
        log.close()
 
@@ -123,7 +130,7 @@ Logduo Methods and Functions
   - `log.exception()`  # ERROR + Traceback
 
 - Create custom log label:
-  - `log.new_level()`  # Create a custom label handled as an existing level; default = "INFO"
+  - `log.new_level()`  # Maps a custom display label to an existing severity level; default severity = "INFO"
 
 - Create additional output:
   - `log.new_logger()`       # Logduo-managed extra log file
@@ -146,7 +153,7 @@ Prefixes
 --------
 - One prefix per log event.
 - Console and log files have independent prefix settings: `console_prefix`, `log_prefix`
-  - `off` → No prefix. Wrapped lines align flush left
+  - `off` → No prefix. Wrapped lines align flush left.
   - `level` → Prefix shows level. Wrapped lines align under message.
   - `timestamp` → Prefix shows timestamp and level. Wrapped lines align under message.
   - `source` → Prefix shows timestamp, level, and source. Wrapped lines align under source.
@@ -234,8 +241,9 @@ Loguru Integration
   - sending selected events to separate destinations
   - passing options directly to `logger.add()`
 
-- Sinks added with `log.new_loguru_sink()` are advanced/pass-through sinks.
-  They are not managed like standard Logduo main logs or `new_logger()` files.
+- Sinks added with `log.new_loguru_sink()` are advanced pass-through sinks.
+  Logduo manages their creation and session lifecycle, but messages sent directly
+  through Loguru bypass normal Logduo formatting, wrapping, routing, headers, and footers.
 
 
 Console compatibility

@@ -1,7 +1,4 @@
 # pyproject.toml
-# in terminal at prompt: (.venv) renyawasson@Renyas-MacBook-Air logduo_project %
-# enter: pip install -e ".[dev]"
-# then:  pip install --upgrade pip
 
 [tool.setuptools.package-data]
 logduo = [
@@ -16,7 +13,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logduo"
 readme = "README.md"
-version = "0.1.3"
+version = "0.1.4"
 authors = [{ name = "R. Wasson", email = "r.wasson.dev@gmail.com" }]
 description = "Logging, console output, and file management for Python — simple by default, configurable for advanced workflows."
 
@@ -37,10 +34,10 @@ keywords = [
 
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent"
+  "Programming Language :: Python :: 3.13",
+  "Operating System :: OS Independent",
+  "Typing :: Typed",
 ]
-
-
 
 # --- Runtime dependencies -----------------------------------------------------
 dependencies = [
@@ -89,9 +86,6 @@ where = ["src"]
 # --- logduo -------------------------------------------------------------------
 [tool.logduo]
 console_theme = "light"
-retention = "off"
-console_verbosity = 3
-log_verbosity = 3
 keep = 3
 
 
@@ -144,6 +138,4 @@ max-args = 15
 combine-as-imports = true
 force-single-line = false  # if false, allows: from typing import Any, Callable
 order-by-type = false  # false preserves expected order
-
-
 

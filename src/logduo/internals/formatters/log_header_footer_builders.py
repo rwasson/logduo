@@ -1,9 +1,9 @@
 """
 log_header_footer_builders.py
 
-Builders for plain-text log headers and footers.
+Builders for plain-text log footers.
 
-Last edited: 2026-6-7
+Last edited: 2026-7-19
 """
 
 from pathlib import Path
@@ -13,17 +13,17 @@ from logduo.internals.formatters.header_footer_formatters import (
     _build_auto_footer_created_file_lists,
     _build_auto_footer_info_rows,
     _build_auto_header_info_rows,
-    _build_shortened_file_path_display_label,
+    _build_wrapped_lines,
     _derive_label_pad,
+    _render_plain_label_value_row,
 )
 from logduo.internals.formatters.message_prep import _to_plain_log_text
 from logduo.internals.session_config.session_config_classes import SessionConfig
 from logduo.internals.session_config.session_constants import (
-    _DEFAULT_SHORT_PATH_WIDTH,
     _DIVIDER_WIDTH,
+    _NO_WRAP_WIDTH,
     _RULE_CHAR,
 )
-from logduo.utils.wrap.wrap_text import wrap_text
 
 
 # --- _build_log_header() ------------------------------------------------------
@@ -92,6 +92,7 @@ def _build_log_header(*, runtime: RuntimeRecord, cfr: CreatedFileRecord) -> str 
     return "\n".join(lines)
 
 
+
 # --- _build_log_footer() ------------------------------------------------------
 def _build_log_footer(
     *,
@@ -139,74 +140,133 @@ def _build_log_footer(
     return _build_user_sink_log_footer(cfr=cfr, runtime=runtime)
 
 
-# === Internal helpers =========================================================
-
-
 # --- _build_main_sink_log_footer()--------------------------------------------------
-def _build_main_sink_log_footer(*, session_config: SessionConfig, runtime: RuntimeRecord) -> str:
+def _build_main_sink_log_footer(*, session_config: SessionConfig, runtime: RuntimeRecord) -> str:  # noqa: PLR0915
 
-    # --- log wrap width ---
-    if session_config.log_wrap_width != "off":
-        assert isinstance(session_config.log_wrap_width, int)
-        line_display_width = min(session_config.log_wrap_width, _DEFAULT_SHORT_PATH_WIDTH)
+    configured_wrap_width = session_config.log_wrap_width
+    if configured_wrap_width == "off":
+        line_display_width = _NO_WRAP_WIDTH
     else:
-        line_display_width = _DEFAULT_SHORT_PATH_WIDTH
+        if not isinstance(configured_wrap_width, int):
+            raise RuntimeError(
+                "LOGDUO INTERNAL ERROR: resolved log_wrap_width "
+                "must be a positive integer or 'off'."
+            )
+        line_display_width = configured_wrap_width
+
 
     # --- created/missing files ---
-    created_files, missing_files = _build_auto_footer_created_file_lists(runtime=runtime)
+    (output_dir_files, project_files, external_files, missing_files,
+     ) = _build_auto_footer_created_file_lists(runtime=runtime)
 
-    created_files = sorted(created_files, key=lambda cf: cf.display_order)
-    missing_files = sorted(missing_files, key=lambda cf: cf.display_order)
+    output_dir_path = runtime.main_sink_log_dir_path_abs
+    project_dir_path = runtime.project_dir_path_abs
 
-    # --- info footer rows (label plus value pair) ---
+    assert output_dir_path is not None
+    assert project_dir_path is not None
+
+    # ---  auto_footer_info_rows (end time + script_path display pairs)  ---
     auto_footer_info_rows = _build_auto_footer_info_rows(
         runtime=runtime,
-        path_display_width="off",
-        anchor_dir=None,
-        max_parents=None,
         is_main_sink=True,
     )
 
     # label_pad = length of longest label
-    label_pad = _derive_label_pad(auto_footer_info_rows)
-
+    label_pad = _derive_label_pad(auto_footer_info_rows, len("output directory"))
     divider_line = _RULE_CHAR * _DIVIDER_WIDTH
     lines: list[str] = [divider_line]
 
-    # --- render info footer rows ---
     for label, value in auto_footer_info_rows:
         row = _render_plain_label_value_row(label=label, value=value, label_pad=label_pad)
-        # hanging_indent = len(f"{label}: ") + 3
-        hanging_indent = label_pad + 3
+        hanging_indent = label_pad + 5
         lines.extend(
             _build_wrapped_lines(
                 value=row,
-                width=session_config.log_wrap_width,
+                width=line_display_width,
                 continuation_width=line_display_width,
                 hanging_indent=hanging_indent,
             )
         )
 
-    # --- append footer with created files list ---
-    if created_files:
-        lines.append("")
-        lines.append("Logduo-managed files created this run:")
+    # --- output directory ---
+    try:
+        output_dir_display_label = str(output_dir_path.relative_to(project_dir_path.parent))
+    except ValueError:
+        output_dir_display_label = str(output_dir_path)
 
-        for file in created_files:
-            # created file block displayed flush left (constant line width)
-            file_path_display_label = _build_shortened_file_path_display_label(
-                file.path, path_display_width="off", anchor_dir=None, max_parents=None
+    rows = _render_plain_label_value_row(
+        label="output directory",
+        value=output_dir_display_label,
+        label_pad=label_pad,
+    )
+
+    lines.extend(
+        _build_wrapped_lines(
+            value=rows,
+            width=line_display_width,
+            continuation_width=line_display_width,
+            hanging_indent=label_pad + 5,
+        )
+    )
+
+    # --- files in output directory ---
+    # Relative to output dir, so might be file names only
+    if output_dir_files:
+        lines.append("")
+        lines.append("files created this logging session in output directory:")
+
+        for file in output_dir_files:
+            file_path_display_label = "    " + str(file.path.relative_to(output_dir_path))
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
+            lines.extend(
+                _build_wrapped_lines(
+                    value=file_path_display_label,
+                    width=line_display_width,
+                    continuation_width=line_display_width,
+                    hanging_indent=6,
+                )
+            )
+
+    # --- other files inside project ---
+    if project_files:
+        lines.append("")
+        lines.append("files created this logging session in project directory:")
+
+        for file in project_files:
+            file_path_display_label = "    " + str(
+                file.path.relative_to(project_dir_path.parent)
             )
 
             if file.log_file_mode == "append":
-                file_path_display_label = f"{file_path_display_label} (append)"
+                file_path_display_label += " (append)"
 
             lines.extend(
                 _build_wrapped_lines(
                     value=file_path_display_label,
-                    width=session_config.log_wrap_width,
+                    width=line_display_width,
                     continuation_width=line_display_width,
-                    hanging_indent=4,
+                    hanging_indent=6,
+                )
+            )
+
+    # --- other files outside project ---
+    if external_files:
+        lines.append("")
+        lines.append("files created this logging session outside project directory:")
+
+        for file in external_files:
+            file_path_display_label = "    " + str(file.path)
+
+            if file.log_file_mode == "append":
+                file_path_display_label += " (append)"
+
+            lines.extend(
+                _build_wrapped_lines(
+                    value=file_path_display_label,
+                    width=line_display_width,
+                    continuation_width=line_display_width,
+                    hanging_indent=6,
                 )
             )
 
@@ -217,9 +277,7 @@ def _build_main_sink_log_footer(*, session_config: SessionConfig, runtime: Runti
 
         for file in missing_files:
             # missing file block displayed flush left (constant line width)
-            file_path_display_label = _build_shortened_file_path_display_label(
-                file.path, path_display_width="off", anchor_dir=None, max_parents=None
-            )
+            file_path_display_label = "    " + str(file.path)
 
             if file.log_file_mode == "append":
                 file_path_display_label = f"{file_path_display_label} (append)"
@@ -227,9 +285,9 @@ def _build_main_sink_log_footer(*, session_config: SessionConfig, runtime: Runti
             lines.extend(
                 _build_wrapped_lines(
                     value=file_path_display_label,
-                    width=session_config.log_wrap_width,
+                    width=line_display_width,
                     continuation_width=line_display_width,
-                    hanging_indent=4,
+                    hanging_indent=6,
                 )
             )
 
@@ -239,64 +297,88 @@ def _build_main_sink_log_footer(*, session_config: SessionConfig, runtime: Runti
 
 
 # --- _build_user_sink_log_footer()--------------------------------------------------
-def _build_user_sink_log_footer(*, cfr: CreatedFileRecord, runtime: RuntimeRecord) -> str:
+def _build_user_sink_log_footer(
+    *,
+    cfr: CreatedFileRecord,
+    runtime: RuntimeRecord,
+) -> str:
 
-    if cfr.log_wrap_width != "off":
-        line_display_width = min(cfr.log_wrap_width, _DEFAULT_SHORT_PATH_WIDTH)
+    configured_wrap_width = cfr.log_wrap_width
+
+    if configured_wrap_width == "off":
+        line_display_width = _NO_WRAP_WIDTH
     else:
-        line_display_width = _DEFAULT_SHORT_PATH_WIDTH
+        if not isinstance(configured_wrap_width, int):
+            raise RuntimeError(
+                "LOGDUO INTERNAL ERROR: resolved log_wrap_width "
+                "must be a positive integer or 'off'."
+            )
+        line_display_width = configured_wrap_width
+    assert isinstance(line_display_width, int)
 
-    # --- info footer rows (label and value pairs) ---
+    # --- universal footer rows ---
     auto_footer_info_rows = _build_auto_footer_info_rows(
         runtime=runtime,
-        cfr=cfr,
-        path_display_width="off",
-        anchor_dir=None,
-        max_parents=None,
         is_main_sink=False,
     )
 
-    # label_pad = length of longest label
-    label_pad = _derive_label_pad(auto_footer_info_rows)
+    # Include the user-sink-specific label when calculating alignment.
+    label_pad = max(
+        _derive_label_pad(auto_footer_info_rows),
+        len("log file path"),
+    )
 
     divider_line = _RULE_CHAR * _DIVIDER_WIDTH
     lines: list[str] = [divider_line]
 
-    # --- render info footer rows ---
-    assert isinstance(line_display_width, int)
+    # --- render universal footer rows ---
     for label, value in auto_footer_info_rows:
-        hanging_indent = label_pad + 3
-        row = _render_plain_label_value_row(label=label, value=value, label_pad=label_pad)
+        row = _render_plain_label_value_row(
+            label=label,
+            value=value,
+            label_pad=label_pad,
+        )
+
         lines.extend(
             _build_wrapped_lines(
                 value=row,
-                width=cfr.log_wrap_width,
+                width=line_display_width,
                 continuation_width=line_display_width,
-                hanging_indent=hanging_indent,
+                hanging_indent=label_pad + 5,
             )
+
         )
+
+    # --- user-sink log file ---
+    project_dir_path = runtime.project_dir_path_abs
+    if project_dir_path is None:
+        raise RuntimeError(
+            "LOGDUO INTERNAL ERROR: project_dir_path_abs not set."
+        )
+    anchor_dir = project_dir_path.parent
+    try:
+        log_file_path_display_label = str(cfr.path.relative_to(anchor_dir))
+    except ValueError:
+        log_file_path_display_label = str(cfr.path)
+
+
+    log_file_path_display = _render_plain_label_value_row(
+        label="log file path",
+        value=log_file_path_display_label,
+        label_pad=label_pad,
+    )
+
+    lines.extend(
+        _build_wrapped_lines(
+            value=log_file_path_display,
+            width=line_display_width,
+            continuation_width=line_display_width,
+            hanging_indent=label_pad + 5,
+        )
+    )
 
     lines.append("")
 
     return "\n".join(lines)
 
 
-# --- _render_plain_label_value_row() -------------------------------------------
-def _render_plain_label_value_row(*, label: str, value: str, label_pad: int) -> str:
-    return f"{label:<{label_pad}}:  {value}"
-
-
-# --- _build_wrapped_lines() ---------------------------------------------------
-def _build_wrapped_lines(
-    *,
-    value: str,
-    width: int | str,
-    continuation_width: int | None = None,
-    hanging_indent: int | None = None,
-) -> list[str]:
-    if width == "off":
-        return [value]
-    assert isinstance(width, int)
-    return wrap_text(
-        value, width=width, continuation_width=continuation_width, hanging_indent=hanging_indent
-    )

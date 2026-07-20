@@ -516,7 +516,7 @@ def test_18_new_loguru_mkdir_failure_returns_none(
         log_dir_path=str(tmp_path),
     )
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):   # noqa
         raise OSError("forced mkdir failure")
 
     monkeypatch.setattr(
@@ -572,7 +572,7 @@ def test_20_new_loguru_add_failure_returns_none(
     monkeypatch,
 ):
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):   # noqa
         raise ValueError("forced add failure")
 
 
@@ -597,7 +597,7 @@ def test_21_register_cfr_failure_non_fatal(
     monkeypatch,
 ):
 
-    def boom(*args, **kwargs):
+    def boom(*args, **kwargs):  # noqa
         raise ValueError("forced cfr failure")
 
     monkeypatch.setattr(
@@ -698,3 +698,39 @@ def test_25_callable_filter(tmp_path):
 
     assert "error" in content
     assert "info" not in content
+
+
+# --- test_26_new_loguru_sink_end_to_end() ---------------------------------------
+def test_26_new_loguru_sink_end_to_end(tmp_path: Path):
+
+    log = Duo()
+    log.configure(
+        log_dir_path=str(tmp_path),
+        log_file_layout="script",
+    )
+
+    sink_id = log.new_loguru_sink("audit.log")
+
+    assert isinstance(sink_id, int)
+
+    _loguru_logger.info("loguru sink end-to-end message")
+
+    cfrs = log._runtime._get_file_list_in_cfr()
+
+    matching = [
+        cfr
+        for cfr in cfrs
+        if cfr.path.name == "audit.log"
+    ]
+
+    assert len(matching) == 1
+    assert matching[0].sink_id == sink_id
+
+    log.close()
+
+    audit_log = _find_file(tmp_path, "audit.log")
+
+    content = audit_log.read_text(encoding="utf-8")
+
+    assert audit_log.exists()
+    assert "loguru sink end-to-end message" in content

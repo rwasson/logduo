@@ -7,7 +7,6 @@ Responsible for:
 - label validation
 - Rich color validation
 - custom label registration
-- callable generation for level_entry()
 
 Last edited: 2026-5-27
 """

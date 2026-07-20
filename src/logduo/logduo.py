@@ -13,7 +13,7 @@ Provides:
 Most implementation lives in internal modules.
 See README.md for more details.
 
-Last edited: 2026-6-13
+Last edited: 2026-7-20
 """
 
 from __future__ import annotations
@@ -160,9 +160,10 @@ class Duo:
                 - log files
                 - artifact files (e.g., config_table.txt)
                 - pyproject.toml (optional)
-        - pyproject.toml configuration is optional. To configure Logduo via TOML:
+        - pyproject.toml configuration is optional.
+            Example configuration overrides:
               [tool.logduo]
-              log_verbosity = 3
+              log_verbosity = 2
               keep = 3
               console_theme = "light"
         - After a logging session has started, later calls to log.configure()
@@ -251,10 +252,6 @@ class Duo:
             docs_path = Path(__file__).parent.resolve()
             log.export_logduo_docs(docs_path)
 
-        Notes
-        -----
-        Documentation files are not included in the main log session footer
-        and are not tracked as session-generated artifacts.
         """
 
         _export_logduo_docs(self, path=path)
@@ -373,8 +370,9 @@ class Duo:
                 - 2 = standard    (Levels in log: quiet + SUCCESS, INFO)
                 - 3 = verbose     (Levels in log: standard + DEBUG, TRACE)
             - If not specified, log_verbosity inherits the session setting.
+                Default session log_verbosity = 3,
             - If the session setting uses log_verbosity=0, new_logger()
-                falls back to default log_verbosity=2.
+                falls back to default log_verbosity=3.
 
 
         Additional per-logger overrides
@@ -524,7 +522,7 @@ class Duo:
         """
         Purpose
         -------
-        Create a custom logging label (e.g., TIP, NOTE).
+        Create a custom logging level that is used like any other Logduo level (e.g., TIP, NOTE).
 
         Example
         -------
@@ -668,15 +666,17 @@ class Duo:
 
         Notes
         -----
-            - Performs final cleanup:
-                - writes per-sink footers
-                - emits console footer (if enabled)
-                - writes JSONL session_end record (if enabled)
-                - emits prune summary message (if applicable)
-            - If the session was started by a script,
-              log.close() is called automatically at script exit.
-            - After log.close(), a new session may be started with
-              log.configure() or by emitting another log message.
+        - Performs best-effort final cleanup:
+            - writes per-sink footers
+            - emits the console footer, if enabled
+            - writes the JSONL session_end record, if enabled
+            - closes sinks and resets session state
+        - In scripts, Logduo calls log.close() automatically during interpreter
+          shutdown.
+        - Failure in one shutdown stage does not prevent the remaining cleanup
+          stages from being attempted.
+        - After log.close(), a new session may be started with log.configure()
+          or by emitting another log message.
 
         """
         _close_session(self)
@@ -710,6 +710,7 @@ class Duo:
         Displays:
             - the user-provided error message
             - traceback block (detail depends on verbosity level)
+            - Both log_verbosity and console_verbosity default to 3.
 
 
         Example
@@ -760,6 +761,7 @@ class Duo:
         Log a critical error message.
         Shown if verbosity level >= 1,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         Example
         -------
@@ -806,6 +808,7 @@ class Duo:
         Log an error message.
         Shown if verbosity level >= 1,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         Example
         -------
@@ -852,6 +855,7 @@ class Duo:
         Log a warning message.
         Shown if verbosity level >= 1,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         Example
         -------
@@ -898,6 +902,7 @@ class Duo:
         Log an information message.
         Shown if verbosity level >= 2,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         Example
         -------
@@ -944,6 +949,7 @@ class Duo:
         Log a success message.
         Shown if verbosity level >= 2,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         Example
         -------
@@ -990,6 +996,7 @@ class Duo:
         Log a debug message.
         Shown if verbosity level >= 3,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
         If show_debug_source is enabled in the config, and if the message was generated
         in a script (i.e., not in interactive session), then the prefix of
@@ -1038,6 +1045,7 @@ class Duo:
         Log a trace message.
         Shown if verbosity level >= 3,
         independently for console_verbosity and log_verbosity.
+        Both verbosity settings default to 3.
 
 
         Example

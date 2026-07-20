@@ -41,10 +41,7 @@ from logduo.internals.filesystem.created_file_record_builders import (
 from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
 )
-from logduo.internals.formatters.log_header_footer_builders import (
-    _build_log_footer,
-    _build_log_header,
-)
+from logduo.internals.formatters.log_header_footer_builders import _build_log_footer, _build_log_header
 from logduo.internals.formatters.message_prep import (
     _build_plain_message,
     _prepare_log_payload,
@@ -111,7 +108,6 @@ def _initialize_main_sink_log(duo: Duo) -> None:
             file_path=main_sink_log_file_path_abs,
             sink_name="main_sink",
             sink_id=sink_id,
-            display_order=0,
         )
         _register_created_file_record(duo, cfr)
 

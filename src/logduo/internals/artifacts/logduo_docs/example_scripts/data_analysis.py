@@ -83,7 +83,7 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
     # ------------------------------------------------------------------
     section("Read the CSV file and log data previews")
 
-    data = pd.read_csv(csv_path)
+    data = pd.read_csv(csv_path)  # noqa inspection PyArgumentList
 
     log("First 8 rows")
     log(data.head(8).to_string(index=False))
@@ -122,21 +122,26 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
 
         log("Selected regression values")
         log(f"R-squared: {results.rsquared:.4f}")
-        log(f"Observations: {int(results.nobs)}")
-        log(f"Education coefficient: {results.params['education']:.2f}")
-        log(f"Experience coefficient: {results.params['experience']:.2f}")
+
+        observation_count = int(float(results.nobs))     # noqa  # statsmodels typing incorrectly reports nobs as callable
+        education_coefficient = float(results.params["education"])
+        experience_coefficient = float(results.params["experience"])
+
+        log(f"Observations: {observation_count}")
+        log(f"Education coefficient: {education_coefficient:.2f}")
+        log(f"Experience coefficient: {experience_coefficient:.2f}")
+
 
     # ------------------------------------------------------------------
     section("Save a basic plot to the Logduo output directory")
 
-    fig = plt.figure()
-    plt.scatter(data["education"], data["income"])
-    plt.xlabel("Education")
-    plt.ylabel("Income")
-    plt.title("Example data: income by education")
-
+    fig, ax = plt.subplots()
+    ax.scatter(data["education"], data["income"])
+    ax.set_xlabel("Education")
+    ax.set_ylabel("Income")
+    ax.set_title("Example data: income by education")
     plot_path = log.output_dir_path / "income_by_education.png"
-    plt.savefig(plot_path)
+    fig.savefig(plot_path)
     plt.close(fig)
 
     log(f"Plot saved to: {plot_path}")

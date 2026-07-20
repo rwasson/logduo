@@ -189,7 +189,7 @@ DEFAULTS: dict[str, Any] = {
     "keep": "off",
     # --- Formatting ---
     # console
-    "console_verbosity": 2,
+    "console_verbosity": 3,
     "console_prefix": "level",
     "console_wrap_width": 120,
     "console_header": "auto",

@@ -39,11 +39,8 @@ def _register_created_file_record(
     for cfr in runtime._get_file_list_in_cfr():
         if path == cfr.path:
             raise ValueError(
-                f"Duplicate file path detected: '{path}'. "
-                "Another sink is already writing to this file. "
-                "Choose a different file name/path, or use file_mode='timestamped' "
-                "to generate unique files per run. "
-                "(e.g., new_logger('audit', file_mode='timestamped'))."
+                f"Duplicate file path detected: '{path}'. "  
+                "A file with this path is already registered for the current session."
             )
 
     key = path

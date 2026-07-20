@@ -23,7 +23,6 @@ from logduo.internals.engine.runtime_classes import CreatedFileRecord, UserSinkC
 from logduo.internals.formatters.prefix_builder import _compute_continuation_prefix_len
 from logduo.internals.session_config.session_config_classes import SessionConfig
 from logduo.internals.session_config.session_constants import (
-    _LOGURU_DISPLAY_ORDER,
     FileKindType,
     LogFileModeType,
     PrefixType,
@@ -33,7 +32,7 @@ from logduo.internals.session_config.session_constants import (
 
 # --- _build_main_sink_log_created_file_record() ------------------------------------
 def _build_main_sink_log_created_file_record(
-    *, config: SessionConfig, file_path: Path, sink_name: str, sink_id: int, display_order: int = 0
+    *, config: SessionConfig, file_path: Path, sink_name: str, sink_id: int,
 ) -> CreatedFileRecord:
 
     if not isinstance(config, SessionConfig):
@@ -52,7 +51,6 @@ def _build_main_sink_log_created_file_record(
         log_header=config.log_header,
         log_footer=config.log_footer,
         show_pid_in_log=config.show_pid_in_log,
-        display_order=display_order,
     )
 
 
@@ -64,7 +62,6 @@ def _build_user_sink_log_created_file_record(
     file_path: Path,
     sink_name: str,
     sink_id: int,
-    display_order: int = 0,
 ) -> CreatedFileRecord:
 
     if not isinstance(config, UserSinkConfig):
@@ -83,13 +80,12 @@ def _build_user_sink_log_created_file_record(
         log_header=config.log_header,
         log_footer=config.log_footer,
         show_pid_in_log=show_pid_in_log,
-        display_order=display_order,
     )
 
 
 # --- _build_jsonl_created_file_record() ---------------------------------------
 def _build_jsonl_created_file_record(
-    *, file_path: Path, display_order: int = 0
+    *, file_path: Path,
 ) -> CreatedFileRecord:
 
     return _build_cfr_base(
@@ -105,13 +101,12 @@ def _build_jsonl_created_file_record(
         log_header="off",
         log_footer="off",
         show_pid_in_log=False,
-        display_order=display_order,
     )
 
 
 # --- _build_artifact_created_file_record() ------------------------------------
 def _build_artifact_created_file_record(
-    *, file_path: Path, display_order: int = 0
+    *, file_path: Path,
 ) -> CreatedFileRecord:
 
     return _build_cfr_base(
@@ -127,7 +122,25 @@ def _build_artifact_created_file_record(
         log_header="off",
         log_footer="off",
         show_pid_in_log=False,
-        display_order=display_order,
+    )
+
+def _build_export_doc_created_file_record(
+    *,
+    file_path: Path,
+) -> CreatedFileRecord:
+    return _build_cfr_base(
+        file_path=file_path,
+        sink_name=None,
+        sink_id=None,
+        file_kind="export_doc",
+        is_log_file=False,
+        log_verbosity=0,
+        log_file_mode="write",
+        log_prefix="off",
+        log_wrap_width="off",
+        log_header="off",
+        log_footer="off",
+        show_pid_in_log=False,
     )
 
 
@@ -137,7 +150,6 @@ def _build_loguru_created_file_record(
     file_path: Path,
     sink_id: int,
     file_mode: LogFileModeType = "write",
-    display_order: int = _LOGURU_DISPLAY_ORDER,
 ) -> CreatedFileRecord:
 
     return _build_cfr_base(
@@ -153,7 +165,6 @@ def _build_loguru_created_file_record(
         log_header="off",
         log_footer="off",
         show_pid_in_log=False,
-        display_order=display_order,
     )
 
 
@@ -176,7 +187,6 @@ def _build_cfr_base(
     log_footer: str,
     show_pid_in_log: bool,
     # --- display ---
-    display_order: int = 0,
 ) -> CreatedFileRecord:
     """
     Build fully resolved immutable CreatedFileRecord with invariant validation.
@@ -216,7 +226,6 @@ def _build_cfr_base(
         show_pid_in_log=show_pid_in_log,
         # display metadata
         continuation_prefix_len=continuation_prefix_len,
-        display_order=display_order,
     )
     _validate_cfr_fields_complete(kwargs)
     cfr_order = [f.name for f in fields(CreatedFileRecord)]
@@ -246,7 +255,6 @@ def _build_cfr_base(
         log_footer=log_footer,
         show_pid_in_log=show_pid_in_log,
         continuation_prefix_len=continuation_prefix_len,
-        display_order=display_order,
     )
 
 

@@ -178,7 +178,6 @@ def _write_config_table_txt(
             {
                 "path": path,
                 "short_label": "config_table.txt",
-                "display_order": 0,
             }
         )
 
@@ -213,7 +212,6 @@ def _write_config_json(
             {
                 "path": path,
                 "short_label": "config.json",
-                "display_order": 0,
             }
         )
 

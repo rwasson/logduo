@@ -145,7 +145,7 @@ rho = "\u03c1"                   # ρ
 sigma = "\u03c3"                 # σ
 tau = "\u03c4"                   # τ
 phi = "\u03c6"                   # φ
-chi = "\u03c7"                   # χ
+chi = "\u03c7"                   # χ       # noqa  # intentionally defined twice
 psi = "\u03c8"                   # ψ
 omega = "\u03c9"                 # ω
 

@@ -47,7 +47,6 @@ from logduo.internals.filesystem.created_file_record_registration import (
 )
 from logduo.internals.filesystem.path_finders import _apply_timestamp_to_filename
 from logduo.internals.session_config.session_constants import (
-    _LOGURU_DISPLAY_ORDER,
     _NOT_GIVEN,
     _NotGiven,
     _VALID_LOGURU_ADD_KWARGS,
@@ -142,9 +141,7 @@ def _initialize_new_loguru_sink(
 
     # --- register CFR (non-fatal if fails) ---
     try:
-        cfr = _build_loguru_created_file_record(
-            file_path=final_path, sink_id=sink_id, display_order=_LOGURU_DISPLAY_ORDER
-        )
+        cfr = _build_loguru_created_file_record(file_path=final_path, sink_id=sink_id)
 
         extra: dict[str, object] = {
             "raw_kwargs": _serialize_new_loguru_kwargs_for_cfr_field(raw_kwargs),

@@ -47,10 +47,7 @@ from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
 )
 from logduo.internals.filesystem.path_finders import _apply_timestamp_to_filename
-from logduo.internals.formatters.log_header_footer_builders import (
-    _build_log_footer,
-    _build_log_header,
-)
+from logduo.internals.formatters.log_header_footer_builders import _build_log_footer, _build_log_header
 from logduo.internals.formatters.message_prep import (
     _build_plain_message,
     _prepare_log_payload,
@@ -153,7 +150,6 @@ def _initialize_user_sink(
         sink_name=sink_name,
         sink_id=sink_id,
         show_pid_in_log=duo.session_config.show_pid_in_log,
-        display_order=0,
     )
     _register_created_file_record(duo, cfr)
 

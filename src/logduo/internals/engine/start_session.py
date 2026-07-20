@@ -201,7 +201,7 @@ def _setup_artifacts(duo: Duo) -> None:
 
     for record in created_artifacts:
         _register_created_file_record(
-            duo, _build_artifact_created_file_record(file_path=record["path"], display_order=0)
+            duo, _build_artifact_created_file_record(file_path=record["path"])
         )
 
 

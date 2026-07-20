@@ -98,13 +98,18 @@ def _close_session(duo: Duo) -> None:
             )
 
         try:
-            _, missing = _build_auto_footer_created_file_lists(
+            (
+                _output_dir_files,
+                _project_files,
+                _external_files,
+                missing_files,
+            ) = _build_auto_footer_created_file_lists(
                 runtime=runtime,
             )
-            if missing:
+            if missing_files:
                 print(
                     "LOGDUO WARNING: Declared but not created:\n"
-                    f"{missing}",
+                    f"{missing_files}",
                     file=sys.stderr,
                 )
         except Exception as e:
@@ -118,62 +123,7 @@ def _close_session(duo: Duo) -> None:
         _reset_session(duo)
 
 
-
-'''
-TODO delete
-def _close_session(duo: Duo) -> None:
-    if not duo._initialized:
-        return
-
-    runtime = duo._runtime
-    runtime.session_state = "closing"
-
-    # --- Finalize timing ---
-    _finalize_timing(runtime)
-
-    # --- End user-file sinks ---
-    try:
-        _emit_user_sink_end(duo)
-    except Exception as e:
-        print(
-            f"LOGDUO WARNING: _emit_user_sink_end crashed unexpectedly → {type(e).__name__}: {e}",
-            file=sys.stderr,
-        )
-
-    # --- End main log sink ---
-    try:
-        _emit_main_sink_log_end(duo)
-    except Exception as e:
-        print(
-            f"LOGDUO WARNING: _emit_main_sink_log_end failed → {type(e).__name__}: {e}",
-            file=sys.stderr,
-        )
-
-    # --- Console footer ---
-    try:
-        _emit_console_end(duo)
-    except Exception as e:
-        print(
-            f"LOGDUO WARNING: _emit_console_end failed → {type(e).__name__}: {e}", file=sys.stderr
-        )
-
-    # --- End JSONL sink ---
-    try:
-        if duo._runtime.jsonl_path_abs is not None:
-            _emit_jsonl_end(duo)
-    except Exception as e:
-        print(f"LOGDUO WARNING: _emit_jsonl_end failed → {type(e).__name__}: {e}", file=sys.stderr)
-
-    _, missing = _build_auto_footer_created_file_lists(runtime=runtime)
-    if missing:
-        print(f"LOGDUO WARNING: Declared but not created:\n{missing}", file=sys.stderr)
-
-    # --- Reset session ---
-    _reset_session(duo)
-'''
-
 # === Internal helpers =========================================================
-
 
 # --- _finalize_timing() -------------------------------------------------------
 def _finalize_timing(runtime: RuntimeRecord) -> None:

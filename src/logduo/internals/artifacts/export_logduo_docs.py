@@ -14,6 +14,10 @@ if TYPE_CHECKING:
     from logduo import Duo
 
 from logduo.internals.engine.runtime_classes import RuntimeRecord
+from logduo.internals.filesystem.created_file_record_builders import _build_export_doc_created_file_record
+from logduo.internals.filesystem.created_file_record_registration import (
+    _register_created_file_record,
+)
 
 
 @dataclass(frozen=True)
@@ -42,11 +46,13 @@ def _export_logduo_docs(
     logduo_dir_path.mkdir(parents=True, exist_ok=True)
 
     readme_result = _write_readme_txt(
+        duo=duo,
         runtime=runtime,
         logduo_dir_path=logduo_dir_path,
     )
 
     example_results = _write_example_scripts(
+        duo=duo,
         logduo_dir_path=logduo_dir_path,
     )
 
@@ -62,6 +68,7 @@ def _export_logduo_docs(
 # --- _write_readme_txt() ------------------------------------------------------
 def _write_readme_txt(
     *,
+    duo: Duo,
     runtime: RuntimeRecord,
     logduo_dir_path: Path,
 ) -> DocsExportFileResult:
@@ -90,6 +97,15 @@ def _write_readme_txt(
             encoding="utf-8",
         )
 
+        record = _build_export_doc_created_file_record(
+            file_path=readme_file_path.resolve(),
+        )
+
+        _register_created_file_record(
+            duo,
+            record,
+        )
+
         return DocsExportFileResult(
             name="README.txt",
             path=readme_file_path,
@@ -106,6 +122,7 @@ def _write_readme_txt(
 # --- _write_example_scripts() -------------------------------------------------
 def _write_example_scripts(
     *,
+    duo: Duo,
     logduo_dir_path: Path,
 ) -> list[DocsExportFileResult]:
     source_examples_dir = (
@@ -148,7 +165,19 @@ def _write_example_scripts(
             )
             continue
 
-        copy2(source_file_path, target_file_path)
+        try:
+            copy2(source_file_path, target_file_path)
+            record = _build_export_doc_created_file_record(
+                file_path=target_file_path.resolve(),
+            )
+            _register_created_file_record(duo, record)
+        except Exception as e:
+            raise RuntimeError(
+                "LOGDUO INTERNAL ERROR:\n\n"
+                "Failed to export example script:\n"
+                f"{target_file_path}\n"
+            ) from e
+
 
         results.append(
             DocsExportFileResult(

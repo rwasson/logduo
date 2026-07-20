@@ -61,6 +61,7 @@ def main() -> None:
         individual_logs=INDIVIDUAL_LOGS,
         log_keep=3,
         debug_pytest_harness=False,
+        console_wrap_width=100,
     )
 
 

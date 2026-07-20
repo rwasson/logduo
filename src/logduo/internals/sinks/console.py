@@ -250,7 +250,6 @@ def _emit_console_end(duo: Duo) -> None:
         console_footer=session_config.console_footer,
         console_wrap_width=session_config.console_wrap_width,
         styles=session_config.console_theme_dict,
-        show_created_files=True,
     )
 
     # --- Emit console footer ---

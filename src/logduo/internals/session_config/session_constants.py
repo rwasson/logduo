@@ -106,9 +106,9 @@ _MAX_VERBOSITY_LEVEL = 3
 
 # === Sink and routing kinds ===================================================
 # file_kind is a field in CreatedFileRecord used by dispatcher/setup/close
-_VALID_FILE_KIND = {"artifact", "main_sink_log", "user_sink_log", "jsonl", "loguru_log"}
+_VALID_FILE_KIND = {"artifact", "export_doc", "main_sink_log", "user_sink_log", "jsonl", "loguru_log"}
 type FileKindType = Literal[
-    "artifact", "main_sink_log", "user_sink_log", "jsonl", "loguru_log"
+    "artifact", "export_doc", "main_sink_log", "user_sink_log", "jsonl", "loguru_log"
 ]
 type TargetKindType = Literal["console", "main_sink_log", "user_sink_log", "jsonl"]
 type LogKindType = Literal["main_sink_log", "user_sink_log"]
@@ -120,7 +120,7 @@ _RESERVED_SINK_STEMS = {
 
 
 # === Config value domains =====================================================
-_DEFAULT_LOG_VERBOSITY = 2
+_DEFAULT_LOG_VERBOSITY = 3
 _VALID_PREFIX = {"off", "level", "timestamp", "source"}
 _VALID_LOG_FILE_MODES = {"write", "append", "timestamped"}
 _VALID_log_file_layoutS = {"flat", "script", "run"}
@@ -143,12 +143,9 @@ _CALLSITE_MAX_SOURCE_DISPLAY_WIDTH = 25
 _CALLSITE_MAX_LINE_NUM_DISPLAY_WIDTH = 9
 _SINK_TAG_WIDTH = _MAX_LEVEL_WIDTH + 2
 _NO_WRAP_WIDTH = 100000  # log_wrap_width when wrapping not desired
-_LOGURU_DISPLAY_ORDER = 100000  # ensure loguru files shown last in created file lists
 _MIN_WRAP_WIDTH = 80
-_TRACEBACK_PATH_WIDTH = 80
-_TRACEBACK_MAX_PARENTS = 4
-_DEFAULT_SHORT_PATH_WIDTH = 120
-_DEFAULT_SHORT_PATH_MAX_PARENTS = 6
+_DEFAULT_CONFIG_TABLE_WIDTH = 120
+
 
 
 # === Themes ===================================================================
