@@ -5,7 +5,7 @@ test_initialize.py
 import pytest
 
 import logduo.internals.engine.start_session as start_session
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import _new_test_log
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import _new_test_log
 from logduo import Duo
 
 

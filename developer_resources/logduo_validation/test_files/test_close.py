@@ -9,7 +9,7 @@ Last edited: 2026-06-12
 
 from datetime import datetime, timedelta
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _find_main_log,
     _new_test_log,
     _read_file,
@@ -32,7 +32,7 @@ def test_01_close_writes_main_log_footer(tmp_path):
 
     content = _read_file(_find_main_log(tmp_path))
 
-    assert "logging ended" in content
+    assert "Logging ended" in content
 
 
 # --- test_02_close_writes_user_sink_footer() ---------------------------------
@@ -46,7 +46,7 @@ def test_02_close_writes_user_sink_footer(tmp_path):
 
     content = _read_file(tmp_path / "session" / "audit.log")
 
-    assert "logging ended" in content
+    assert "Logging ended" in content
 
 
 # --- test_03_close_resets_initialized_state() --------------------------------
@@ -88,15 +88,15 @@ def test_06_close_records_duration(tmp_path):
     assert runtime.duration_display is not None
 
 
-# --- test_07_close_footer_lists_created_files() ------------------------------
-def test_07_close_footer_lists_created_files(tmp_path):
+# --- test_07_close_footer_lists_generated_files() ------------------------------
+def test_07_close_footer_lists_generated_files(tmp_path):
     log = _new_test_log(tmp_path)
 
     log.close()
 
     content = _read_file(_find_main_log(tmp_path))
 
-    assert "files created this logging session in output directory" in content
+    assert "Log-generated files in output directory" in content
 
 
 # --- test_08_close_respects_log_verbosity_zero() -----------------------------
@@ -155,7 +155,7 @@ def test_10_close_preserves_user_sink_until_footer(tmp_path):
     content = _read_file(tmp_path / "session" / "audit.log")
 
     assert "hello" in content
-    assert "logging ended" in content
+    assert "Logging ended" in content
 
 
 # --- test_11_finalize_timing_seconds_only() ----------------------------------
@@ -328,7 +328,7 @@ def test_18_missing_files_warning(
     )
 
     monkeypatch.setattr(
-        "logduo.internals.engine.close_session._build_auto_footer_created_file_lists",
+        "logduo.internals.engine.close_session._build_auto_footer_generated_file_lists",
         lambda runtime: (
             [],  # output-directory files
             [],  # project files
@@ -341,5 +341,5 @@ def test_18_missing_files_warning(
 
     err = capsys.readouterr().err
 
-    assert "Declared but not created" in err
+    assert "Declared but not generated" in err
     assert "missing.txt" in err

@@ -13,9 +13,9 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logduo"
 readme = "README.md"
-version = "0.1.4"
+version = "0.1.5"
 authors = [{ name = "R. Wasson", email = "r.wasson.dev@gmail.com" }]
-description = "Logging, console output, and file management for Python — simple by default, configurable for advanced workflows."
+description = "Easy logging and output management for Python scripts and interactive sessions"
 
 license = "MIT"
 license-files = ["LICENSE"]
@@ -60,9 +60,8 @@ Issues = "https://github.com/rwasson/logduo/issues"
 [project.optional-dependencies]
 dev = [
   "build",
-  "black>=24.0.0",
-  "ruff>=0.15.0",
-  "mypy>=1.10,<3",
+  "ruff>=0.16.1",
+  "mypy>=2.3,<3",
   "vulture",
   "types-setuptools",
   "types-requests",

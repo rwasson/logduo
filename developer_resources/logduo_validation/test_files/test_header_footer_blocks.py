@@ -14,7 +14,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _find_file,
     _find_main_log,
     _find_new_logger_log,
@@ -28,15 +28,18 @@ from logduo.internals.formatters.console_header_footer_builders import (
     _render_rich_label_value_row,
 )
 from logduo.internals.formatters.header_footer_formatters import (
-    _build_auto_footer_created_file_lists,
+    _build_auto_footer_generated_file_lists,
     _build_auto_footer_info_rows,
     _build_auto_header_info_rows,
     _derive_label_pad,
 )
-from logduo.internals.session_config.session_constants import FileKindType
+from logduo.internals.session_config.session_constants import (
+    FileKindType,
+    LogFileModeType,
+)
 from logduo.utils.wrap.wrap_text import wrap_text
 
-# === Custom Blocks used in pytest_files ==============================================
+# === Custom Blocks used in test_files ==============================================
 
 _DEBUG_TEST_PRINT = False
 
@@ -53,11 +56,12 @@ CUSTOM_FOOTER = (
 )
 
 
-#  --- helper for pytest_files' CreatedFileRecord -------------------------------------
+#  --- helper for test_files' CreatedFileRecord -------------------------------------
 def _make_cfr(
     path: Path,
     *,
     file_kind: FileKindType = "artifact",
+    log_file_mode: LogFileModeType = "write",
 ) -> CreatedFileRecord:
     return CreatedFileRecord(
         path=path,
@@ -68,7 +72,7 @@ def _make_cfr(
         sink_name=None,
         sink_id=None,
         log_verbosity=0,
-        log_file_mode="write",
+        log_file_mode=log_file_mode,
         log_prefix="off",
         log_wrap_width="off",
         log_header="off",
@@ -93,14 +97,14 @@ def test_01_default_header_footer(tmp_path: Path):
 
     _print_test_details(
         test_name="test_01_default_header_footer",
-        assertion="'started' in log_content",
+        assertion="'Started' in log_content",
         expected=True,
-        actual=("logging started" in log_content),
+        actual=("Logging started" in log_content),
         log_content=log_content,
     )
 
-    assert "logging started" in log_content
-    assert "logging ended" in log_content
+    assert "Logging started" in log_content
+    assert "Logging ended" in log_content
 
 
 # --- test_02_custom_global_header_footer() ------------------------------------
@@ -295,14 +299,16 @@ def test_07_log_footer_wrap_width_off(tmp_path: Path):
 
     # Note pytest does not behave like script generated session
     # no script path should be found
-    assert "script path" not in log_content
-    assert "logging ended" in log_content
-    assert "files created this logging session in output directory:" in log_content
+    assert "Script path" not in log_content
+    assert "Logging ended" in log_content
+    assert "Log-generated files in output directory:" in log_content
     assert "config_table.txt" in log_content
 
 
 # --- test_08_user_sink_footer_contains_log_file_path() ------------------------
-def test_08_user_sink_footer_contains_log_file_path(tmp_path: Path):
+def test_08_user_sink_footer_contains_log_file_path(
+    tmp_path: Path,
+) -> None:
     log = Duo()
     log.configure(
         log_dir_path=str(tmp_path),
@@ -320,9 +326,33 @@ def test_08_user_sink_footer_contains_log_file_path(tmp_path: Path):
     audit_log = _find_file(tmp_path, "audit.log")
     audit_content = _read_file(audit_log)
 
-    assert "logging ended" in audit_content
-    assert "log file path" in audit_content.lower()
-    assert "audit.log" in audit_content
+    assert "Logging ended" in audit_content
+
+    lines = audit_content.splitlines()
+    log_file_label_index = lines.index("Log file path:")
+    displayed_path_lines: list[str] = []
+
+    for line in lines[log_file_label_index + 1:]:
+        if not line.startswith(" "):
+            break
+        displayed_path_lines.append(line)
+
+    assert displayed_path_lines
+
+    first_path_line = displayed_path_lines[0]
+
+    assert first_path_line.startswith("    ")
+    assert not first_path_line.startswith("        ")
+
+    for continuation_line in displayed_path_lines[1:]:
+        assert continuation_line.startswith("        ")
+
+    displayed_path = "".join(
+        line.strip()
+        for line in displayed_path_lines
+    )
+
+    assert displayed_path == str(audit_log.absolute())
 
 
 # --- test_09_console_verbosity_zero_hides_startup_footer() --------------------
@@ -344,8 +374,8 @@ def test_09_console_verbosity_zero_hides_startup_footer(
 
     console_output = captured.out + captured.err
 
-    assert "logging started" not in console_output.lower()
-    assert "logging ended" not in console_output.lower()
+    assert "Logging started" not in console_output
+    assert "Logging ended" not in console_output
 
 
 # --- test_10_script_mode_populates_script_path() -------------------------
@@ -355,7 +385,7 @@ def test_10_script_mode_populates_script_path(tmp_path: Path):
     env["LOGDUO_TEST_OUTPUT_DIR"] = str(tmp_path)
 
     script_path = Path(
-        __file__).parent.parent / "pytest_files" / "pytest_helpers" / "script_simple.py"
+        __file__).parent.parent / "test_files" / "test_helpers" / "script_simple.py"
     print(" ")
     print("***********************************************************")
     print("test_10_script_mode_populates_script_path(tmp_path: Path) ")
@@ -379,7 +409,7 @@ def test_10_script_mode_populates_script_path(tmp_path: Path):
     print(log_content)
 
     assert "script_simple.py" in output
-    assert "script path" in log_content.lower()
+    assert "Script path" in log_content
     assert "script_simple.py" in log_content
 
 
@@ -400,14 +430,16 @@ def test_11_pytest_is_not_treated_as_script(tmp_path: Path):
 
 
 # --- test_12_main_log_footer_wraps_script_path() ------------------------------
-def test_12_main_log_footer_wraps_script_path(tmp_path: Path):
-
+def test_12_main_log_footer_wraps_script_path(tmp_path: Path) -> None:
     env = os.environ.copy()
     env["LOGDUO_TEST_OUTPUT_DIR"] = str(tmp_path)
 
-    script_path = Path(
-        __file__).parent.parent / "pytest_files" / "pytest_helpers" / "script_simple.py"
-
+    script_path = (
+        Path(__file__).parent.parent
+        / "test_files"
+        / "test_helpers"
+        / "script_simple.py"
+    )
 
     result = subprocess.run(
         [sys.executable, str(script_path)],
@@ -420,35 +452,40 @@ def test_12_main_log_footer_wraps_script_path(tmp_path: Path):
 
     log_file = _find_main_log(tmp_path)
     log_content = _read_file(log_file)
-
-    assert "script path" in log_content.lower()
-
     lines = log_content.splitlines()
 
-    script_line_index = next(
-        i
-        for i, line in enumerate(lines)
-        if line.lower().startswith("script path")
+    script_label_index = lines.index("Script path:")
+
+    first_path_line = lines[script_label_index + 1]
+    continuation_line = lines[script_label_index + 2]
+
+    assert first_path_line.startswith("    ")
+    assert not first_path_line.startswith("        ")
+
+    assert continuation_line.startswith("        ")
+
+    displayed_path_lines: list[str] = []
+    for line in lines[script_label_index + 1:]:
+        if not line.startswith(" "):
+            break
+        displayed_path_lines.append(line)
+
+    assert len(displayed_path_lines) >= 2
+    assert displayed_path_lines[0].startswith("    ")
+    assert not displayed_path_lines[0].startswith("        ")
+
+    for continuation_line in displayed_path_lines[1:]:
+        assert continuation_line.startswith("        ")
+
+    displayed_path = "".join(
+        line.strip()
+        for line in displayed_path_lines
     )
-
-    continuation_line = lines[script_line_index + 1]
-
-    print(" ")
-    print("*************************************************************************")
-    print("test_12__main_log_footer_wraps_script_path")
-    print("script_path:")
-    print(script_path)
-
-    print("\nSCRIPT PATH CONTINUATION LINE:")
-    print(repr(continuation_line))
-    print(f"assert continuation_line.startswith(' ')")
-
-    assert continuation_line.startswith(" ")
+    assert displayed_path == str(script_path.absolute())
 
 
-
-# --- test_13_main_log_footer_wraps_created_files() ------------------------
-def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
+# --- test_13_main_log_footer_wraps_generated_files() ------------------------
+def test_13_main_log_footer_wraps_generated_files(tmp_path: Path):
     log = Duo()
 
     log.configure(
@@ -466,13 +503,13 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
 
     print()
     print("**********************************************")
-    print("test_13_main_log_footer_wraps_created_files")
+    print("test_13_main_log_footer_wraps_generated_files")
     print()
     print(log_content)
     print("**********************************************")
     print(" ")
 
-    marker = "files created this logging session in output directory:"
+    marker = "Log-generated files in output directory:"
     assert marker in log_content
 
     footer = log_content.split(marker, maxsplit=1)[1]
@@ -500,38 +537,58 @@ def test_13_main_log_footer_wraps_created_files(tmp_path: Path):
     )
 
 
-# --- test_14_main_log_footer_uses_hanging_indent_for_paths() ------------------
-def test_14_main_log_footer_uses_hanging_indent_for_paths(tmp_path: Path):
-
+# --- test_14_main_log_footer_wraps_output_directory() ------------------------
+def test_14_main_log_footer_wraps_output_directory(
+    tmp_path: Path,
+) -> None:
+    long_log_dir = (
+            tmp_path
+            / "deliberately_long_directory_name_for_footer_wrapping"
+            / "another_long_directory_component"
+    )
     log = Duo()
 
     log.configure(
-        log_dir_path=str(tmp_path),
+        log_dir_path=str(long_log_dir),
         log_file_layout="script",
         log_wrap_width=80,
     )
+
+    output_dir_path = log.output_dir_path
+    assert output_dir_path is not None
 
     log.close()
 
     log_file = _find_main_log(tmp_path)
     log_content = _read_file(log_file)
-
     lines = log_content.splitlines()
 
-    continuation_lines = [
-        line
-        for line in lines
-        if line.startswith("    ")
-    ]
+    output_dir_label_index = lines.index("Output directory:")
 
-    print(" ")
-    print("*************************************************************************")
-    print("test_14_main_log_footer_uses_hanging_indent_for_paths")
-    print("\nCONTINUATION LINES:")
-    for line in continuation_lines:
-        print(repr(line))
+    displayed_path_lines: list[str] = []
 
-    assert continuation_lines
+    for line in lines[output_dir_label_index + 1:]:
+        if not line.startswith(" "):
+            break
+
+        displayed_path_lines.append(line)
+
+    assert len(displayed_path_lines) >= 2
+
+    first_path_line = displayed_path_lines[0]
+
+    assert first_path_line.startswith("    ")
+    assert not first_path_line.startswith("        ")
+
+    for continuation_line in displayed_path_lines[1:]:
+        assert continuation_line.startswith("        ")
+
+    displayed_path = "".join(
+        line.strip()
+        for line in displayed_path_lines
+    )
+
+    assert displayed_path == str(output_dir_path.absolute())
 
 
 # --- test_15_hanging_indent_applied() --------------------------------------------
@@ -694,8 +751,8 @@ def test_25_build_auto_header_info_rows_log_file():
     )
 
     assert (None, "main.log") in rows
-    assert ("logging started", "10:00") in rows
-    assert ("created by", "demo.py") in rows
+    assert ("Logging started", "10:00") in rows
+    assert ("Generated by", "demo.py") in rows
 
 
 # --- test_26_build_auto_header_info_rows_console() ----------------------------
@@ -712,7 +769,7 @@ def test_26_build_auto_header_info_rows_console():
     )
 
     assert (None, "ignored.log") not in rows
-    assert ("running script", "demo.py") in rows
+    assert ("Running script", "demo.py") in rows
 
 
 # --- test_27_build_auto_footer_info_rows_duration() ---------------------------
@@ -730,7 +787,7 @@ def test_27_build_auto_footer_info_rows_duration(tmp_path):
     )
 
     assert rows[0] == (
-        "logging ended",
+        "Logging ended",
         "11:00 (duration 5 sec)",
     )
 
@@ -747,40 +804,56 @@ def test_28_derive_label_pad_ignores_none():
     assert _derive_label_pad(rows) == len("longest label")
 
 
-# --- test_29_build_auto_footer_created_file_lists_missing(tmp_path) -----------
-def test_29_build_auto_footer_created_file_lists_missing(tmp_path):
+# --- test_29_build_auto_footer_generated_file_lists_missing() ----------------
+def test_29_build_auto_footer_generated_file_lists_missing(
+    tmp_path: Path,
+) -> None:
     runtime = RuntimeRecord()
     runtime.main_sink_log_dir_path_abs = tmp_path
-    runtime.project_dir_path_abs = tmp_path / "project"
 
-    cfr = _make_cfr(
-        tmp_path / "missing.log",
+    write_path = tmp_path / "missing_write.log"
+    append_path = tmp_path / "missing_append.log"
+
+    write_cfr = _make_cfr(
+        write_path,
         file_kind="artifact",
     )
 
-    runtime.created_file_record_registry[cfr.path] = cfr
+    append_cfr = _make_cfr(
+        append_path,
+        file_kind="artifact",
+        log_file_mode="append",
+    )
+
+    runtime.created_file_record_registry[write_path] = write_cfr
+    runtime.created_file_record_registry[append_path] = append_cfr
 
     (
+        output_dir_path,
         output_dir_files,
-        project_files,
-        external_files,
+        other_files,
         missing_files,
-    ) = _build_auto_footer_created_file_lists(
+    ) = _build_auto_footer_generated_file_lists(
         runtime=runtime,
     )
 
+    assert output_dir_path == str(tmp_path.absolute())
     assert output_dir_files == []
-    assert missing_files == [cfr]
+    assert other_files == []
+
+    assert missing_files == [
+        f"{append_path.absolute()} (append)",
+        str(write_path.absolute()),
+    ]
 
 
-# --- test_30_build_auto_footer_created_file_lists_jsonl_included(tmp_path) ---
-def test_30_build_auto_footer_created_file_lists_jsonl_included(tmp_path):
+# --- test_30_build_auto_footer_generated_file_lists_jsonl_included(tmp_path) ---
+def test_30_build_auto_footer_generated_file_lists_jsonl_included(
+    tmp_path,
+) -> None:
     runtime = RuntimeRecord()
     runtime.main_sink_log_dir_path_abs = tmp_path
-    runtime.project_dir_path_abs = tmp_path / "project"
-
     path = tmp_path / "events.jsonl"
-    path.write_text("", encoding="utf-8")
     jsonl_cfr = _make_cfr(
         path,
         file_kind="jsonl",
@@ -788,15 +861,88 @@ def test_30_build_auto_footer_created_file_lists_jsonl_included(tmp_path):
 
     runtime.created_file_record_registry[path] = jsonl_cfr
     (
+        output_dir_path,
         output_dir_files,
-        project_files,
-        external_files,
+        other_files,
         missing_files,
-    ) = _build_auto_footer_created_file_lists(runtime=runtime)
+    ) = _build_auto_footer_generated_file_lists(runtime=runtime)
 
-    assert jsonl_cfr in output_dir_files
+    assert output_dir_path == str(tmp_path.absolute())
+    assert output_dir_files == ["events.jsonl"]
+    assert other_files == []
     assert missing_files == []
 
+
+def test_31_generated_file_lists_marks_append_mode(
+    tmp_path: Path,
+) -> None:
+    runtime = RuntimeRecord()
+    runtime.main_sink_log_dir_path_abs = tmp_path
+
+    write_path = tmp_path / "write.log"
+    append_path = tmp_path / "append.log"
+
+    write_path.write_text("", encoding="utf-8")
+    append_path.write_text("", encoding="utf-8")
+
+    runtime.created_file_record_registry[write_path] = _make_cfr(
+        write_path,
+    )
+    runtime.created_file_record_registry[append_path] = _make_cfr(
+        append_path,
+        log_file_mode="append",
+    )
+
+    (
+        output_dir_path,
+        output_dir_files,
+        other_files,
+        missing_files,
+    ) = _build_auto_footer_generated_file_lists(runtime=runtime)
+
+    assert output_dir_path == str(tmp_path.absolute())
+    assert output_dir_files == [
+        "append.log (append)",
+        "write.log",
+    ]
+    assert other_files == []
+    assert missing_files == []
+
+def test_32_generated_file_lists_groups_other_files(
+    tmp_path: Path,
+) -> None:
+    output_dir = tmp_path / "output"
+    other_dir = tmp_path / "other"
+    output_dir.mkdir()
+    other_dir.mkdir()
+
+    runtime = RuntimeRecord()
+    runtime.main_sink_log_dir_path_abs = output_dir
+
+    output_file = output_dir / "main.log"
+    other_file = other_dir / "report.log"
+
+    output_file.write_text("", encoding="utf-8")
+    other_file.write_text("", encoding="utf-8")
+
+    runtime.created_file_record_registry[output_file] = _make_cfr(
+        output_file,
+    )
+    runtime.created_file_record_registry[other_file] = _make_cfr(
+        other_file,
+    )
+
+    (
+        output_dir_path,
+        output_dir_files,
+        other_files,
+        missing_files,
+    ) = _build_auto_footer_generated_file_lists(runtime=runtime)
+
+    assert output_dir_path == str(output_dir.absolute())
+    assert output_dir_files == ["main.log"]
+    assert other_files == [str(other_file.absolute())]
+    assert missing_files == []
 
 
 # ==+ Internal helper ==========================================================

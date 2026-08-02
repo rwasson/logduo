@@ -235,8 +235,8 @@ class Duo:
                     data_analysis.py
                     first_script.py
                     math_report_notation.py
-                    nested_parent_script.py
-                    nested_child_script.py
+                    script_parent.py
+                    script_child.py
 
         Existing files are preserved and are not overwritten.
 

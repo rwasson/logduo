@@ -46,6 +46,7 @@ Run:
     git commit -m "Release $VERSION"
     git push origin main
     git status
+    echo "$VERSION"
 
 Confirm:
 - working tree is clean
@@ -121,8 +122,17 @@ Run a basic logging test.
 ------------------
 Run:
 
-    git tag vX.Y.Z
-    git push origin vX.Y.Z
+    VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+    TAG="v$VERSION"
+    echo "Preparing to create tag: $TAG"
+    
+    if git rev-parse "$TAG" >/dev/null 2>&1; then
+        echo "Tag $TAG already exists."
+        exit 1
+    fi
+    git tag "$TAG"
+    git push origin "$TAG"
+
 
 Confirm the tag appears on GitHub.
 

@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 from logduo.internals.engine.reset_session import _reset_session
 from logduo.internals.engine.runtime_classes import RuntimeRecord
 from logduo.internals.formatters.header_footer_formatters import (
-    _build_auto_footer_created_file_lists,
+    _build_auto_footer_generated_file_lists,
 )
 from logduo.internals.sinks.console import _emit_console_end
 from logduo.internals.sinks.jsonl import _emit_jsonl_end
@@ -103,12 +103,12 @@ def _close_session(duo: Duo) -> None:
                 _project_files,
                 _external_files,
                 missing_files,
-            ) = _build_auto_footer_created_file_lists(
+            ) = _build_auto_footer_generated_file_lists(
                 runtime=runtime,
             )
             if missing_files:
                 print(
-                    "LOGDUO WARNING: Declared but not created:\n"
+                    "LOGDUO WARNING: Declared but not generated:\n"
                     f"{missing_files}",
                     file=sys.stderr,
                 )

@@ -1,19 +1,19 @@
 """
 example_scripts_runner.py
 
-Run installed Logduo example scripts and log results.
+Run installed Logduo example scripts and README validation scripts, and log results.
 
 Skips:
-    nested_child_script.py
+    script_child.py
 
 Reason:
-    nested_child_script.py is intended to be run by nested_parent_script.py.
+    script_child.py is intended to be run by script_parent.py.
     It calls log.join() and expects an active parent session.
 
 Runs automatically in macOS, Ubuntu and Windows when changes pushed to GitHub.
     called by:  .github/workflows/tests.yml
 
-Last edited: 2026-07-08
+Last edited: 2026-08-02
 """
 
 from __future__ import annotations
@@ -27,10 +27,16 @@ from logduo import log
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 EXAMPLES_DIR = PROJECT_ROOT / "src" / "logduo" / "internals" / "artifacts" / "logduo_docs" / "example_scripts"
+README_QUICK_SCRIPTS_PATH = (
+    PROJECT_ROOT
+    / "developer_resources"
+    / "logduo_validation"
+    / "quick_scripts_in_readme.py"
+)
 
 SKIP_EXAMPLES = {
     "__init__.py",
-    "nested_child_script.py",
+    "script_child.py",
 }
 
 EXPECTED_EXPORTED_FILES = {
@@ -39,8 +45,8 @@ EXPECTED_EXPORTED_FILES = {
     "examples/console_rendering.py",
     "examples/data_analysis.py",
     "examples/math_report_notation.py",
-    "examples/nested_parent_script.py",
-    "examples/nested_child_script.py",
+    "examples/script_parent.py",
+    "examples/script_child.py",
 }
 
 
@@ -178,32 +184,45 @@ def validate_logduo_docs_export() -> None:
     log.success("Documentation export validation passed.")
 
 
+
+def run_readme_quick_scripts() -> ExampleResult:
+    """Run the quick scripts reproduced in README.txt."""
+    if not README_QUICK_SCRIPTS_PATH.is_file():
+        raise FileNotFoundError(
+            f"README quick-scripts file not found: {README_QUICK_SCRIPTS_PATH}"
+        )
+    return _run_example(README_QUICK_SCRIPTS_PATH)
+
+
 def main() -> None:
+
     log.configure(
         log_dir_path=PROJECT_ROOT / "developer_resources" / "logduo_validation" / "logs",
         console_verbosity=3,
         log_verbosity=3,
     )
+    log("something??")
 
     results = run_example_scripts()
+    results.append(run_readme_quick_scripts())
     failures = failed_examples(results)
-
     validate_logduo_docs_export()
-
     _section("Example script summary")
 
     if not failures:
-        log.success("All standalone example scripts passed.")
+        log.success("All example and README validation scripts passed.")
         log.close()
         return
 
-    log.error("Some example scripts failed:")
+    log.error("Some example or README validation scripts failed:")
+
     for failure in failures:
         log.error(f"- {failure.name}: return code {failure.returncode}")
-
     log.close()
+
     raise SystemExit(1)
 
 
 if __name__ == "__main__":
+
     main()

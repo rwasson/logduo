@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import _new_test_log
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import _new_test_log
 from logduo import Duo
 from logduo.internals.engine.runtime_classes import CreatedFileRecord, RuntimeRecord, UserSinkConfig
 from logduo.internals.filesystem.created_file_record_builders import (

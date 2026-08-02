@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _emit_all_levels,
     _find_main_log,
     _LEVEL_MESSAGES,
@@ -261,7 +261,7 @@ def test_12_critical_bypasses_console_verbosity_zero(tmp_path, capsys):
 def test_13_internal_error_visible_to_user(tmp_path):
 
     script_path = Path(
-        __file__).parent.parent / "pytest_files" / "pytest_helpers" / "script_raise.py"
+        __file__).parent.parent / "test_files" / "test_helpers" / "script_raise.py"
 
     print(" ")
     print("********************************")

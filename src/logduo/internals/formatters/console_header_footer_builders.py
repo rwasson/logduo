@@ -3,10 +3,10 @@ console_header_footer_builders.py
 
 # "_build_auto_*" helpers generate auto-generated info subcomponents
 
-Note: in scrolling console output window environments, line dividers look heavy.
-Line dividers are not displayed in console, but still are displayed in logs.
+Note: when scrolling console output window, line dividers look heavy.
+Line dividers are not displayed in the console header, but are displayed in footer.
 
-Last edited: 2026-5-27
+Last edited: 2026-7-31
 """
 
 from collections.abc import Mapping
@@ -17,7 +17,7 @@ from rich.text import Text
 
 from logduo.internals.engine.runtime_classes import RuntimeRecord
 from logduo.internals.formatters.header_footer_formatters import (
-    _build_auto_footer_created_file_lists,
+    _build_auto_footer_generated_file_lists,
     _build_auto_footer_info_rows,
     _build_auto_header_info_rows,
     _build_wrapped_lines,
@@ -102,9 +102,8 @@ def _build_console_header(
     return Text("\n").join(lines)
 
 
-
 # --- _build_console_footer() --------------------------------------------------
-def _build_console_footer(  # noqa: PLR0915
+def _build_console_footer(   # noqa: PLR0915
     *,
     runtime: RuntimeRecord,
     console_footer: str,
@@ -117,6 +116,7 @@ def _build_console_footer(  # noqa: PLR0915
 
     # --- disabled footer handling ---
     console_footer_arg = console_footer.strip().lower()
+
     if console_footer_arg == "off":
         return None
 
@@ -138,7 +138,6 @@ def _build_console_footer(  # noqa: PLR0915
             ]
         )
 
-    # --- console wrap width ---
     line_display_width = console_wrap_width
 
     # --- styles ---
@@ -146,32 +145,20 @@ def _build_console_footer(  # noqa: PLR0915
     value_style = styles.get("header_value") or "black"
     divider_style = styles.get("divider") or "blue"
 
-    # --- created/missing files ---
+    # --- generated/missing files ---
     (
+        output_dir_path,
         output_dir_files,
-        project_files,
-        external_files,
+        other_files,
         missing_files,
-    ) = _build_auto_footer_created_file_lists(
+    ) = _build_auto_footer_generated_file_lists(
         runtime=runtime
     )
 
-    output_dir_path = runtime.main_sink_log_dir_path_abs
-    project_dir_path = runtime.project_dir_path_abs
-
-    assert output_dir_path is not None
-    assert project_dir_path is not None
-
-    # --- auto footer info rows ---
+    # --- footer information ---
     auto_footer_info_rows = _build_auto_footer_info_rows(
         runtime=runtime,
         is_main_sink=True,
-    )
-
-    # Include output-directory label in alignment calculation.
-    label_pad = _derive_label_pad(
-        auto_footer_info_rows,
-        len("output directory"),
     )
 
     divider_line = _RULE_CHAR * _DIVIDER_WIDTH
@@ -180,61 +167,78 @@ def _build_console_footer(  # noqa: PLR0915
         Text(divider_line, style=divider_style)
     ]
 
-    # --- logging ended / script path ---
+    # --- logging-ended and script-path information ---
     for label, value in auto_footer_info_rows:
+        if label == "Logging ended":
+            label_with_colon = f"{label}:"
+            header_label_width = len("Logging started:")
+
+            line = Text()
+            line.append(
+                f"{label_with_colon:<{header_label_width}}  ",
+                style=label_style,
+            )
+            line.append(
+                value,
+                style=value_style,
+            )
+            lines.append(line)
+            continue
+
+        lines.append(
+            Text(
+                f"{label}:",
+                style=label_style,
+            )
+        )
+
+        wrapped_lines = _build_wrapped_lines(
+            value=f"    {value}",
+            width=line_display_width,
+            continuation_width=line_display_width,
+            hanging_indent=8,
+        )
+
         lines.extend(
-            _build_wrapped_rich_label_value_lines(
-                label=label,
-                value=value,
-                label_pad=label_pad,
-                line_display_width=line_display_width,
-                label_style=label_style,
-                value_style=value_style,
-            )
+            Text(line, style=value_style)
+            for line in wrapped_lines
         )
 
-    # --- output directory ---
-    try:
-        output_dir_display_label = str(output_dir_path.relative_to(project_dir_path.parent))
-    except ValueError:
-        output_dir_display_label = str(output_dir_path)
 
-
-    lines.extend(
-        _build_wrapped_rich_label_value_lines(
-            label="output directory",
-            value=output_dir_display_label,
-            label_pad=label_pad,
-            line_display_width=line_display_width,
-            label_style=label_style,
-            value_style=value_style,
-        )
-    )
-
-    # --- files created in output directory ---
+    # --- files inside output directory ---
     if output_dir_files:
-        lines.append(Text(""))
         lines.append(
             Text(
-                "files created this logging session in output directory:",
+                "Output directory:",
                 style=label_style,
             )
         )
 
-        for file in output_dir_files:
-            file_path_display_label = (
-                "    "
-                + str(file.path.relative_to(output_dir_path))
+        wrapped_output_dir = _build_wrapped_lines(
+            value=f"    {output_dir_path}",
+            width=line_display_width,
+            continuation_width=line_display_width,
+            hanging_indent=8,
+        )
+
+        lines.extend(
+            Text(line, style=value_style)
+            for line in wrapped_output_dir
+        )
+
+        lines.append(
+            Text(
+                "Log-generated files in output directory:",
+                style=label_style,
             )
+        )
 
-            if file.log_file_mode == "append":
-                file_path_display_label += " (append)"
-
+        for file_display in output_dir_files:
             wrapped_lines = _build_wrapped_lines(
-                value=file_path_display_label,
+                value=f"    {file_display}",
                 width=line_display_width,
                 continuation_width=line_display_width,
-                hanging_indent=6,
+                hanging_indent=4,
             )
 
             lines.extend(
@@ -242,60 +246,22 @@ def _build_console_footer(  # noqa: PLR0915
                 for line in wrapped_lines
             )
 
-    # --- files created in project directory ---
-    if project_files:
-        lines.append(Text(""))
+    # --- files outside output directory ---
+    if other_files:
+
         lines.append(
             Text(
-                "files created this logging session in project directory:",
+                "Other log-generated files:",
                 style=label_style,
             )
         )
 
-        for file in project_files:
-            file_path_display_label = (
-                "    "
-                + str(
-                    file.path.relative_to(project_dir_path.parent)
-                )
-            )
-
-            if file.log_file_mode == "append":
-                file_path_display_label += " (append)"
-
+        for file_display in other_files:
             wrapped_lines = _build_wrapped_lines(
-                value=file_path_display_label,
+                value=f"    {file_display}",
                 width=line_display_width,
                 continuation_width=line_display_width,
-                hanging_indent=6,
-            )
-
-            lines.extend(
-                Text(line, style=value_style)
-                for line in wrapped_lines
-            )
-
-    # --- files created outside project directory ---
-    if external_files:
-        lines.append(Text(""))
-        lines.append(
-            Text(
-                "files created this logging session outside project directory:",
-                style=label_style,
-            )
-        )
-
-        for file in external_files:
-            file_path_display_label = "    " + str(file.path)
-
-            if file.log_file_mode == "append":
-                file_path_display_label += " (append)"
-
-            wrapped_lines = _build_wrapped_lines(
-                value=file_path_display_label,
-                width=line_display_width,
-                continuation_width=line_display_width,
-                hanging_indent=6,
+                hanging_indent=8,
             )
 
             lines.extend(
@@ -313,17 +279,12 @@ def _build_console_footer(  # noqa: PLR0915
             )
         )
 
-        for file in missing_files:
-            file_path_display_label = "    " + str(file.path)
-
-            if file.log_file_mode == "append":
-                file_path_display_label += " (append)"
-
+        for file_display in missing_files:
             wrapped_lines = _build_wrapped_lines(
-                value=file_path_display_label,
+                value=f"    {file_display}",
                 width=line_display_width,
                 continuation_width=line_display_width,
-                hanging_indent=6,
+                hanging_indent=8,
             )
 
             lines.extend(
@@ -336,9 +297,10 @@ def _build_console_footer(  # noqa: PLR0915
     return Text("\n").join(lines)
 
 
+
 # === Internal helpers =========================================================
 
-# --- _render_rich_label_value_row() ---------------------------------------------------------
+# --- _render_rich_label_value_row() -------------------------------------------
 def _render_rich_label_value_row(
     label: str,
     value: str | None,
@@ -348,62 +310,22 @@ def _render_rich_label_value_row(
     label_pad: int,
 ) -> Text:
     """
-    Render one 'Label: Value' line with fixed padding and Rich styles.
+    Render one aligned ``Label: Value`` line with Rich styles.
     """
-
-    t = Text()
+    text = Text()
     if label and value is not None:
-        t.append(f"{label.strip():<{label_pad}}:  ", style=label_style)
-
-        t.append(str(value).strip(), style=value_style)
-
+        label_with_colon = f"{label.strip()}:"
+        text.append(
+            f"{label_with_colon:<{label_pad + 1}}  ",
+            style=label_style,
+        )
+        text.append(
+            str(value).strip(),
+            style=value_style,
+        )
     elif label:
-        t.append(label.strip(), style=label_style)
-
-    return t
-
-
-# --- _build_wrapped_rich_label_value_lines() ---------------------------------
-def _build_wrapped_rich_label_value_lines(
-    *,
-    label: str,
-    value: str,
-    label_pad: int,
-    line_display_width: int,
-    label_style: str | None,
-    value_style: str | None,
-) -> list[Text]:
-    """
-    Render and wrap one Rich label/value row.
-
-    Continuation lines begin two spaces beyond the start of the value.
-    """
-    label_prefix = f"{label:<{label_pad}}:  "
-    rendered_line = label_prefix + value
-
-    wrapped_lines = _build_wrapped_lines(
-        value=rendered_line,
-        width=line_display_width,
-        continuation_width=line_display_width,
-        hanging_indent=label_pad + 5,
-    )
-
-    rich_lines: list[Text] = []
-
-    for line_index, wrapped_line in enumerate(wrapped_lines):
-        if line_index == 0:
-            rich_line = Text()
-            rich_line.append(label_prefix, style=label_style)
-            rich_line.append(
-                wrapped_line[len(label_prefix):],
-                style=value_style,
-            )
-        else:
-            rich_line = Text(
-                wrapped_line,
-                style=value_style or "",
-            )
-
-        rich_lines.append(rich_line)
-
-    return rich_lines
+        text.append(
+            label.strip(),
+            style=label_style,
+        )
+    return text

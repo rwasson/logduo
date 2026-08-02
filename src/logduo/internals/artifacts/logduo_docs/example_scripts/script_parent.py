@@ -1,5 +1,5 @@
 """
-nested_parent_script.py
+script_parent.py
 
 Demonstrates running a child script/s from a parent script.
 
@@ -13,7 +13,7 @@ one child script multiple times.
 Run this file directly.
 
 Child script used by this example:
-    nested_child_script.py
+    script_child.py
 
 Last edited: 2026-07-08
 """
@@ -31,9 +31,10 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
         log_dir_path=LOG_DIR,
         console_wrap_width=140,
         write_jsonl=True,
-        console_prefix="source",
+        console_prefix="source",    # comment to disable source info in prefix
         log_prefix="source",
     )
+
 
     log(
         "run(<file>) executes a Python script from a parent script "
@@ -47,7 +48,7 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
 
     script_dir_path = Path(__file__).parent
 
-    run(script_dir_path / "nested_child_script.py")
+    run(script_dir_path / "script_child.py")
 
     log.close()
 

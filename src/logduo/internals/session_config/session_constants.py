@@ -10,14 +10,12 @@ from typing import Literal
 
 # === Runtime lifecycle ========================================================
 class _NotGiven:
-    """
-    Sentinel for omitted user arguments.
-    """
-    pass
+    """Sentinel type for arguments that were not supplied."""
+    def __repr__(self) -> str:
+        return "NOT_GIVEN"
 
 
 _NOT_GIVEN = _NotGiven()
-
 
 # --- Timestamp formatting ---
 _SESSION_TIMESTAMP_FMT = "%Y_%m_%d__%H_%M_%S"

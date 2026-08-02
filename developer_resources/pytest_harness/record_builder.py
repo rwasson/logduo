@@ -47,7 +47,7 @@ def _build_test_file_record(  # noqa: PLR0915
     extra_pytest_args: list[str] | None = None,
     coverage_config_file_path: Path | None = None,
     individual_logs: bool = True,
-    debug_pytest_harness: bool = False,    # noqa  # maybe unused, but reserved for future use
+    debug_pytest_harness: bool = False,
 ) -> TestFileRecord:
     """
     Dev-mode pytest runner using subprocess.
@@ -180,7 +180,6 @@ def _build_test_file_record(  # noqa: PLR0915
             ).decode(output_encoding)
             print(safe_captured_text, flush=True)
             print("=" * 80)
-
 
     if test_logger is not None:
         cleaned = strip_ansi("".join(captured))

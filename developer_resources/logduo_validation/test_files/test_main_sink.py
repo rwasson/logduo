@@ -6,7 +6,7 @@ Last edited: 2026-06-11
 import pytest
 from rich.text import Text
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _find_main_log,
     _read_file,
 )
@@ -60,8 +60,8 @@ def test_01_main_log_writes_inline_string(tmp_path):
 
 
     # header/footer written
-    assert "logging started" in content
-    assert "logging ended" in content
+    assert "Logging started" in content
+    assert "Logging ended" in content
 
     # prefix generation
     assert "INFO" in content

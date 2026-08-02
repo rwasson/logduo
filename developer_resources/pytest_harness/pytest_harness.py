@@ -10,9 +10,12 @@ pytest_harness is an IDE-friendly pytest workflow runner built on Logduo.
 
 Last edited: 2026-07-18
 """
+
 import tempfile
 from pathlib import Path
 from typing import NoReturn
+
+from rich.text import Text
 
 from developer_resources.pytest_harness.arg_resolver import _resolve_harness_args
 from developer_resources.pytest_harness.constants_and_classes import (
@@ -20,12 +23,10 @@ from developer_resources.pytest_harness.constants_and_classes import (
     DEFAULT_WIDTH,
     TestFileRecord,
 )
+from developer_resources.pytest_harness.dashboard_builder import _build_dashboard
 from developer_resources.pytest_harness.record_builder import _build_test_file_record
 from developer_resources.pytest_harness.resolve_test_file_paths import _resolve_test_file_paths
 from developer_resources.pytest_harness.summary_data_builder import _build_summary_data, _combine_coverage_data_files
-from developer_resources.pytest_harness.summary_table_builder import (
-    _build_summary_table,
-)
 from logduo import log
 
 
@@ -158,6 +159,7 @@ def pytest_harness(
         console_wrap_width=args.console_wrap_width,
         log_prefix="off",
     )
+    theme = log.session_config.console_theme_dict
 
     try:
         output_dir_path = log.output_dir_path
@@ -277,13 +279,15 @@ def pytest_harness(
                 debug_pytest_harness=args.debug_pytest_harness,
             )
 
-            summary_text = _build_summary_table(
+            summary_text = _build_dashboard(
                 summary_data=summary_data,
                 coverage_warning_threshold=args.coverage_warning_threshold,
                 show_skipped_and_xfailed=args.show_skipped_and_xfailed,
                 show_source_file_coverage=args.show_source_file_coverage,
+                theme=theme,
             )
-            log(summary_text)
+
+            log(Text.from_markup(summary_text))
 
             run_failed = (
                 summary_data.failed_test_function_count > 0

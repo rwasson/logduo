@@ -10,7 +10,7 @@ import pytest
 from rich.panel import Panel
 from rich.text import Text
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _emit_all_levels,
     _find_main_log,
     _LEVEL_MESSAGES,

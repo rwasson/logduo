@@ -1,5 +1,5 @@
 """
-nested_child_script.py
+script_child.py
 
 Assumes a Logduo session is already active
 (created in a parent script or interactive session).
@@ -9,7 +9,7 @@ It can be called multiple times.
 It can also create its own dedicated log file using new_logger().
 
 To run this example in PyCharm:
-    right-click nested_parent_script.py and choose Run
+    right-click script_parent.py and choose Run
 
 Last edited: 2026-07-08
 """

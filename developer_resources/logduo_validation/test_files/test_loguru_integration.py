@@ -15,7 +15,7 @@ Last edited: 2026-06-14
 
 import pytest
 
-from developer_resources.logduo_validation.pytest_files.pytest_helpers.file_helpers import (
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
     _find_file,
     _find_main_log,
     _read_file,

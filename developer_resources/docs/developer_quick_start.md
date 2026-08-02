@@ -9,7 +9,6 @@ Run the validation scripts (or just right-click in Pycharm):
     python -m developer_resources.validation.linter_runner
     python -m developer_resources.validation.pytest_harness_runner
     python -m developer_resources.validation.example_script_runner
-    python -m developer_resources.validation.export_logduo_docs_demo
 
 
 These scripts quickly verify:

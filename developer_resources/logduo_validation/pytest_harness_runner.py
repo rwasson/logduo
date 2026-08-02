@@ -22,7 +22,11 @@ include_list: list[str] | None = None
 
 # Exclude specific test_*.py files if needed.
 # exclude_list: list[str] | None = None
-exclude_list  = ["test_make_real_default_logs"]
+exclude_list  = ["test_make_real_default_logs",
+                 "test_pytest_harness_empty",
+                 "test_pytest_harness_flagged",
+                 "test_pytest_harness_import_error",
+                 ]
 
 
 
@@ -33,7 +37,7 @@ test_dir = (
     PROJECT_ROOT
     / "developer_resources"
     / "logduo_validation"
-    / "pytest_files"
+    / "test_files"
 )
 
 log_dir = (
