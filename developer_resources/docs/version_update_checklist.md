@@ -16,7 +16,7 @@ LOGDUO RELEASE CHECKLIST
 1. Local computer checks:
 
 A. Local validation (in PyCharm Project window)
--------------------
+-----------------------------------------------
 Run:
 
     example_scripts_runner.py
@@ -32,18 +32,21 @@ Confirm:
 
 
 B. Update package version (in pyproject.toml)
---------------------------
+---------------------------------------------
 Edit pyproject.toml:
 
     version = "X.Y.Z"
 
 PyPI versions cannot be replaced after publication.
 
+
+
+
 II.  GitHub updates (in Pycharm's Terminal)
 ---------------------------------------------
 
 A. Confirm project directory:
-
+----------------------------
     pwd
 
 Expected:
@@ -52,6 +55,7 @@ Expected:
 
 
 B. Read and save the version from pyproject.toml:
+-------------------------------------------------
 
     VERSION=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
 
@@ -61,6 +65,7 @@ Confirm:
 
 
 C. Review changed files:
+------------------------
 
     git status --short --untracked-files=all
 
@@ -68,6 +73,7 @@ This only displays changes. It does not alter anything.
 
 
 D. Stage all changes (does not change GitHub yet):
+--------------------------------------------------
 
     git add .
 
@@ -75,19 +81,21 @@ This prepares modified, new, and deleted files for the next commit.
 
 
 E. Review staged changes:
+-------------------------
 
     git diff --cached --stat
     git status --short
 
 
 F. Commit and push:
+-------------------
 
     git commit -m "Release $VERSION"
     git push origin main
 
 
 G. Confirm local and GitHub branches match:
-
+-------------------------------------------
     git status
 
 Expected:
@@ -98,11 +106,11 @@ Expected:
 
 
 H. Verify the version stored in GitHub's pyproject.toml:
+--------------------------------------------------------
 
     git fetch origin
 
-    git show origin/main:pyproject.toml |
-    python -c 'import sys, tomllib; print(tomllib.loads(sys.stdin.read())["project"]["version"])'
+    git show origin/main:pyproject.toml |python -c 'import sys, tomllib; print(tomllib.loads(sys.stdin.read())["project"]["version"])'
 
 Expected:
 
@@ -110,7 +118,7 @@ Expected:
 
 
 I. Create and push the Git tag
--------------------------------
+------------------------------
 
 1. Create tag name from the package version:
 
@@ -135,7 +143,6 @@ I. Create and push the Git tag
 
 J. Create the GitHub Release
 ----------------------------
-
 Pushing the tag does not necessarily create a GitHub Release.
 
 On GitHub:
@@ -166,6 +173,9 @@ Confirm all required jobs pass on:
 - Ubuntu
 
 Do not publish to PyPI until all required GitHub Actions jobs pass.
+
+
+
 
 III. PyPI release
 =================
