@@ -69,8 +69,6 @@ dev = [
   "pytest-cov>=5.0.0",
   "pytest-json-report",
   "pytest-rerunfailures>=16,<17",
-  "isort>=5.13.0",
-  "pre-commit>=3.7.0",
 ]
 
 
