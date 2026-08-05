@@ -13,7 +13,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "logduo"
 readme = "README.md"
-version = "0.1.5"
+version = "0.1.6"
 authors = [{ name = "R. Wasson", email = "r.wasson.dev@gmail.com" }]
 description = "Easy logging and output management for Python scripts and interactive sessions"
 

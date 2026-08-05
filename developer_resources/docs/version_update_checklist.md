@@ -1,14 +1,21 @@
 LOGDUO MINOR UPDATE CHECKLIST (GitHub only)
 ===========================================
-STAMP=$(date +%Y-%m-%d_%H-%M)
+# Change reason string!!
 
-git status --short --untracked-files=all
-git add .
-git diff --cached --stat
-git commit -m "Update $STAMP"
-git push origin main
 git status
+git add .
+git commit -m "Improve cross-platform log filename validation"
+git push
 
+
+Quick version update
+1. GoitHub
+# Change Release number!!
+
+git status
+git add .
+git commit -m "Release Logduo 0.1.6"
+git push
 
 
 LOGDUO RELEASE CHECKLIST
