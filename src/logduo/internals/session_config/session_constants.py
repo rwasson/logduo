@@ -50,13 +50,13 @@ _PUBLIC_API_NAMES = (
 
     # discovery helpers
     "export_logduo_docs",
-    "session_config",      # immutable config, safe for inspection
-    "output_dir_path",     # immutable saved path
-    "main_log_file_path"   # immutable saved path
+    "session_config",       # immutable config, safe for inspection
+    "output_dir_path",      # immutable saved path
+    "main_log_file_path",   # immutable saved path
 )
 
 
-# === Loguru  ========================x==========================================
+# === Loguru  ==================================================================
 # Logduo validated against Loguru 0.7.x add() arguments.
 # Logduo validates and forwards Loguru add() arguments.
 # Keep this list synchronized with the bundled/tested
@@ -84,8 +84,6 @@ _VALID_LOGURU_ADD_KWARGS = {
 
 
 # === Levels and verbosity =====================================================
-# --- Levels ---
-# tuple (immutable list with display order maintained)
 _VALID_LEVELS = {"CRITICAL", "ERROR", "WARNING", "SUCCESS", "INFO", "DEBUG", "TRACE"}
 _MAX_LEVEL_WIDTH = max(len(level) for level in _VALID_LEVELS)
 _LEVEL_RANK: dict[str, int] = {
@@ -111,32 +109,32 @@ type FileKindType = Literal[
 type TargetKindType = Literal["console", "main_sink_log", "user_sink_log", "jsonl"]
 type LogKindType = Literal["main_sink_log", "user_sink_log"]
 
-_RESERVED_SINK_STEMS = {
-    # --- artifacts / generated ---
-    "session_config",
-}
-
+_RESERVED_SINK_STEMS = {"session_config"}
+_RESERVED_WINDOWS_STEMS = {"con", "prn", "aux", "nul", "com1", "com2", "com3", "com4", "com5", "com6",
+     "com7", "com8", "com9", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9"}
 
 # === Config value domains =====================================================
 _DEFAULT_LOG_VERBOSITY = 3
 _VALID_PREFIX = {"off", "level", "timestamp", "source"}
 _VALID_LOG_FILE_MODES = {"write", "append", "timestamped"}
-_VALID_log_file_layoutS = {"flat", "script", "run"}
+_VALID_LOG_FILE_LAYOUTS = {"flat", "script", "run"}
 type PrefixType = Literal["off", "level", "timestamp", "source"]
 type LogFileModeType = Literal["write", "append", "timestamped"]
 type LogDirLayoutType = Literal["flat", "script", "run"]
 
 
-# === Validation and naming ===================================================
+# === Validation and naming ====================================================
+# Note log file names can end in space or '.', validator strips and adds `.log`
 _LOG_FILE_NAME_RE = re.compile(r'^(?!\.{1,2}$)[^\x00-\x1f<>:"/\\|?*]+$')
-_VALID_SINK_STEM_NAME_RE = re.compile(r"^[a-z0-9_]{1,32}$")  # strict
+_VALID_SINK_STEM_NAME_RE = re.compile(r"^[a-z0-9_]{1,200}$")
 _RESERVED_LABELS = {"PRINT", "CONSOLE", "EXCEPTION"} | _VALID_LEVELS
+
 
 
 # === Layout and wrapping ======================================================
 _RULE_CHAR = "─"  # Unicode: "\u2500"   or "═"   # Unicode: "\u2550"
 _DIVIDER_WIDTH = 55
-_PID_FIELD_WIDTH = 7  # Long enough to fit PID's from any OS
+_PID_FIELD_WIDTH = 7  # Accommodates typical OS process-ID ranges.
 _CALLSITE_MAX_SOURCE_DISPLAY_WIDTH = 25
 _CALLSITE_MAX_LINE_NUM_DISPLAY_WIDTH = 9
 _SINK_TAG_WIDTH = _MAX_LEVEL_WIDTH + 2

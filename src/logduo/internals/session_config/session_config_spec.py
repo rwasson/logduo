@@ -35,7 +35,7 @@ from logduo.internals.session_config.session_constants import (
     _DARK_THEME_COLORS,
     _DEFAULT_LOG_VERBOSITY,
     _LIGHT_THEME_COLORS,
-    _VALID_log_file_layoutS,
+    _VALID_LOG_FILE_LAYOUTS,
     _VALID_LOG_FILE_MODES,
     _VALID_PREFIX,
 )
@@ -242,7 +242,7 @@ CERBERUS_SCHEMA: dict[str, Any] = {
     "log_file_name": {"type": "string", "empty": False, "default": DEFAULTS["log_file_name"]},
     "log_file_layout": {
         "type": "string",
-        "allowed": list(_VALID_log_file_layoutS),
+        "allowed": list(_VALID_LOG_FILE_LAYOUTS),
         "default": DEFAULTS["log_file_layout"],
         "coerce": _norm_str_lower,
     },

@@ -17,6 +17,7 @@ Last edited: 2026-5-27
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING, TypedDict
@@ -37,6 +38,7 @@ from logduo.internals.session_config.session_constants import (
     _NOT_GIVEN,
     _NotGiven,
     _RESERVED_SINK_STEMS,
+    _RESERVED_WINDOWS_STEMS,
     _VALID_LOG_FILE_MODES,
     _VALID_PREFIX,
     _VALID_SINK_STEM_NAME_RE,
@@ -261,56 +263,100 @@ def _resolve_log_wrap_width(
 
 
 # --- _resolve_new_logger_target_arg() -----------------------------------------------------
+# --- _resolve_new_logger_target_arg() ----------------------------------------
 def _resolve_new_logger_target_arg(
-        *,
-        duo: Duo,
-        value: str | Path,
+    *,
+    duo: Duo,
+    value: str | Path,
 ) -> SinkInfo:
     if not isinstance(value, (str, Path)):  # excludes None or _NOT_GIVEN
-        raise ValueError("new_logger() target must be a string or Path")
+        raise ValueError(
+            "new_logger() target must be a string or Path"
+        )
 
     if isinstance(value, str):
         value = value.strip()
+
         if value.lower() == "auto":
             raise ValueError(
-                "new_logger() target cannot be 'auto'; 'auto' is reserved for internal use"
+                "new_logger() target cannot be 'auto'; "
+                "'auto' is reserved for internal use"
             )
+
         if not value:
-            raise ValueError("new_logger() target cannot be empty")
+            raise ValueError(
+                "new_logger() target cannot be empty"
+            )
 
     p = Path(value)
     value_is_path = isinstance(value, Path) or p.is_absolute()
 
+    # --- Absolute-path sink case ---
     if value_is_path:
         if not p.is_absolute():
-            raise ValueError("new_logger() target path must be absolute")
-        if p.exists() and p.is_dir():
-            raise ValueError("new_logger() target path must be a file path, not a directory")
-        if not p.name:
-            raise ValueError("new_logger() target path must include a filename")
-        filename = p.name
+            raise ValueError(
+                "new_logger() target path must be absolute"
+            )
 
-        normalized_filename = f"{p.stem.lower()}{p.suffix}"
+        if p.exists() and p.is_dir():
+            raise ValueError(
+                "new_logger() target path must be a file path, "
+                "not a directory"
+            )
+
+        if not p.name:
+            raise ValueError(
+                "new_logger() target path must include a filename"
+            )
+
+        filename = p.name
+        normalized_stem = p.stem.lower()
+        normalized_filename = (
+            f"{normalized_stem}{p.suffix.lower()}"
+        )
 
         _validate_filename_full(
             filename=normalized_filename,
-            stem_regex=_VALID_SINK_STEM_NAME_RE,  # check again lower_cased file stem
+            stem_regex=_VALID_SINK_STEM_NAME_RE,
             reserved_stems=_RESERVED_SINK_STEMS,
         )
 
-        final_path = p.resolve(strict=False)  # save original case file stem
+        _validate_windows_filename_stem(
+            normalized_stem
+        )
 
-        return {"value_is_path": True, "file_path": final_path, "base_file_name_with_ext": filename}
+        # Preserve the original capitalization supplied in the Path.
+        final_path = p.resolve(strict=False)
+
+        return {
+            "value_is_path": True,
+            "file_path": final_path,
+            "base_file_name_with_ext": filename,
+        }
 
     # --- Name-only sink case ---
     raw = str(value).strip()
 
-    # --- block path-like input ---
+    # A trailing period is treated like a missing extension.
+    # Example: "audit." becomes "audit.log".
+    raw = raw.rstrip(".")
+
+    if not raw:
+        raise ValueError(
+            "new_logger() target cannot be empty"
+        )
+
+    # --- Block path-like input ---
     if "/" in raw or "\\" in raw:
-        raise ValueError("new_logger() target file name must not contain path separators")
+        raise ValueError(
+            "new_logger() target file name must not contain "
+            "path separators"
+        )
 
     if raw in {".", ".."}:
-        raise ValueError("new_logger() target file name cannot be '.' or '..'")
+        raise ValueError(
+            "new_logger() target file name cannot be '.' or '..'"
+        )
 
     p = Path(raw)
     stem = p.stem.lower()
@@ -328,20 +374,44 @@ def _resolve_new_logger_target_arg(
     filename = f"{stem}{suffix}"
 
     _validate_filename_full(
-        filename=filename, stem_regex=_VALID_SINK_STEM_NAME_RE, reserved_stems=_RESERVED_SINK_STEMS
+        filename=filename,
+        stem_regex=_VALID_SINK_STEM_NAME_RE,
+        reserved_stems=_RESERVED_SINK_STEMS,
     )
 
-    # --- derive default path ---
+    _validate_windows_filename_stem(
+        stem
+    )
+
+    # --- Derive default path ---
     base_dir = duo._runtime.main_sink_log_dir_path_abs
+
     if base_dir is None:
         raise RuntimeError(
-            "LOGDUO INTERNAL ERROR: main_sink_log_dir_path_abs is not set on runtime"
+            "LOGDUO INTERNAL ERROR: "
+            "main_sink_log_dir_path_abs is not set on runtime"
         )
 
-    final_path = (Path(base_dir) / filename).resolve(strict=False)
+    final_path = (
+        Path(base_dir) / filename
+    ).resolve(strict=False)
 
-    return {"value_is_path": False, "file_path": final_path, "base_file_name_with_ext": filename}
+    return {
+        "value_is_path": False,
+        "file_path": final_path,
+        "base_file_name_with_ext": filename,
+    }
 
+def _validate_windows_filename_stem(
+    stem: str,
+) -> None:
+    if (
+        os.name == "nt"
+        and stem.lower() in _RESERVED_WINDOWS_STEMS
+    ):
+        raise ValueError(
+            f"new_logger() target stem {stem!r} is reserved on Windows"
+        )
 
 # --- _resolve_call_no_prefix() ------------------------------------------------
 def _resolve_call_no_prefix(
