@@ -4,18 +4,58 @@ LOGDUO MINOR UPDATE CHECKLIST (GitHub only)
 
 git status
 git add .
-git commit -m "Improve cross-platform log filename validation"
+git commit -m "Simplified example script (console_rendering.py)"
 git push
 
 
 Quick version update
-1. GoitHub
+AFTER UPDATE VERSION IN PYPROJECT.TOML
+1. push to GitHub
 # Change Release number!!
 
 git status
 git add .
 git commit -m "Release Logduo 0.1.6"
 git push
+
+2. update GitHub tag
+A.
+# Change VERSION number!!
+VERSION="0.1.6"
+TAG="v$VERSION"
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+    echo "STOP: tag $TAG already exists."
+else
+    echo "Creating tag $TAG..."
+    git tag "$TAG"
+    git push origin "$TAG"
+    echo "Tag $TAG created and pushed."
+fi
+
+
+
+B. Confirm, and start over with newer version if these don't match
+echo "TAGGED COMMIT:"
+git show --no-patch --oneline "$TAG"
+echo
+echo "NEWEST COMMIT:"
+git log -1 --oneline
+
+
+3. Update build
+rm -rf dist
+python -m pip install --upgrade build twine
+python -m build
+python -m twine check dist/*
+python -m twine upload dist/*
+
+# enter PYPI token saved in Password app (will not see it on screen)
+
+4. verify 
+python -m pip install --upgrade logduo
+python -m pip show logduo
+
+5. Login to GitHub and click on `Release`, and Draft a new one
 
 
 LOGDUO RELEASE CHECKLIST

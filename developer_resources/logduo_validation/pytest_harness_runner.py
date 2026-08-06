@@ -66,6 +66,7 @@ def main() -> None:
         log_keep=3,
         debug_pytest_harness=False,
         console_wrap_width=100,
+        show_skipped_and_xfailed=True,
     )
 
 

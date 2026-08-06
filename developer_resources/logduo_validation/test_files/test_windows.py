@@ -9,6 +9,10 @@ simulating the Windows-specific validation branch.
 Actual Windows path tests run only on Windows because pathlib.Path uses
 the host operating system's path rules.
 
+- For the last 4 tests, pytest stops early at certain assertions (due to macOS),
+and marks those 4 tests as "skipped".
+- Some assertions are still passed even for those tests on macOS.
+
 Last edited: 2026-08-05
 """
 
@@ -25,7 +29,6 @@ from logduo.internals.filesystem.path_validators import (
     _raise_if_invalid_config_arg_log_file_name,
     _raise_if_invalid_config_arg_log_file_path,
 )
-
 
 WINDOWS_RESERVED_STEMS = [
     "con",
