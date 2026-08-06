@@ -9,9 +9,7 @@ simulating the Windows-specific validation branch.
 Actual Windows path tests run only on Windows because pathlib.Path uses
 the host operating system's path rules.
 
-- For the last 4 tests, pytest stops early at certain assertions (due to macOS),
-and marks those 4 tests as "skipped".
-- Some assertions are still passed even for those tests on macOS.
+- In macOS, pytest skips the last 4 tests (7,8,9,10) because they can only be run in Windows OS.
 
 Last edited: 2026-08-05
 """
