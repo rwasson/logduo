@@ -27,6 +27,7 @@ Key ideas:
 
 Optional example dependency:
     pip install prettytable
+    pip install matplotlib
 
 Last edited: 2026-08-10
 """
@@ -326,13 +327,10 @@ log("")
 log("8. PrettyTable / ColorTable: multiline string", console_style="blue bold")
 
 try:
-    # noinspection PyUnresolvedReferences
-    import prettytable.colortable as pretty_colortable
-
+    pretty_colortable = importlib.import_module("prettytable.colortable")
 except ImportError:
     log("PrettyTable example skipped: prettytable is not installed.")
     log("Install optional example dependency with: pip install prettytable")
-
 else:
     pretty_table = pretty_colortable.ColorTable(
         theme=pretty_colortable.Themes.OCEAN
