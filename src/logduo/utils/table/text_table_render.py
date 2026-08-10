@@ -1,7 +1,7 @@
 """
 text_table_render.py
 
-Last edited: 2026-06-18
+Last edited: 2026-08-10
 """
 
 from typing import Any
@@ -164,20 +164,6 @@ def _group_columns_to_fit_wrap_table_width(
             groups.append(current_group)
             current_group = [base_index, col_index]
     groups.append(current_group)
-
-    if not wrap_table:
-        if not groups:
-            return []
-        first_group = groups[0]
-        while (
-            first_group
-            and _total_width_for_column_group(first_group, col_widths, padding_spaces)
-            > wrap_table_width
-        ):
-            if len(first_group) <= 1:
-                break
-            first_group = first_group[:-1]
-        return [first_group] if first_group else []
 
     return groups
 

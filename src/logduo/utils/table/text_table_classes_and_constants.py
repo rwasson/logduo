@@ -3,8 +3,9 @@ text_table_classes_and_constants.py
 
 Shared classes and constants
 
-Last edited: 2026_06-18
+Last edited: 2026-08-10
 """
+
 from dataclasses import dataclass
 from typing import Any
 

@@ -6,7 +6,7 @@ Includes:
     _get_script_path_abs()
     _get_toml_path_abs()
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -171,7 +171,7 @@ def _get_toml_path_abs(*, cwd_path_abs: Path | None) -> tuple[Path | None, str |
                 with candidate_toml_path_abs.open("r", encoding="utf-8"):
                     pass
 
-            except Exception:  # noqa
+            except (OSError, UnicodeError):
                 warn_msg = (
                     f"Discovered pyproject.toml is not readable:\n  {candidate_toml_path_abs}"
                 )

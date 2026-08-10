@@ -15,7 +15,7 @@ Run this file directly.
 Child script used by this example:
     script_child.py
 
-Last edited: 2026-07-08
+Last edited: 2026-08-10
 """
 
 from pathlib import Path
@@ -24,7 +24,7 @@ from logduo import log, run
 
 LOG_DIR = Path.cwd() / "logs"
 
-def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many statements'
+def main() -> None:
 
     log.configure(
         console_theme="light",

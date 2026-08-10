@@ -15,15 +15,12 @@ Demonstrates:
 - additional log files
 - log.close()
 
-Last edited: 2026-6-22
+Last edited: 2026-08-10
 """
 
 from pathlib import Path
-from pydoc import plain, render_doc
 
 from logduo import log
-
-# from logduo import log, text_table, run
 
 LOG_DIR = Path.cwd() / "logs"
 
@@ -49,9 +46,20 @@ log(
     "    from pydoc import plain, render_doc\n"
     "    log(plain(render_doc(log.configure)))"
 )
+# To log docs:
+# from pydoc import plain, render_doc
+# log(plain(render_doc(log.configure, title="Logduo documentation: %s")))
 
-log(plain(render_doc(log.configure, title="Logduo documentation: %s")))
-
+log(
+    'Demo of logging line options: no_prefix=True, console_style="italic blue", '
+    'left_indent=26, and log_wrap_width=80. '
+    'Console wrapping is controlled separately by console_wrap_width '
+    f'(current session value: {log.session_config.console_wrap_width}).',
+    no_prefix=True,
+    console_style="italic blue",
+    left_indent=26,
+    log_wrap_width=80,
+)
 
 log(" ")
 log("Obtain Logduo docs (README.txt and example scripts): log.export_logduo_docs()")

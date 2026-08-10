@@ -22,7 +22,7 @@ from logduo.internals.filesystem.path_finders import (
     _get_toml_path_abs,
     _normalize_path_candidate,
 )
-from logduo.internals.filesystem.path_validators import (
+from logduo.internals.filesystem.path_policy import (
     _is_abs_dir_path_writable,
     _raise_if_invalid_config_arg_log_dir_path,
     _raise_if_invalid_config_arg_log_file_name,

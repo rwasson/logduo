@@ -15,11 +15,12 @@ Used by:
 
 This file contains no resolution logic.
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from logduo.internals.session_config.cerberus_utils import (
@@ -435,10 +436,12 @@ SESSION_CONFIG_SPEC = {
 
 # === II. FUNCTIONS ============================================================
 
-
 # --- logduo_config_hints() ----------------------------------------------------
-def _session_config_hints(field: str, defaults: dict) -> str:  # noqa: PLR0911  # many returns
-    # --- File Management (bools at end)---
+def _session_config_hints(  # noqa: PLR0911  # many returns
+    field: str,
+    defaults: Mapping[str, Any],
+) -> str:
+    # --- File Management (bools at end) ---
     if field == "log_file_mode":
         return "must be 'write' (or 'w'), 'append' (or 'a'), 'timestamped' (or 't')"
     if field == "log_file_path":
@@ -483,7 +486,7 @@ def _session_config_hints(field: str, defaults: dict) -> str:  # noqa: PLR0911  
     if field in {"log_header", "log_footer"}:
         return "must be 'off', or a non-empty string"
 
-    # -- Advanced (bools at bottom) ---
+    # --- Advanced (bools at bottom) ---
 
     # --- Loguru (bools at bottom) ---
     if field == "rotation":

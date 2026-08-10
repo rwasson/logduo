@@ -3,7 +3,7 @@ log_header_footer_builders.py
 
 Builders for plain-text log footers.
 
-Last edited: 2026-7-31
+Last edited: 2026-08-10
 """
 
 from pathlib import Path
@@ -170,6 +170,11 @@ def _build_main_sink_log_footer(
 
     divider_line = _RULE_CHAR * _DIVIDER_WIDTH
     lines: list[str] = [divider_line]
+
+    if runtime.deleted_file_count > 0:
+        lines.append(
+            f"Pruned run dirs:  {runtime.deleted_file_count}"
+        )
 
     # --- logging-ended and script-path information ---
     for label, value in auto_footer_info_rows:

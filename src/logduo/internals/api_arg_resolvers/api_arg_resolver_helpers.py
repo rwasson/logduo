@@ -13,7 +13,7 @@ Includes:
 
 Imported across Logduo internal API layers.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 from __future__ import annotations
 
@@ -52,6 +52,9 @@ class SinkInfo(TypedDict):
     base_file_name_with_ext: str
 
 
+# === text_table args ==========================================================
+# also shares some _resolvers() with new_logger()
+
 # --- _resolve_int_arg() -------------------------------------------------------
 def _resolve_int_arg(
     *,
@@ -79,6 +82,8 @@ def _resolve_int_arg(
 
     return value
 
+
+# === new_logger() args ========================================================
 
 # --- _resolve_bool_arg() ------------------------------------------------------
 def _resolve_bool_arg(
@@ -262,17 +267,14 @@ def _resolve_log_wrap_width(
     raise ValueError(f"Invalid log_wrap_width = {resolved_log_wrap_width!r}; use int or 'off' to disable")
 
 
-# --- _resolve_new_logger_target_arg() -----------------------------------------------------
-# --- _resolve_new_logger_target_arg() ----------------------------------------
+# --- _resolve_new_logger_target_arg() -----------------------------------------
 def _resolve_new_logger_target_arg(
     *,
     duo: Duo,
     value: str | Path,
 ) -> SinkInfo:
     if not isinstance(value, (str, Path)):  # excludes None or _NOT_GIVEN
-        raise ValueError(
-            "new_logger() target must be a string or Path"
-        )
+        raise ValueError("new_logger() target must be a string or Path")
 
     if isinstance(value, str):
         value = value.strip()
@@ -284,9 +286,7 @@ def _resolve_new_logger_target_arg(
             )
 
         if not value:
-            raise ValueError(
-                "new_logger() target cannot be empty"
-            )
+            raise ValueError("new_logger() target cannot be empty")
 
     p = Path(value)
     value_is_path = isinstance(value, Path) or p.is_absolute()
@@ -294,9 +294,7 @@ def _resolve_new_logger_target_arg(
     # --- Absolute-path sink case ---
     if value_is_path:
         if not p.is_absolute():
-            raise ValueError(
-                "new_logger() target path must be absolute"
-            )
+            raise ValueError("new_logger() target path must be absolute")
 
         if p.exists() and p.is_dir():
             raise ValueError(
@@ -305,9 +303,7 @@ def _resolve_new_logger_target_arg(
             )
 
         if not p.name:
-            raise ValueError(
-                "new_logger() target path must include a filename"
-            )
+            raise ValueError("new_logger() target path must include a filename")
 
         filename = p.name
         normalized_stem = p.stem.lower()
@@ -321,9 +317,7 @@ def _resolve_new_logger_target_arg(
             reserved_stems=_RESERVED_SINK_STEMS,
         )
 
-        _validate_windows_filename_stem(
-            normalized_stem
-        )
+        _validate_windows_filename_stem(normalized_stem)
 
         # Preserve the original capitalization supplied in the Path.
         final_path = p.resolve(strict=False)
@@ -342,9 +336,7 @@ def _resolve_new_logger_target_arg(
     raw = raw.rstrip(".")
 
     if not raw:
-        raise ValueError(
-            "new_logger() target cannot be empty"
-        )
+        raise ValueError("new_logger() target cannot be empty")
 
     # --- Block path-like input ---
     if "/" in raw or "\\" in raw:
@@ -354,9 +346,7 @@ def _resolve_new_logger_target_arg(
         )
 
     if raw in {".", ".."}:
-        raise ValueError(
-            "new_logger() target file name cannot be '.' or '..'"
-        )
+        raise ValueError("new_logger() target file name cannot be '.' or '..'")
 
     p = Path(raw)
     stem = p.stem.lower()
@@ -379,9 +369,7 @@ def _resolve_new_logger_target_arg(
         reserved_stems=_RESERVED_SINK_STEMS,
     )
 
-    _validate_windows_filename_stem(
-        stem
-    )
+    _validate_windows_filename_stem(stem)
 
     # --- Derive default path ---
     base_dir = duo._runtime.main_sink_log_dir_path_abs
@@ -409,9 +397,10 @@ def _validate_windows_filename_stem(
         os.name == "nt"
         and stem.lower() in _RESERVED_WINDOWS_STEMS
     ):
-        raise ValueError(
-            f"new_logger() target stem {stem!r} is reserved on Windows"
-        )
+        raise ValueError(f"new_logger() target stem {stem!r} is reserved on Windows")
+
+
+# === Call args  for log level statements ======================================
 
 # --- _resolve_call_no_prefix() ------------------------------------------------
 def _resolve_call_no_prefix(
@@ -480,7 +469,29 @@ def _resolve_call_log_wrap_width(
 
     raise ValueError(err_msg)
 
+# --- _resolve_call_left_indent() ------------------------------------------------
+def _resolve_call_left_indent(
+        *,
+        left_indent: int | _NotGiven,
+) -> int:
+    """call arg only, but can be built from sink_config's log_prefix"""
 
+    if left_indent is None:
+        raise ValueError("left_indent cannot be None; enter a non-negative integer or omit")
+
+    if left_indent is _NOT_GIVEN:
+        return 0
+
+    if type(left_indent) is not int:
+        raise ValueError("left_indent must be a non-negative integer")
+
+    if left_indent < 0:
+        raise ValueError("left_indent must be a non-negative integer")
+
+    return left_indent
+
+
+# === new_level args ===========================================================
 # --- _resolve_call_console_style() --------------------------------------------
 def _resolve_call_console_style(
         *,
@@ -533,6 +544,9 @@ def _resolve_call_console_style(
 
     return resolved_console_style
 
+
+
+# === Internal helpers =========================================================
 
 # --- _validate_filename_full() ------------------------------------------------
 def _validate_filename_full(
@@ -649,4 +663,3 @@ def _precheck_auto_and_none(
         return default
 
     return value
-

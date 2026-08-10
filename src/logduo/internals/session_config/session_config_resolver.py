@@ -13,8 +13,6 @@ Responsibilities:
 - theme/header/footer derivation
 - Loguru passthrough normalization
 
-
-
 This module coordinates config resolution but does not:
 - emit normal log events
 - create files/directories
@@ -26,7 +24,7 @@ Notes:
   _runtime_warning() when user-supplied settings require
   automatic normalization.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -45,7 +43,7 @@ from logduo.internals.filesystem.path_finders import (
     _get_script_path_abs,
     _get_toml_path_abs,
 )
-from logduo.internals.filesystem.path_validators import _raise_if_invalid_session_config_path_fields
+from logduo.internals.filesystem.path_policy import _raise_if_invalid_session_config_path_fields
 from logduo.internals.session_config.configure_args_normalizer import (
     _normalize_configure_args_with_defaults_and_toml,
 )

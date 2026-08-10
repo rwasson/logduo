@@ -3,7 +3,7 @@ text_table_layout.py
 
 Resolve table columns, headers, and data rows before rendering.
 
-Last edited: 2026-06-24
+Last edited: 2026-08-10
 """
 
 from collections.abc import Mapping, Sequence

@@ -11,6 +11,7 @@ Features
 --------
 - No setup required — safe defaults applied
 - Manages output directories and log files automatically
+- Supports console-only logging without creating output directories or files
 - Provides `help()` documentation and actionable error messages
 - Validates arguments to all Logduo methods and functions
 - Safely prunes old run directories containing a Logduo marker file
@@ -54,7 +55,7 @@ Quick interactive session
 
 - If a log statement, such as `log("hello world")`, is called before `log.configure()`,
   Logduo applies configuration settings from `[tool.logduo]` in `pyproject.toml`.
-- If `[tool.logduo]` settings are not provided, Logduo applies its own configuration defaults.
+- If [tool.logduo] settings are not provided, Logduo applies its own configuration defaults.
 - `help()` output appears on the console only and is not written to log files.
    - Use focused calls such as `help(log.configure)` or `help(log.new_logger)`.
    - `help(log)` displays the complete logger API and is therefore lengthy.
@@ -69,7 +70,7 @@ Key Logduo default configuration settings
   - verbosity = 3, all logging levels emitted (including DEBUG and TRACE)
   - verbosity = 2, only CRITICAL, ERROR, WARNING, INFO, SUCCESS are emitted
   - verbosity = 1, only CRITICAL, ERROR, WARNING are emitted
-  - verbosity = 0, output is suppressed
+  - verbosity = 0, output to that destination is suppressed
 - `console_prefix = "level"` and `log_prefix = "timestamp"`
   - Prefix options layer cumulatively: `"off"`, `"level"`, `"timestamp"`, `"source"`
   - Example prefix = `"source":   16:30:40.371 | WARNING  | example_2.py:382`
@@ -102,7 +103,10 @@ Key Logduo default configuration settings
     kept and older run directories are pruned.
 - `write_config_table = True`
   - `config_table.txt` written to output directory (useful reference for all configuration settings).
-
+- `log.configure(<argument>=None)`
+  - Explicit `None` resets that configuration argument to its built-in Logduo default.
+  - This is useful when a script or package uses Logduo and needs to ensure the default value
+    is used, even if there is a project-level TOML setting.
 
 Quick script with log.configure()
 ---------------------------------
@@ -123,6 +127,17 @@ Quick script with log.configure()
     var = 3 * 3
 
     log.debug(f"made it here: var = {var}")
+
+    log(
+        'Demo of logging line options: no_prefix=True, console_style="italic blue", '
+        'left_indent=26, and log_wrap_width=80. '
+        'Console wrapping is controlled separately by console_wrap_width '
+        f'(current session value: {log.session_config.console_wrap_width}).',
+        no_prefix=True,
+        console_style="italic blue",
+        left_indent=26,
+        log_wrap_width=80,
+    )
 
     output_dir_path = log.output_dir_path
     assert isinstance(output_dir_path, Path)     # Satisfy static type checkers.
@@ -187,32 +202,58 @@ Logduo Methods, Functions, and Properties
    - Inside script_parent.py or interactive session: `run(<path to script_child.py>)`
    - Inside script_child.py: `log = log.join()`
 
-- Access paths.
+- Access output paths.
     - log.output_dir_path
     - log.main_log_file_path
 
       These properties are `None` until Logduo is initialized by `log.configure()` or
       a logging call such as `log("message")`.
 
+      Resolving a path does not necessarily create the corresponding directory or file.
+      Logduo creates output directories only when file output is actually needed.
+
+
+Per-call line options
+---------------------
+Example: `log("hello", no_prefix=True, left_indent=4)`
+- `no_prefix=True` suppresses the prefix for that logging call.
+- `left_indent=n` adds `n` spaces before displayed message text.
+  Wrapped continuation lines retain the requested indentation.
+- `log_wrap_width=n` overrides log-file wrapping for that call.
+  It does not change console wrapping.
+- `console_style="..."` applies a Rich style to console output for that call.
+    It does not affect plain-text log output.
+
 
 Message Rendering
 -----------------
-- Strings without `\n`: Displayed inline with the prefix.
-    - Console: Wrapped to `console_wrap_width`).
-    - Log files: Wrapped only if `log_wrap_width` is set to a positive integer. Default is `"off"`.
-- Strings containing `\n`: Displayed as block flush left below prefix. Line breaks are honored.
-    - This preserves the full available line width for tables, panels, JSON, tracebacks, and other
-      structured content.
-    - Use manual indenting or Rich `Padding` if indent behavior is desired:
+- Simple strings and text-like Python objects:
+    - Plain-text strings without `\n`, and Python objects with a useful text
+      representation (such as dictionaries, lists, numbers, and custom objects),
+      are displayed on the same line as the prefix in both the console and log.
+    - Long text wraps beneath the start of the message.
 
-           indent = "   "
-           log(
-              f"{indent}Step 1: Load data\n"
-              f"{indent}Step 2: Clean data\n"
-           )
-- ANSI-styled strings and Rich `Text` objects are rendered on the console and written as plain text in log files.
-- Other Rich objects, such as `Panel`, are rendered on the console but displayed as placeholders in log files.
-    - For more examples, use `log.export_logduo_docs()` and see `console_rendering.py`.
+- Multiline strings (strings containing `\n`):
+    - Displayed below the prefix in both the console and log, preserving the
+      user-supplied line layout and maximum available line width.
+    - Long lines may wrap in the console to fit the console width.
+    - In log files, the user-supplied line breaks are preserved.
+
+- Rich Text objects
+    - Displayed flush left below the prefix in the console,
+      unless `left-indent` is applied or Rich's Padding() is used.
+    - Written as plain text in log files.
+
+- Other Rich objects, such as `Panel`, and `Table`:
+    - Displayed flush left below the prefix in the console, unless Rich's
+      Padding() is used (not eligible for `left-indent`).
+    - Represented by placeholders in log files.
+
+- Other objects, such as images and figures:
+    - Displayed using placeholder or text representations in the console and log.
+
+- For more examples, use `log.export_logduo_docs()` and see
+  `console_rendering.py`.
 
 
 Loguru Integration

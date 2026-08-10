@@ -11,7 +11,7 @@ from __future__ import annotations
 from logduo.utils.run.run import run
 from logduo.utils.table.text_table import text_table
 
-from .logduo import Duo, logduo, logduo as log
+from .logduo import Duo, logduo as log
 
 __all__ = [
     "log",         # typical entry

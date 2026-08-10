@@ -1,7 +1,7 @@
 """
 session_config_classes.py
 
-Last edited 2026-5-27
+Last edited 2026-08-10
 """
 
 from dataclasses import dataclass, field
@@ -63,6 +63,24 @@ class SessionConfig:
     backtrace: bool
     diagnose: bool
 
+    @classmethod
+    def from_dict(
+            cls,
+            resolved_session_config: dict[str, Any],
+    ) -> "SessionConfig":
+        """
+        Build SessionConfig from a resolved configuration dictionary.
+        Unexpected keys are ignored to support forward-compatible
+        configuration expansion.
+        """
+        allowed = cls.__annotations__.keys()
+        filtered = {
+            key: value
+            for key, value in resolved_session_config.items()
+            if key in allowed
+        }
+        return cls(**filtered)
+
 
 # --- class ArgSourceRecord ----------------------------------------------------
 @dataclass(slots=True)
@@ -80,15 +98,3 @@ class ArgSourceRecord:
     #         "has_tool_table": False,
     #         "toml_keys": [],
     #     }
-
-
-# --- builder ------------------------------------------------------------------
-def _build_session_config_class_instance(resolved_session_config: dict[str, Any]) -> SessionConfig:
-    """
-    Convert resolved_session_config dict → SessionConfig instance
-    Ignores unexpected keys to support forward-compatible config expansion.
-    """
-
-    allowed = SessionConfig.__annotations__.keys()
-    filtered = {k: v for k, v in resolved_session_config.items() if k in allowed}
-    return SessionConfig(**filtered)

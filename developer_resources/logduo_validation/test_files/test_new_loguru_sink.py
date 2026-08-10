@@ -267,7 +267,7 @@ def test_09_cfr_record_registered(
     cfrs = log._runtime._get_file_list_in_cfr()
 
     matching = [
-        cfrs
+        cfr
         for cfr in cfrs
         if cfr.path.name == "audit.log"
     ]
@@ -504,17 +504,14 @@ def test_17_loguru_sink_id_stored_in_cfr(tmp_path: Path):
     log.close()
 
 
-# --- test_18_new_loguru_mkdir_failure_returns_none() -------------------------
-def test_18_new_loguru_mkdir_failure_returns_none(
-    tmp_path,
+# --- test_18_new_loguru_mkdir_failure_raises() -------------------------------
+def test_18_new_loguru_mkdir_failure_raises(
+    tmp_path: Path,
     monkeypatch,
 ):
 
     log = Duo()
-
-    log.configure(
-        log_dir_path=str(tmp_path),
-    )
+    log.configure(log_dir_path=str(tmp_path))
 
     def boom(*args, **kwargs):   # noqa
         raise OSError("forced mkdir failure")
@@ -525,11 +522,10 @@ def test_18_new_loguru_mkdir_failure_returns_none(
         boom,
     )
 
-    sink_id = log.new_loguru_sink(
-        "audit.log",
-    )
+    with pytest.raises(RuntimeError) as exc_info:
+        log.new_loguru_sink("audit.log")
 
-    assert sink_id is None
+    assert "Failed to create run directory" in str(exc_info.value)
 
     log.close()
 
@@ -734,3 +730,91 @@ def test_26_new_loguru_sink_end_to_end(tmp_path: Path):
 
     assert audit_log.exists()
     assert "loguru sink end-to-end message" in content
+
+
+# --- test_27_session_relative_sink_creates_run_dir_and_marker() --------------
+def test_27_session_relative_sink_creates_run_dir_and_marker(
+    tmp_path: Path,
+):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="run",
+        console_verbosity=0,
+        log_verbosity=0,
+        write_config_table=False,
+        write_config_json=False,
+        write_jsonl=False,
+    )
+
+    output_dir_path = log.output_dir_path
+
+    assert output_dir_path is not None
+    assert not output_dir_path.exists()
+
+    sink_id = log.new_loguru_sink(
+        "audit.log",
+    )
+
+    assert isinstance(sink_id, int)
+
+    # A session-relative sink materializes the Logduo run directory.
+    assert output_dir_path.is_dir()
+
+    marker_path = (
+        output_dir_path
+        / ".logduo_marker"
+    )
+    assert marker_path.is_file()
+
+    audit_path = output_dir_path / "audit.log"
+    assert audit_path.exists()
+
+    log.close()
+
+
+# --- test_28_absolute_sink_does_not_create_session_run_dir() -----------------
+def test_28_absolute_sink_does_not_create_session_run_dir(
+    tmp_path: Path,
+):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="run",
+        console_verbosity=0,
+        log_verbosity=0,
+        write_config_table=False,
+        write_config_json=False,
+        write_jsonl=False,
+    )
+
+    output_dir_path = log.output_dir_path
+
+    assert output_dir_path is not None
+    assert not output_dir_path.exists()
+
+    external_path = (
+        tmp_path
+        / "external"
+        / "audit.log"
+    )
+
+    sink_id = log.new_loguru_sink(
+        external_path,
+    )
+
+    assert isinstance(sink_id, int)
+
+    # The explicitly requested external destination is created.
+    assert external_path.exists()
+
+    # The unused Logduo session run directory remains unmaterialized.
+    assert not output_dir_path.exists()
+
+    log.close()
+
+    assert not output_dir_path.exists()

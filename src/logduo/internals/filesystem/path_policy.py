@@ -1,19 +1,72 @@
 """
-path_validators.py
+path_policy.py
 
-Path handling helpers used during session_config  resolution.
-These are not general purpose path helpers - they are tailored to Logduo.
+Path validation and filesystem policy helpers used by Logduo.
+
+Responsibilities:
+- validate session configuration paths
+- determine whether paths are writable/creatable
+- ensure Logduo-managed run directories have ownership markers
+
+These are not general-purpose path helpers; they are tailored to Logduo.
 
 NOTE:
 - Assumes upstream schema normalization/defaulting already completed.
 
-Last edited: 2026-06-08
+Last edited: 2026-08-10
 """
 
-from pathlib import Path
-from typing import Any
+from __future__ import annotations
 
-from logduo.internals.session_config.session_constants import _LOG_FILE_NAME_RE
+from pathlib import Path
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from logduo import Duo
+from logduo.internals.session_config.session_constants import _LOG_FILE_NAME_RE, _LOGDUO_RUN_DIR_MARKER_NAME
+
+
+# --- _ensure_run_dir_and_marker() --------------------------------------------------------
+def _ensure_run_dir_and_marker(duo: Duo) -> None:
+    """
+    Ensure the Logduo-managed run directory and ownership marker exist.
+
+    Does nothing when log_file_layout != "run".
+    Safe to call more than once.
+    """
+    session_config = duo.session_config
+
+    if session_config.log_file_layout != "run":
+        return
+
+    log_dir_path = duo._runtime.main_sink_log_dir_path_abs
+
+    if log_dir_path is None:
+        raise RuntimeError(
+            "LOGDUO INTERNAL ERROR: run directory path missing"
+        )
+
+    try:
+        log_dir_path.mkdir(parents=True, exist_ok=True)
+
+        marker_path = log_dir_path / _LOGDUO_RUN_DIR_MARKER_NAME
+
+        if not marker_path.exists():
+            marker_path.write_text(
+                "This directory was created and managed by Logduo.\n"
+                "Directories containing this file may be automatically "
+                "pruned based on the current 'keep' setting.\n"
+                "To disable pruning, set keep=0.\n"
+                "Delete this file to prevent this directory from being "
+                "automatically pruned.\n",
+                encoding="utf-8",
+            )
+
+    except OSError as e:
+        raise RuntimeError(
+            f"LOGDUO INTERNAL ERROR: Failed to create run directory "
+            f"'{log_dir_path}': {e}"
+        ) from e
 
 
 # ---_raise_if_invalid_config_arg_log_dir_path() -------------------------------

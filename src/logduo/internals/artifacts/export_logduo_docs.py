@@ -1,8 +1,9 @@
 """
 export_logduo_docs.py
 
-Last edited: 2026-06-24
+Last edited: 2026-08-10
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -14,9 +15,15 @@ if TYPE_CHECKING:
     from logduo import Duo
 
 from logduo.internals.engine.runtime_classes import RuntimeRecord
-from logduo.internals.filesystem.created_file_record_builders import _build_export_doc_created_file_record
+from logduo.internals.filesystem.created_file_record_builders import (
+    _build_export_doc_created_file_record,
+)
 from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
+)
+from logduo.internals.session_config.session_constants import (
+    _NOT_GIVEN,
+    _NotGiven,
 )
 
 
@@ -30,17 +37,28 @@ class DocsExportFileResult:
 # --- _export_logduo_docs() ----------------------------------------------------
 def _export_logduo_docs(
     duo: Duo,
-    path: str | Path | None = None,
+    path: str | Path | _NotGiven = _NOT_GIVEN,
 ) -> None:
+
+    if path is None:
+        raise ValueError(
+            "export_logduo_docs() path cannot be None. "
+            "Omit the path argument to use the default path, "
+            "or provide a valid path."
+        )
+
+
     runtime = duo._runtime
 
     assert runtime.project_dir_path_abs is not None
 
-    if path is None:
+    if path is _NOT_GIVEN:
         logduo_dir_path = (
             runtime.project_dir_path_abs / "logduo_docs"
         ).resolve(strict=False)
     else:
+        # let run fail is user enters invalid path
+        assert isinstance(path, (str, Path))
         logduo_dir_path = Path(path).expanduser().resolve(strict=False)
 
     logduo_dir_path.mkdir(parents=True, exist_ok=True)

@@ -1,7 +1,7 @@
 """
 test_table_validators.py
 
-Last edited: 2026-1-19
+Last edited: 2026-08-10
 """
 import warnings
 from collections.abc import Sequence
@@ -211,14 +211,18 @@ def _validate_title_and_header(
     if title is not None and "\n" in title:
         raise ValueError("title must be a single line")
     if title and _visible_len(title) > wrap_table_width:
-        warnings.warn("title exceeds wrap_table_width and will be truncated")
+        warnings.warn(
+            "title exceeds wrap_table_width and will be truncated",
+            stacklevel=2,
+        )
 
     if subtitle is not None and not isinstance(subtitle, str):
         raise ValueError(f"subtitle must be a string or None (not {title!r})")
     if subtitle is not None and "\n" in subtitle:
         raise ValueError("subtitle must be a single line")
     if subtitle and _visible_len(subtitle) > wrap_table_width:
-        warnings.warn("subtitle exceeds wrap_table_width and will be truncated")
+        warnings.warn("subtitle exceeds wrap_table_width and will be truncated",
+                      stacklevel=2)
 
     if header_labels is not None and len(header_labels) == 0:
         raise ValueError("header_labels cannot be empty.")

@@ -1,7 +1,7 @@
 """
 test_main_sink.py
 
-Last edited: 2026-06-11
+Last edited: 2026-08-09
 """
 import pytest
 from rich.text import Text
@@ -11,6 +11,7 @@ from developer_resources.logduo_validation.test_files.test_helpers.file_helpers 
     _read_file,
 )
 from logduo import Duo
+from logduo.internals.formatters.message_prep import _prepare_text_block
 
 LONG_MSG = ("Logduo is designed for data scientists, researchers, students, and "
     "Python developers who want readable console output, organized log files, "
@@ -34,23 +35,36 @@ def test_01_main_log_writes_inline_string(tmp_path):
     log("hello world")
     log(LONG_MSG)
     log("a < 3")
-
+    instance_index = log._runtime.instance_index
+    pid = log._runtime.pid
 
     log.close()
 
-    content = _read_file(_find_main_log(tmp_path))
+    log_content = _read_file(_find_main_log(tmp_path))
     print(" ")
     print("***********************")
     print("test_01_main_log_writes_inline_string()")
-    print("content")
-    print(content)
+    print(f"pid = {pid}")
+    print(f"instance_index = {instance_index}")
+    print("log_content")
+    print(log_content)
+    result = _prepare_text_block(
+        text=LONG_MSG,
+        first_line_prefix_len=40,
+        continuation_prefix_len=27,
+        line_width=80,
+        wrap=True,
+        left_indent=0,
+    )
+    print("raw output from _prepare_text_block() = repr(result):")
+    print(repr(result))
 
-    assert "hello world" in content
-    assert "a < 3" in content
+    assert "hello world" in log_content
+    assert "a < 3" in log_content
 
     lines = [
         line
-        for line in content.splitlines()
+        for line in log_content.splitlines()
         if "Logduo is designed" in line
            or "minimal logging setup." in line
     ]
@@ -58,18 +72,17 @@ def test_01_main_log_writes_inline_string(tmp_path):
     # at least 4 blank characters at start of second wrapped line
     assert lines[1].startswith("     ")
 
-
     # header/footer written
-    assert "Logging started" in content
-    assert "Logging ended" in content
+    assert "Logging started" in log_content
+    assert "Logging ended" in log_content
 
     # prefix generation
-    assert "INFO" in content
+    assert "INFO" in log_content
 
     # pid formatting enabled
-    assert "(" in content
-    assert ":i1)" in content
-
+    assert pid is not None
+    assert instance_index is not None
+    assert f"({pid}:i{instance_index})" in log_content
 
 
 # --- test_02_main_log_preserves_structured_string() --------------------------
@@ -247,11 +260,16 @@ def test_09_main_log_show_pid_disabled(tmp_path):
     )
 
     log("hello world")
+
+    pid = log._runtime.pid
+    instance_index = log._runtime.instance_index
     log.close()
 
-    content = _read_file(_find_main_log(tmp_path))
+    log_content = _read_file(_find_main_log(tmp_path))
 
-    assert ":i1)" not in content
+    assert pid is not None
+    assert instance_index is not None
+    assert f"(p{pid}:i{instance_index})" not in log_content
 
 
 # --- test_10_main_log_header_off() --------------------------------------------

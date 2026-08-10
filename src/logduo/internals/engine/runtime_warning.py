@@ -8,8 +8,9 @@ Responsible for:
 - fallback warning emission during partial initialization
 - warning classification passthrough for JSONL (warn_key)
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING

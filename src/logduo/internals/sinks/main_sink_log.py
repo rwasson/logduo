@@ -21,7 +21,7 @@ Contract:
 Notes:
     - No per-sink session_config object; all values originate from SessionConfig
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ if TYPE_CHECKING:
 
 
 
-from logduo.internals.engine.runtime_classes import EmitEvent
+from logduo.internals.engine.runtime_classes import EmitEvent, MessageKind
 from logduo.internals.engine.runtime_warning import _runtime_warning
 from logduo.internals.filesystem.created_file_record_builders import (
     _build_main_sink_log_created_file_record,
@@ -42,11 +42,7 @@ from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
 )
 from logduo.internals.formatters.log_header_footer_builders import _build_log_footer, _build_log_header
-from logduo.internals.formatters.message_prep import (
-    _build_plain_message,
-    _prepare_log_payload,
-    MessageKind,
-)
+from logduo.internals.formatters.message_prep import _build_plain_message, _prepare_log_payload
 from logduo.internals.formatters.prefix_builder import _build_prefix
 from logduo.internals.sinks.loguru_integration import _create_logduo_log_sink, _emit_log_payload
 
@@ -140,6 +136,7 @@ def _emit_main_sink_log(duo: Duo, *, event: EmitEvent) -> None:
     rca = event.resolved_call_args
     no_prefix = rca["no_prefix"]
     log_wrap_width = rca["log_wrap_width"]
+    left_indent = rca["left_indent"]
     # two rca fields not used in this function:
     #     console_style = rca["console_style"]
     #     warn_key = rca.get("warn_key")
@@ -172,6 +169,7 @@ def _emit_main_sink_log(duo: Duo, *, event: EmitEvent) -> None:
         prefix=prefix,
         cfr_continuation_prefix_len=cfr.continuation_prefix_len,
         log_wrap_width=log_wrap_width,
+        left_indent=left_indent,
     )
 
     # --- emit prepared payload through Loguru ---

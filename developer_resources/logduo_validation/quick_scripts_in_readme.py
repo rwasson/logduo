@@ -27,6 +27,18 @@ var = 3 * 3
 
 log.debug(f"made it here: var = {var}")
 
+log(
+        'Demo of logging line options: no_prefix=True, console_style="italic blue", '
+        'left_indent=26, and log_wrap_width=80. '
+        'Console wrapping is controlled separately by console_wrap_width '
+        f'(current session value: {log.session_config.console_wrap_width}).',
+        no_prefix=True,
+        console_style="italic blue",
+        left_indent=26,
+        log_wrap_width=80,
+    )
+
+
 output_dir_path = log.output_dir_path
 assert isinstance(output_dir_path, Path)     # Satisfy static type checkers.
 

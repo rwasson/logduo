@@ -25,7 +25,7 @@ NOTE:
     plain-text-safe output suitable for logs and artifacts.
 
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from collections.abc import Iterable

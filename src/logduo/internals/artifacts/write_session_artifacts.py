@@ -11,8 +11,9 @@ Note:
     paths are stored as Path objects and converted to str(path) for display,
     preserving native OS separators.
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
+
 from __future__ import annotations
 
 import json
@@ -57,7 +58,14 @@ def _write_session_artifacts(
     if not log_dir_path:
         return [], []
 
-    _ensure_artifact_dir_exists(log_dir_path)
+    # No artifact files requested.
+    needs_artifact_file = (
+            session_config.write_config_table
+            or session_config.write_config_json
+    )
+
+    if needs_artifact_file:
+        _ensure_artifact_dir_exists(log_dir_path)
 
     rows = _build_config_rows(
         session_config=session_config,
@@ -88,7 +96,6 @@ def _write_session_artifacts(
             rows=rows,
             created_artifacts=created_artifacts,
         )
-
 
     return rows, created_artifacts
 

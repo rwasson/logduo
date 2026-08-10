@@ -10,7 +10,7 @@ Provides:
 
 Acts as the public call surface returned by log.new_logger().
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 from __future__ import annotations
 

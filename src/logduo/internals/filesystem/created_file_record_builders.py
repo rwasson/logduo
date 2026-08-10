@@ -13,7 +13,7 @@ Used by:
 - sink initializers (main_sink_log, user_sink, jsonl, capture)
 - artifact creation paths
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
 
 from dataclasses import fields

@@ -11,7 +11,7 @@ It can also create its own dedicated log file using new_logger().
 To run this example in PyCharm:
     right-click script_parent.py and choose Run
 
-Last edited: 2026-07-08
+Last edited: 2026-08-10
 """
 
 from logduo import log

@@ -1,7 +1,7 @@
 """
 text_table_widths.py
 
-Last edited: 2026-06-18
+Last edited: 2026-08-10
 """
 from typing import Any
 

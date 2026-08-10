@@ -21,11 +21,12 @@ Notes:
   and other sink-specific behavior.
 - Callable Loguru arguments are passed through unchanged.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
@@ -46,6 +47,7 @@ from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
 )
 from logduo.internals.filesystem.path_finders import _apply_timestamp_to_filename
+from logduo.internals.filesystem.path_policy import _ensure_run_dir_and_marker
 from logduo.internals.session_config.session_constants import (
     _NOT_GIVEN,
     _NotGiven,
@@ -108,11 +110,25 @@ def _initialize_new_loguru_sink(
         raise ValueError(f"Output file already in use: {final_path}")
 
     # --- ensure directory ---
+    session_output_dir = runtime.main_sink_log_dir_path_abs
+    final_dir = final_path.parent
+    if (
+            session_output_dir is not None
+            and final_dir.resolve(strict=False)
+            == session_output_dir.resolve(strict=False)
+    ):
+        _ensure_run_dir_and_marker(duo)
+
     try:
-        final_path.parent.mkdir(parents=True, exist_ok=True)
+        final_dir.mkdir(parents=True, exist_ok=True)
+
     except OSError as e:
-        _runtime_warning(duo, warn_msg=f"Failed to create directory → {e}")
-        return None
+        raise RuntimeError(
+            "LOGDUO INTERNAL ERROR: "
+            f"Failed to create new_loguru_sink() directory "
+            f"'{final_dir}': {e}"
+        ) from e
+
 
     # --- apply write mode ---
     if file_mode == "write":
@@ -157,9 +173,11 @@ def _initialize_new_loguru_sink(
     return sink_id
 
 
-# --- _serialize_new_loguru_kwargs_for_cfr_field() ------------------------------------------
-def _serialize_new_loguru_kwargs_for_cfr_field(d: dict) -> dict[str, str | int | float | bool]:
-    out = {}
+# --- _serialize_new_loguru_kwargs_for_cfr_field() -----------------------------
+def _serialize_new_loguru_kwargs_for_cfr_field(
+    d: Mapping[str, Any],
+) -> dict[str, str | int | float | bool]:
+    out: dict[str, str | int | float | bool] = {}
     for k, v in d.items():
         if isinstance(v, (str, int, float, bool)):
             out[k] = v

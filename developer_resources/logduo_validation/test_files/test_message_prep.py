@@ -27,9 +27,18 @@ def test_02_block_kind_structured():
 
 
 # --- test_03_block_kind_object() ---------------------------------------------
-def test_03_block_kind_object():
-
-    assert _message_kind(123) is MessageKind.OBJECT
+@pytest.mark.parametrize(
+    "message",
+    [
+        "\nhello",
+        "hello\n",
+        "\nhello\n",
+        "\n",
+        "\n\n",
+    ],
+)
+def test_03_block_kind_edge_newlines_are_structured(message):
+    assert _message_kind(message) is MessageKind.STRUCTURED
 
 
 # --- test_04_prepare_text_block_no_wrap() ------------------------------------
@@ -141,6 +150,7 @@ def test_13_prepare_log_payload_no_prefix_uses_full_width():
         prefix="LONG PREFIX ",
         cfr_continuation_prefix_len=12,
         log_wrap_width=18,
+        left_indent=0,
     )
 
     result_with_prefix = _prepare_log_payload(
@@ -150,6 +160,7 @@ def test_13_prepare_log_payload_no_prefix_uses_full_width():
         prefix="LONG PREFIX ",
         cfr_continuation_prefix_len=12,
         log_wrap_width=18,
+        left_indent=0,
     )
 
     assert len(result_without_prefix.splitlines()) <= len(
@@ -167,6 +178,7 @@ def test_14_prepare_log_payload_single_line_rich_text_wraps():
         prefix="",
         cfr_continuation_prefix_len=0,
         log_wrap_width=12,
+        left_indent=0,
     )
 
     assert "\n" in result
@@ -184,6 +196,7 @@ def test_15_prepare_log_payload_structured_rich_text_does_not_wrap():
         prefix="",
         cfr_continuation_prefix_len=0,
         log_wrap_width=12,
+        left_indent=0,
     )
 
     assert result == message
@@ -199,6 +212,7 @@ def test_16_prepare_log_payload_object_wraps():
         prefix="",
         cfr_continuation_prefix_len=0,
         log_wrap_width=12,
+        left_indent=0,
     )
 
     assert "\n" in result
@@ -214,6 +228,7 @@ def test_17_prepare_log_payload_rich_renderable_wraps():
         prefix="",
         cfr_continuation_prefix_len=0,
         log_wrap_width=12,
+        left_indent=0,
     )
 
     assert "\n" in result
@@ -230,6 +245,7 @@ def test_18_prepare_log_payload_invalid_message_kind_raises():
             prefix="",
             cfr_continuation_prefix_len=0,
             log_wrap_width=80,
+            left_indent=0,
         )
 
 
@@ -308,7 +324,198 @@ def test_26_build_plain_message_unprintable_object():
     assert result == "<unprintable object>"
 
 
+# --- test_27_prepare_text_block_left_indent_multiline() ----------------------
+def test_27_prepare_text_block_left_indent_multiline():
+
+    result = _prepare_text_block(
+        text="line one\nline two\nline three",
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=80,
+        wrap=False,
+        left_indent=5,
+    )
+
+    assert result == (
+        "     line one\n"
+        "     line two\n"
+        "     line three"
+    )
 
 
+# --- test_28_prepare_text_block_left_indent_single_line() --------------------
+def test_28_prepare_text_block_left_indent_single_line():
+
+    result = _prepare_text_block(
+        text="hello",
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=80,
+        wrap=False,
+        left_indent=4,
+    )
+
+    assert result == "    hello"
+
+# --- test_29_prepare_text_block_indent_preserves_trailing_newline() ----------
+def test_29_prepare_text_block_indent_preserves_trailing_newline():
+    result = _prepare_text_block(
+        text="one\ntwo\n",
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=80,
+        wrap=False,
+        left_indent=3,
+    )
+
+    assert result == "   one\n   two\n"
 
 
+# --- test_30_prepare_text_block_left_indent_with_wrap() ----------------------
+def test_30_prepare_text_block_left_indent_with_wrap():
+
+    result = _prepare_text_block(
+        text="one two three four five six seven eight",
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=18,
+        wrap=True,
+        left_indent=4,
+    )
+
+    lines = result.splitlines()
+
+    assert len(lines) > 1
+    assert all(line.startswith(" " * 4) for line in lines)
+    assert all(len(line) <= 18 for line in lines)
+
+
+# --- test_31_prepare_text_block_prefix_and_left_indent_reduce_width() --------
+def test_31_prepare_text_block_prefix_and_left_indent_reduce_width():
+
+    line_width = 24
+    prefix_len = 8
+    left_indent = 4
+
+    result = _prepare_text_block(
+        text="one two three four five six seven eight",
+        first_line_prefix_len=prefix_len,
+        continuation_prefix_len=prefix_len,
+        line_width=line_width,
+        wrap=True,
+        left_indent=left_indent,
+    )
+
+    lines = result.splitlines()
+
+    assert len(lines) > 1
+
+    # First physical line also contains the real prefix outside this payload.
+    assert len(lines[0]) + prefix_len <= line_width
+    assert lines[0].startswith(" " * left_indent)
+
+    # Continuation payload already contains both prefix alignment
+    # and left_indent.
+    continuation_indent = prefix_len + left_indent
+
+    for line in lines[1:]:
+        assert line.startswith(" " * continuation_indent)
+        assert len(line) <= line_width
+
+
+# --- test_32_prepare_log_payload_rich_text_left_indent() ---------------------
+def test_32_prepare_log_payload_rich_text_left_indent():
+
+    result = _prepare_log_payload(
+        msg="one two three four five six seven",
+        message_kind=MessageKind.RICH_TEXT,
+        no_prefix=True,
+        prefix="",
+        cfr_continuation_prefix_len=0,
+        log_wrap_width=16,
+        left_indent=4,
+    )
+
+    lines = result.splitlines()
+
+    assert len(lines) > 1
+    assert all(line.startswith(" " * 4) for line in lines)
+    assert all(len(line) <= 16 for line in lines)
+
+
+# --- test_33_prepare_log_payload_structured_rich_text_left_indent() ----------
+def test_33_prepare_log_payload_structured_rich_text_left_indent():
+
+    result = _prepare_log_payload(
+        msg="first line\nsecond line",
+        message_kind=MessageKind.RICH_TEXT,
+        no_prefix=True,
+        prefix="",
+        cfr_continuation_prefix_len=0,
+        log_wrap_width=12,
+        left_indent=4,
+    )
+
+    assert result == (
+        "    first line\n"
+        "    second line"
+    )
+
+
+# --- test_34_prepare_text_block_preserves_structured_newlines() ---------------
+def test_34_prepare_text_block_preserves_structured_newlines():
+
+    text = "\nline one\n\nline three\n"
+
+    result = _prepare_text_block(
+        text=text,
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=80,
+        wrap=False,
+        left_indent=0,
+    )
+
+    assert result == text
+
+
+# --- test_35_prepare_text_block_indent_preserves_interior_blank_lines() -------
+def test_35_prepare_text_block_indent_preserves_interior_blank_lines():
+
+    result = _prepare_text_block(
+        text="line one\n\nline three",
+        first_line_prefix_len=0,
+        continuation_prefix_len=0,
+        line_width=80,
+        wrap=False,
+        left_indent=4,
+    )
+
+    assert result == (
+        "    line one\n"
+        "\n"
+        "    line three"
+    )
+
+
+# --- test_36_prepare_log_payload_structured_preserves_newlines_and_indent() ---
+def test_36_prepare_log_payload_structured_preserves_newlines_and_indent():
+
+    message = "\nline one\n\nline three\n"
+
+    result = _prepare_log_payload(
+        msg=message,
+        message_kind=MessageKind.STRUCTURED,
+        no_prefix=False,
+        prefix="| INFO | ",
+        cfr_continuation_prefix_len=9,
+        log_wrap_width=12,
+        left_indent=4,
+    )
+
+    assert result == (
+        "\n"
+        "    line one\n"
+        "\n"
+        "    line three\n"
+    )

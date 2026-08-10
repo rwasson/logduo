@@ -3,7 +3,7 @@ safe_console_print.py
 
 This helper must be isolated in its own file to prevent circular dependencies
 
-Last edited: 2026-4-25
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def _safe_console_print(
     if console is None:
         print(message)
         return
-
+    # noinspection PyBroadException
     try:
         if message_kind in (
                 MessageKind.RICH_TEXT,
@@ -51,10 +51,11 @@ def _safe_console_print(
             console.print(message)
         else:
             console.print(message, soft_wrap=True)
-    except Exception:  # noqa
+    except Exception:
+        # noinspection PyBroadException
         try:
             print(message)
-        except Exception:  # noqa
+        except Exception:
             pass
 
 

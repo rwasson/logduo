@@ -34,7 +34,7 @@ Notes:
     - Runtime routing metadata is passed via logger.bind(extra=...).
     - Dispatcher controls target_kind and sink_name semantics.
 
-Last edited 2026-5-27
+Last edited 2026-08-10
 """
 from __future__ import annotations
 

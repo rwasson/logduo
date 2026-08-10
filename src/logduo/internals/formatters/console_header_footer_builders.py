@@ -6,7 +6,7 @@ console_header_footer_builders.py
 Note: when scrolling console output window, line dividers look heavy.
 Line dividers are not displayed in the console header, but are displayed in footer.
 
-Last edited: 2026-7-31
+Last edited: 2026-08-10
 """
 
 from collections.abc import Mapping
@@ -103,7 +103,7 @@ def _build_console_header(
 
 
 # --- _build_console_footer() --------------------------------------------------
-def _build_console_footer(   # noqa: PLR0915
+def _build_console_footer(
     *,
     runtime: RuntimeRecord,
     console_footer: str,
@@ -162,10 +162,21 @@ def _build_console_footer(   # noqa: PLR0915
     )
 
     divider_line = _RULE_CHAR * _DIVIDER_WIDTH
+    lines: list[Text] = [Text(divider_line, style=divider_style)]
 
-    lines: list[Text] = [
-        Text(divider_line, style=divider_style)
-    ]
+    if runtime.deleted_file_count > 0:
+        line = Text()
+        line.append(
+            "Pruned run dirs:  ",
+            style=label_style,
+        )
+        line.append(
+            str(runtime.deleted_file_count),
+            style=value_style,
+        )
+        lines.append(line)
+
+
 
     # --- logging-ended and script-path information ---
     for label, value in auto_footer_info_rows:

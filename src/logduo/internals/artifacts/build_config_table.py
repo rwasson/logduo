@@ -9,7 +9,7 @@ Responsible for:
 - value normalization for display
 - path/theme footnote expansion
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 

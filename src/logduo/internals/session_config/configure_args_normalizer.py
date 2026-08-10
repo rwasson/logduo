@@ -13,7 +13,7 @@ Responsibilities:
 - merge resolved arg layers
 - track arg source provenance
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -42,6 +42,16 @@ def _normalize_configure_args_with_defaults_and_toml(
     validator = cerberus.Validator(schema, allow_unknown=False)
     # Apply schema defaults to an empty config - for comparison for each source
     schema_defaults = validator.normalized({}) or {}
+
+    # Explicit None in configure() resets that field to its schema default.
+    # The "Source" column in config_table.txt will say "configure", not "default"
+    configure_args = {
+        key: schema_defaults[key]
+        if value is None and key in schema_defaults
+        else value
+        for key, value in configure_args.items()
+    }
+
 
     # start with schema_defaults
     normalized_session_args: dict[str, Any] = dict(schema_defaults)

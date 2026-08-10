@@ -27,8 +27,9 @@ Example:
      audit.warning(...)
          -> sink_name = "audit"
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
+
 from __future__ import annotations
 
 import re
@@ -67,6 +68,7 @@ def _level_entry(
     no_prefix: bool | _NotGiven = _NOT_GIVEN,
     log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
     console_style: str | _NotGiven = _NOT_GIVEN,
+    left_indent: int | _NotGiven = _NOT_GIVEN,
     # internal warn flag for JSONL
     event_type: str = "message",
     warn_key: str | None = None,
@@ -114,6 +116,7 @@ def _level_entry(
         no_prefix=no_prefix,
         log_wrap_width=log_wrap_width,
         console_style=console_style,
+        left_indent=left_indent,
     )
 
 
@@ -123,6 +126,7 @@ def _level_entry(
         "no_prefix": no_prefix,
         "log_wrap_width": log_wrap_width,
         "console_style": console_style,
+        "left_indent": left_indent,
     }
 
     _dispatch_event(
@@ -141,7 +145,7 @@ def _level_entry(
 # --- _exception_entry() -------------------------------------------------------
 def _exception_entry(
     duo: Duo,
-    message: object | None = None,
+    message: object | _NotGiven = _NOT_GIVEN,
     *,
     sink_name: str | None = None,
     **kwargs: Any,
@@ -153,9 +157,23 @@ def _exception_entry(
     """
     duo._ensure_initialized()
 
-    line = message or "Unhandled exception"
+    if message is _NOT_GIVEN:
+        resolved_message: object = "Unhandled exception"
+    elif message is None:
+        raise ValueError(
+            "message cannot be None; omit the argument if no message is needed"
+        )
+    else:
+        resolved_message = message
 
-    _level_entry(duo, line, level="ERROR", label="ERROR", sink_name=sink_name, **kwargs)
+    _level_entry(
+        duo,
+        resolved_message,
+        level="ERROR",
+        label="ERROR",
+        sink_name=sink_name,
+        **kwargs,
+    )
 
     _emit_traceback_block(duo, sink_name=sink_name)
 
@@ -239,6 +257,7 @@ def _emit_traceback_block(
         no_prefix=False,
         log_wrap_width="off",
         console_style=_NOT_GIVEN,
+        left_indent=0,
         sink_name=sink_name,
     )
 
@@ -308,6 +327,7 @@ def _raise_if_none(
     no_prefix: bool | _NotGiven,
     log_wrap_width: int | str | _NotGiven,
     console_style: str | _NotGiven,
+    left_indent: int | _NotGiven = _NOT_GIVEN,
 ) -> None:
     if no_prefix is None:
         raise ValueError("no_prefix does not accept None; omit the argument instead")
@@ -317,6 +337,9 @@ def _raise_if_none(
 
     if console_style is None:
         raise ValueError("console_style does not accept None; omit the argument instead")
+
+    if left_indent is None:
+        raise ValueError("left_indent does not accept None; omit the argument instead")
 
 
 # --- _build_path_display_label() ---------------------------------------------

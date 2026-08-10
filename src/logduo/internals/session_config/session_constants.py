@@ -1,7 +1,7 @@
 """
 session_constants.py
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 import re
@@ -21,6 +21,7 @@ _NOT_GIVEN = _NotGiven()
 _SESSION_TIMESTAMP_FMT = "%Y_%m_%d__%H_%M_%S"
 _SESSION_DISPLAY_TIMESTAMP_FMT = "%Y-%m-%d %H:%M:%S"
 _LINE_TIMESTAMP_FMT = "%H:%M:%S.%f"  # microseconds; later trimmed to ms
+_LOGDUO_RUN_DIR_MARKER_NAME = ".logduo_marker"
 
 _VALID_SESSION_STATE = Literal[
     "initializing",

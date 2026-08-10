@@ -43,7 +43,7 @@ Naming model:
         sink_name → origin (logical)
         file_name → destination (physical)
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -260,7 +260,6 @@ def _dispatch_event(  # noqa: PLR0915
             _emit_main_sink_log(duo, event=event)
 
     # --- User_Sink Log ---
-    user_sink_routed = False
     if user_sink_log_cfr is not None:
         if _should_route_to_sink(
             rank=rank,
@@ -269,7 +268,6 @@ def _dispatch_event(  # noqa: PLR0915
             console_verbosity=duo.session_config.console_verbosity,
             main_sink_log_verbosity=duo.session_config.log_verbosity,
         ):
-            user_sink_routed = True
             resolved_call_args = _resolve_level_call_args(
                 duo, is_console_sink=False, sink_config=user_sink_log_cfr, call_args=call_args
             )
@@ -291,19 +289,12 @@ def _dispatch_event(  # noqa: PLR0915
             )
             _emit_user_sink(duo, event=event)
 
-    # --- Check for silent user-sink routing errors ---
-    if user_sink_config is not None:
-        if user_sink_config.log_file_path is None and user_sink_config.log_verbosity > 0:
-            raise RuntimeError(
-                f"LOGDUO INTERNAL ERROR: User sink '{sink_name}' has "
-                "log_verbosity > 0 but no log_file_path"
-            )
-        if user_sink_config.log_verbosity > 0:
-            if rank <= user_sink_config.log_verbosity and not user_sink_routed:
-                raise RuntimeError(
-                    f"LOGDUO INTERNAL ERROR: User sink '{sink_name}' expected to route "
-                    f"but did not (level={level}, verbosity={user_sink_config.log_verbosity})"
-                )
+    # --- Check for invalid user-sink state ---
+    if user_sink_config is not None and user_sink_log_cfr is None:
+        raise RuntimeError(
+            f"LOGDUO INTERNAL ERROR: User sink '{sink_name}' has "
+            "no matching CreatedFileRecord"
+        )
 
     # --- JSONL ---
     # MUST be last to capture full output_target_list

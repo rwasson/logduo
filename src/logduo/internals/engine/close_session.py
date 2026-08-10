@@ -9,7 +9,7 @@ Responsible for:
 - footer emission
 - session reset
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 from logduo.internals.engine.reset_session import _reset_session
 from logduo.internals.engine.runtime_classes import RuntimeRecord
+from logduo.internals.filesystem.prune import _prune_run_dirs
 from logduo.internals.formatters.header_footer_formatters import (
     _build_auto_footer_generated_file_lists,
 )
@@ -56,6 +57,20 @@ def _close_session(duo: Duo) -> None:
             print(
                 "LOGDUO WARNING: _finalize_timing failed; "
                 "using fallback end time "
+                f"→ {type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
+
+
+        try:
+            runtime.deleted_file_count = _prune_run_dirs(
+                log_file_layout=duo.session_config.log_file_layout,
+                keep=duo.session_config.keep,
+                main_sink_log_file_path=duo._runtime.main_sink_log_file_path_abs,
+            )
+        except Exception as e:
+            print(
+                "LOGDUO WARNING: run directory pruning failed "
                 f"→ {type(e).__name__}: {e}",
                 file=sys.stderr,
             )
@@ -146,3 +161,5 @@ def _finalize_timing(runtime: RuntimeRecord) -> None:
             runtime.duration_display = f"{minutes:02d}:{seconds:02d} min:sec"
         else:
             runtime.duration_display = f"{seconds:02d} sec"
+
+

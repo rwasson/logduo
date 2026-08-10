@@ -21,7 +21,7 @@ to keep output deterministic and log-safe.
 Public API:
   - text_table()
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations

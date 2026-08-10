@@ -8,9 +8,12 @@ from pathlib import Path
 import pytest
 
 from logduo import Duo
-from logduo.internals.session_config.configure_args_normalizer import _load_toml_args, _normalize_args_from_one_source
+from logduo.internals.session_config.configure_args_normalizer import (
+    _load_toml_args,
+    _normalize_args_from_one_source,
+    _normalize_configure_args_with_defaults_and_toml,
+)
 from logduo.internals.session_config.session_config_classes import (
-    _build_session_config_class_instance,
     ArgSourceRecord,
     SessionConfig,
 )
@@ -212,25 +215,25 @@ def test_12_compression_off_becomes_none(duo):
     assert resolved["compression"] is None
 
 
-# --- test_13_build_session_config_instance() ----------------------------------
-def test_13_build_session_config_instance():
+# --- test_13_session_config_from_dict() ---------------------------------------
+def test_13_session_config_from_dict():
 
     config = dict(DEFAULTS)
 
-    result = _build_session_config_class_instance(config)
+    result = SessionConfig.from_dict(config)
 
     assert isinstance(result, SessionConfig)
     assert result.log_verbosity == DEFAULTS["log_verbosity"]
 
 
-# --- test_14_extra_keys_ignored() ---------------------------------------------
-def test_14_extra_keys_ignored():
+# --- test_14_session_config_from_dict_ignores_extra_keys() --------------------
+def test_14_session_config_from_dict_ignores_extra_keys():
 
     config = dict(DEFAULTS)
 
     config["future_field"] = "future"
 
-    result = _build_session_config_class_instance(config)
+    result = SessionConfig.from_dict(config)
 
     assert isinstance(result, SessionConfig)
     assert not hasattr(result, "future_field")
@@ -636,3 +639,64 @@ def test_35_session_config_hints_boolean_fields(field: str):
     assert result
     assert "True" in result or "False" in result
 
+
+# --- test_36_configure_none_resets_toml_to_default() -------------------------
+def test_36_configure_none_resets_toml_to_default(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+):
+
+    toml_path = tmp_path / "pyproject.toml"
+    toml_path.write_text(
+        """
+        [tool.logduo]
+        log_verbosity = 2
+        """,
+        encoding="utf-8",
+    )
+
+    monkeypatch.chdir(tmp_path)
+
+    duo = Duo()
+
+    session_config = duo.configure(
+        log_verbosity=None,
+        log_dir_path=tmp_path / "logs",
+    )
+
+    duo.debug("debug message from default verbosity")
+    duo.close()
+
+    assert DEFAULTS["log_verbosity"] == 3
+    assert session_config.log_verbosity == 3
+
+    log_files = list((tmp_path / "logs").rglob("*.log"))
+    assert log_files
+
+    log_text = log_files[0].read_text(encoding="utf-8")
+
+    assert "debug message from default verbosity" in log_text
+
+
+# --- test_37_configure_none_source_is_configure() ----------------------------
+def test_37_configure_none_source_is_configure(tmp_path: Path):
+
+    toml_path = tmp_path / "pyproject.toml"
+    toml_path.write_text(
+        """
+        [tool.logduo]
+        log_verbosity = 2
+        """,
+        encoding="utf-8",
+    )
+
+    resolved, sources, _ = _normalize_configure_args_with_defaults_and_toml(
+        toml_path_abs=toml_path,
+        configure_args={"log_verbosity": None},
+        session_config_spec=SESSION_CONFIG_SPEC,
+        session_config_hints=_session_config_hints,
+    )
+
+    assert DEFAULTS["log_verbosity"] == 3
+    assert resolved["log_verbosity"] == 3
+    assert sources["log_verbosity"] == "configure"

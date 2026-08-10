@@ -24,13 +24,14 @@ Notes:
         - SessionConfig defaults
     - Supports independent routing and formatting policies per user sink
 
-Last edited: 2026-05-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from logduo import Duo
@@ -38,7 +39,7 @@ if TYPE_CHECKING:
 
 
 from logduo.internals.api_arg_resolvers.new_logger_args_resolver import _resolve_new_logger_args
-from logduo.internals.engine.runtime_classes import EmitEvent, UserSinkConfig
+from logduo.internals.engine.runtime_classes import EmitEvent, MessageKind, UserSinkConfig
 from logduo.internals.engine.runtime_warning import _runtime_warning
 from logduo.internals.filesystem.created_file_record_builders import (
     _build_user_sink_log_created_file_record,
@@ -47,12 +48,9 @@ from logduo.internals.filesystem.created_file_record_registration import (
     _register_created_file_record,
 )
 from logduo.internals.filesystem.path_finders import _apply_timestamp_to_filename
+from logduo.internals.filesystem.path_policy import _ensure_run_dir_and_marker
 from logduo.internals.formatters.log_header_footer_builders import _build_log_footer, _build_log_header
-from logduo.internals.formatters.message_prep import (
-    _build_plain_message,
-    _prepare_log_payload,
-    MessageKind,
-)
+from logduo.internals.formatters.message_prep import _build_plain_message, _prepare_log_payload
 from logduo.internals.formatters.prefix_builder import _build_prefix
 from logduo.internals.sinks.loguru_integration import _create_logduo_log_sink, _emit_log_payload
 
@@ -61,7 +59,7 @@ from logduo.internals.sinks.loguru_integration import _create_logduo_log_sink, _
 def _initialize_user_sink(
         duo: Duo,
         *,
-        new_logger_args: dict
+        new_logger_args: Mapping[str, Any],
 ) -> UserSinkCallAdapter:
     from logduo.internals.engine.user_sink_call_adapter import UserSinkCallAdapter
 
@@ -129,11 +127,21 @@ def _initialize_user_sink(
         )
 
     # --- ensure parent dir exists ---
+    session_output_dir = runtime.main_sink_log_dir_path_abs
+    if (
+            session_output_dir is not None
+            and user_sink_dir_path.resolve(strict=False)
+            == session_output_dir.resolve(strict=False)
+    ):
+        _ensure_run_dir_and_marker(duo)
     try:
         user_sink_dir_path.mkdir(parents=True, exist_ok=True)
+
     except OSError as e:
         raise RuntimeError(
-            f"LOGDUO INTERNAL ERROR: Failed to create new_logger() log at {user_sink_dir_path}: {e}"
+            "LOGDUO INTERNAL ERROR: "
+            f"Failed to create new_logger() directory "
+            f"'{user_sink_dir_path}': {e}"
         ) from e
 
     sink_id = _create_logduo_log_sink(
@@ -191,6 +199,7 @@ def _emit_user_sink(
     rca = event.resolved_call_args
     log_wrap_width = rca["log_wrap_width"]
     no_prefix = rca["no_prefix"]
+    left_indent = rca["left_indent"]
 
     msg = _build_plain_message(event.message)
     if msg is None:
@@ -220,6 +229,7 @@ def _emit_user_sink(
         prefix=prefix,
         cfr_continuation_prefix_len=cfr.continuation_prefix_len,
         log_wrap_width=log_wrap_width,
+        left_indent=left_indent,
     )
 
     # --- emit prepared payload through Loguru ---

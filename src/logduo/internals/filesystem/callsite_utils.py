@@ -9,7 +9,7 @@ Utilities for:
 
 Used by dispatcher, traceback formatting, and sink validation.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ def _shorten_callsite_for_prefix(
     line_num_str = str(line_num)
 
     if len(line_num_str) > max_callsite_num_width:
-        line_num_str = ">" + ("9" * max_callsite_num_width)  # noqa: PLR2004
+        line_num_str = ">" + ("9" * max_callsite_num_width)
 
     return f"{short_source}:{line_num_str}"
 

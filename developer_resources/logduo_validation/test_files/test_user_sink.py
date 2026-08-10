@@ -3,13 +3,20 @@ test_user_sink.py
 
 Last edited: 2026-06-12
 """
+from pathlib import Path
 
 import pytest
 from rich.text import Text
 
-from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import _find_main_log, _read_file
+from developer_resources.logduo_validation.test_files.test_helpers.file_helpers import (
+    _find_main_log,
+    _read_file,
+)
 from logduo import Duo
-from logduo.internals.session_config.session_constants import _DEFAULT_LOG_VERBOSITY
+from logduo.internals.session_config.session_constants import (
+    _DEFAULT_LOG_VERBOSITY,
+    _LOGDUO_RUN_DIR_MARKER_NAME,
+)
 
 LONG_MSG = ("Logduo is designed for data scientists, researchers, students, and "
     "Python developers who want readable console output, organized log files, "
@@ -353,3 +360,84 @@ def test_16_main_log_disabled_user_sink_still_created(tmp_path):
     print(content)
 
     assert "hello" in content
+
+# --- test_17_session_relative_new_logger_creates_run_dir_and_marker() ---------
+def test_17_session_relative_new_logger_creates_run_dir_and_marker(
+    tmp_path: Path,
+):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="run",
+        console_verbosity=0,
+        log_verbosity=0,
+        write_config_table=False,
+        write_config_json=False,
+        write_jsonl=False,
+    )
+
+    output_dir_path = log.output_dir_path
+
+    assert output_dir_path is not None
+
+    # The output path is resolved, but no file output has been requested yet.
+    assert not output_dir_path.exists()
+
+    audit = log.new_logger("audit")
+    audit("hello")
+
+    # A session-relative new_logger() materializes the run directory.
+    assert output_dir_path.is_dir()
+
+    marker_path = (output_dir_path / _LOGDUO_RUN_DIR_MARKER_NAME)
+
+    assert marker_path.is_file()
+    assert (output_dir_path / "audit.log").is_file()
+
+    log.close()
+
+
+# --- test_18_absolute_new_logger_does_not_create_session_run_dir() ------------
+def test_18_absolute_new_logger_does_not_create_session_run_dir(
+    tmp_path: Path,
+):
+
+    log = Duo()
+
+    log.configure(
+        log_dir_path=tmp_path / "logs",
+        log_file_layout="run",
+        console_verbosity=0,
+        log_verbosity=0,
+        write_config_table=False,
+        write_config_json=False,
+        write_jsonl=False,
+    )
+
+    output_dir_path = log.output_dir_path
+
+    assert output_dir_path is not None
+    assert not output_dir_path.exists()
+
+    external_file_path = (
+        tmp_path
+        / "external"
+        / "audit.log"
+    )
+
+    audit = log.new_logger(
+        external_file_path,
+    )
+    audit("hello")
+
+    # The explicitly requested external directory/file is created.
+    assert external_file_path.is_file()
+
+    # The unused Logduo session output directory is not materialized.
+    assert not output_dir_path.exists()
+
+    log.close()
+
+    assert not output_dir_path.exists()

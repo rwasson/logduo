@@ -9,7 +9,7 @@ Responsible for:
 - label color resolution
 - prefix visibility policy (timestamp/source/pid/sink_tag)
 
-Last edited: 2026-06-7
+Last edited: 2026-08-10
 """
 from __future__ import annotations
 

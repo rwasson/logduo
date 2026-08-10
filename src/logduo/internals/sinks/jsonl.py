@@ -13,12 +13,13 @@ Notes:
       sink_name="main_sink" during JSONL emission
     - event_type distinguishes internally-generated and user-generated messages
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, TYPE_CHECKING
 
@@ -269,7 +270,10 @@ def _emit_jsonl(duo: Duo, *, event: EmitEvent) -> None:
 
 # --- _emit_jsonl_file_registration() ------------------------------------------
 def _emit_jsonl_file_registration(
-    duo: Duo, cfr: CreatedFileRecord, *, extra: dict | None = None
+    duo: Duo,
+    cfr: CreatedFileRecord,
+    *,
+    extra: Mapping[str, Any] | None = None,
 ) -> None:
     """
     Emit a JSONL event when a file is registered.

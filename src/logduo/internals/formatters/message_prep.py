@@ -8,11 +8,11 @@ message_prep.py
     "_to_plain_log_text",      # Convert Rich/markup text to plain log-safe text
     "_effective_prefix_length", # Return the effective first-line and continuation prefix lengths
 
-Last edited: 2026-6-11
+Last edited: 2026-08-10
 """
 
 import re
-from typing import Any
+from typing import Any, Literal
 
 from rich.errors import MarkupError
 from rich.protocol import is_renderable
@@ -82,30 +82,42 @@ def _prepare_text_block(
     continuation_prefix_len: int,
     line_width: int,
     wrap: bool,
+    left_indent: int = 0,
 ) -> str:
     """
     Format a plain text message for output.
 
+    left_indent is applied to every displayed message line.
     Only INLINE text blocks should normally use wrap=True.
     """
 
+    indent = " " * left_indent
+
     # --- no wrap ---
     if not wrap:
-        return text
-
-    first_width = line_width - first_line_prefix_len
-
-    # --- continuation indent = prefix width ---
-    hanging_indent = continuation_prefix_len if continuation_prefix_len >= 1 else None
-
-    wrapped_text_block = "\n".join(
-        wrap_text(
-            text, width=first_width, continuation_width=line_width, hanging_indent=hanging_indent
+        if left_indent == 0:
+            return text
+        return "\n".join(
+            indent + line if line else ""
+            for line in text.split("\n")
         )
+
+    first_width = line_width - first_line_prefix_len - left_indent
+
+    continuation_indent = continuation_prefix_len + left_indent
+    hanging_indent = continuation_indent if continuation_indent >= 1 else None
+
+    wrapped_lines = wrap_text(
+        text,
+        width=first_width,
+        continuation_width=line_width,
+        hanging_indent=hanging_indent,
     )
 
-    return wrapped_text_block
+    if left_indent:
+        wrapped_lines[0] = indent + wrapped_lines[0]
 
+    return "\n".join(wrapped_lines)
 
 
 # --- _prepare_log_payload() ---------------------------------------------------
@@ -116,7 +128,8 @@ def _prepare_log_payload(
     no_prefix: bool,
     prefix: str,
     cfr_continuation_prefix_len: int,
-    log_wrap_width: int,
+    log_wrap_width: int | Literal["off"],
+    left_indent: int,
 ) -> str:
 
     # --- 3. resolve layout + prepare payload --------------------------------
@@ -155,6 +168,7 @@ def _prepare_log_payload(
         continuation_prefix_len=continuation_prefix_len,
         line_width=line_width,
         wrap=should_wrap,
+        left_indent=left_indent
     )
 
     return payload

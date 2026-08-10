@@ -4,7 +4,7 @@ LOGDUO MINOR UPDATE CHECKLIST (GitHub only)
 
 git status
 git add .
-git commit -m "Simplified example script (console_rendering.py)"
+git commit -m "Added left_indent"
 git push
 
 

@@ -1,30 +1,39 @@
 """
 console_rendering.py
 
-Demonstrates how Logduo handles styled console output and plain-text logs.
+Demonstrates how Logduo renders strings and Python objects in the console
+and in plain-text log files.
 
 Covers:
-- console_style (Logduo message option)
-- ANSI color strings
+- simple strings
+- multiline strings
+- console_style
+- ANSI-styled strings
+- ordinary Python objects
 - Rich Text
 - Rich Panel
 - Rich Table
+- Rich Padding
 - PrettyTable / ColorTable string output when installed
 
-Key idea:
-- Console output may show color, styling, panels, or tables.
-- Log files preserve readable plain text whenever possible.
-- Rich renderables display in the console, with placeholders in plain-text logs.
-- String tables from PrettyTable / ColorTable can be logged like any other multiline string.
+Key ideas:
+- Simple text-like values are displayed inline with the prefix.
+- Multiline strings are displayed below the prefix with their line layout preserved.
+- Rich objects are displayed below the prefix in the console.
+- Rich Text is written as readable plain text in log files.
+- Other Rich objects are represented by placeholders in plain-text logs.
+- left_indent applies to strings and Rich Text.
+- Rich Padding can be used to indent other Rich objects.
 
 Optional example dependency:
     pip install prettytable
 
-Last edited: 2026-07-08
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 from rich.padding import Padding
@@ -44,26 +53,6 @@ YELLOW = "\033[33m"
 WHITE = "\033[97m"
 RESET = "\033[0m"
 
-# === Internal helpers ========================================================
-def section(title: str) -> None:
-    log("")
-    log("=" * 87)
-    log(title)
-    log("=" * 87)
-
-
-def spaces(num: int, *, char: str = " ") -> str:
-    """Return a string containing num repetitions of char."""
-    return char * num
-
-
-def indent_block(text: str, indent: int = 4) -> str:
-    """Indent every line in a string by the requested number of spaces."""
-    prefix = " " * indent
-    return "\n".join(f"{prefix}{line}" for line in text.splitlines())
-
-
-# === Example ==================================================================
 
 log.configure(
     log_dir_path=LOG_DIR,
@@ -74,58 +63,205 @@ log.configure(
 long_msg = (
     'If you set log_wrap_width in log.configure(), then log strings '
     'will be wrapped. The default log_wrap_width = "off". '
-    f'console_wrap_width must be an integer. '
-    'Current console_wrap_width =' 
-    f'{log.session_config.console_wrap_width}.'
+    'console_wrap_width must be an integer. '
+    f'Current console_wrap_width = {log.session_config.console_wrap_width}.'
 )
 
-# ------------------------------------------------------------------------------
-section("console_style (Logduo message option): color in console; plain text in log")
 
-log("console_style applies color/style to a whole string in the console.")
+# --- 1. Simple strings --------------------------------------------------------
+
+log("")
+log("1. Simple strings: inline with prefix", console_style="blue bold")
+
+log("Simple strings without \\n are displayed on the same line as the prefix.")
+
+log(
+    "Long simple strings wrap beneath the start of the message. "
+    "This deliberately long example demonstrates how Logduo keeps wrapped "
+    "continuation lines aligned with the beginning of the message."
+)
+
+log(
+    'Demo of line options: no_prefix=True, console_style="italic blue", '
+    'left_indent=13, and log_wrap_width=80. '
+    'Console wrapping is controlled separately by console_wrap_width '
+    f'(current session value: {log.session_config.console_wrap_width}).',
+    no_prefix=True,
+    console_style="italic blue",
+    left_indent=13,
+    log_wrap_width=80,
+)
+
+
+# --- 2. Multiline strings -----------------------------------------------------
+
+log("")
+log("2. Multiline strings: displayed below prefix", console_style="blue bold")
+
+log(
+    "Strings containing \\n are displayed below the prefix "
+    "to preserve maximum display width"
+)
+
+multiline_text = (
+    "Step 1: Load data\n"
+    "Step 2: Clean data\n"
+    "Step 3: Analyze results"
+)
+
+log(multiline_text)
+
+log("The same multiline string can be indented using left_indent.")
+
+log(
+    multiline_text,
+    left_indent=13,
+)
+
+log("Leading, trailing, and interior blank lines are also preserved.")
+
+log(
+    "\n"
+    "First content line\n"
+    "\n"
+    "Second content line after an intentional blank line\n"
+)
+
+
+# --- 3. Styled strings --------------------------------------------------------
+
+log("")
+log("3. Styled strings: console_style and ANSI", console_style="blue bold")
+
+log("console_style applies a Rich style to the whole string in the console.")
 log("The plain-text log records the message without console styling.")
-log('Example using console_style: log("console_style example: entire message", console_style="blue")')
-log("console_style example: entire message", console_style="blue")
 
-# ------------------------------------------------------------------------------
-section("ANSI color strings: color in console; plain text in log")
-
-log("ANSI escape codes can color all or part of a string in the console.")
-log("The plain-text log records the same message without ANSI color codes.")
-log('Example using ANSI: log(f"ANSI example: some colored {RED}ANSI red text{RESET} plus more plain text")')
-log(f"ANSI example: some colored {RED}ANSI red text{RESET} plus more plain text")
-
-# ------------------------------------------------------------------------------
-section("Rich Text: styled in console; plain text in log")
-
-log("Rich Text can style (color, bold, italic, ...) all or part of a message in the console.")
-log("The plain-text log records the readable text without Rich styling.")
 log(
-    'Example using Rich Text: log(Text("Rich Text Example: (starts next line at far left): ") + '
-    'Text.from_markup("[blue]Partial text with color[/blue]"))'
-)
-log(
-    Text("Rich Text Example: (starts next line at far left): ")
-    + Text.from_markup("[blue]Partial text with color[/blue]")
-)
-log(
-    'Example using Rich Text with added spaces:  log( '
-    'Text(spaces(13) + "Indented Rich Text: ") '
-    '+ Text.from_markup("[blue]Partial text with color[/blue]")')
-log(
-    Text(spaces(13) + "Indented Rich Text: ")
-    + Text.from_markup("[blue]Partial text with color[/blue]")
+    'Example: log("console_style example", console_style="blue")'
 )
 
-# ------------------------------------------------------------------------------
-section("Rich Panel: displayed in console; placeholder in log")
+log(
+    "console_style example: entire message",
+    console_style="blue",
+)
 
-log("Rich Panel is only renderable in the console.")
-log("The console displays the Rich Panel; the plain-text log records a placeholder.")
+log("ANSI escape codes can style all or part of a string in the console.")
+log("ANSI codes are removed from the plain-text log.")
+
+log(
+    f"ANSI example: plain text, {RED}red text{RESET}, "
+    f"{GREEN}green text{RESET}, then plain text again."
+)
 
 
-log(" ")
-log("Example using Rich Panel: log(rich_panel)")
+# --- 4. Ordinary Python objects ----------------------------------------------
+
+log("")
+log("4. Ordinary Python objects: text or placeholder representation", console_style="blue bold")
+
+log(
+    "Python objects with useful text representations are displayed inline "
+    "with the prefix, like ordinary text."
+)
+
+log({"a": 1, "b": 2})
+log([1, 2, 3])
+log(12345)
+
+long_dict = {
+    "project_name": "Logduo demonstration project",
+    "description": (
+        "A deliberately long dictionary used to demonstrate how ordinary "
+        "Python objects are displayed when their string representation exceeds "
+        "the available console and log width."
+    ),
+    "version": "0.2.0",
+    "status": "active",
+    "features": [
+        "console logging",
+        "plain-text log files",
+        "Rich Text support",
+        "custom logging levels",
+        "additional user loggers",
+    ],
+    "configuration": {
+        "console_wrap_width": log.session_config.console_wrap_width,
+        "log_wrap_width": log.session_config.log_wrap_width,
+        "console_verbosity": log.session_config.console_verbosity,
+        "log_verbosity": log.session_config.log_verbosity,
+    },
+    "statistics": {
+        "files_processed": 127,
+        "records_processed": 18432,
+        "warnings": 7,
+        "errors": 2,
+    },
+}
+
+log(long_dict)
+
+
+class Example:
+    pass
+
+
+log(
+    "Objects without a more useful text representation may appear as a "
+    "standard Python object placeholder."
+)
+
+log(Example())
+
+
+# --- 5. Rich Text -------------------------------------------------------------
+
+log("")
+log("5. Rich Text: styled in console; plain text in log", console_style="blue bold")
+
+log(
+    "Rich Text is displayed below the prefix in the console and written as "
+    "readable plain text in the log file."
+)
+
+rich_text = (
+    Text("Rich Text example: ", style="bold")
+    + Text.from_markup("[blue]partial blue text[/blue]")
+)
+
+log(rich_text)
+
+log(
+    "left_indent can be applied directly to Rich Text while preserving its "
+    "Rich styling."
+)
+
+log(
+    rich_text,
+    left_indent=13,
+)
+
+log(
+    "console_style can also apply an additional style to the complete Rich "
+    "Text message."
+)
+
+log(
+    rich_text,
+    left_indent=13,
+    console_style="underline green",
+)
+
+
+# --- 6. Rich Panel ------------------------------------------------------------
+
+log("")
+log("6. Rich Panel: console renderable; placeholder in log", console_style="blue bold")
+
+log(
+    "Rich Panel is rendered below the prefix in the console. "
+    "The plain-text log records a placeholder."
+)
+
 rich_panel = Panel.fit(
     long_msg,
     title="Example: Rich Panel around long message",
@@ -134,25 +270,35 @@ rich_panel = Panel.fit(
 
 log(rich_panel)
 
-log("Rich controls layout for Rich renderables.")
-log("Padding shifts the Rich object inside the available console width.")
-log("Set an explicit Rich width if you need exact panel sizing.")
-# available_width = log.session_config.console_wrap_width - 13
-# log("Reference * line: available_width = log.session_config.console_wrap_width - 13")
-# log(spaces(available_width, char="*"))
-log("Example using Rich Panel indented with Rich Padding: "
-    "log(Padding(narrow_panel_with_padding, (0, 0, 0, 13)))")
+log(
+    "left_indent does not alter the layout of Rich Panel. "
+    "Use Rich Padding when indentation is desired."
+)
 
-narrow_panel_with_padding = Panel(
+narrow_panel = Panel(
     long_msg,
-    title="Example: Rich Panel around long message (with Padding = 13)",
+    title="Example: Rich Panel with Padding = 13",
     style="blue",
     width=80,
 )
-log(Padding(narrow_panel_with_padding, (0, 0, 0, 13)))
 
-# ------------------------------------------------------------------------------
-section("Rich Table: displayed in console; placeholder in log")
+log(
+    Padding(
+        narrow_panel,
+        (0, 0, 0, 13),
+    )
+)
+
+
+# --- 7. Rich Table ------------------------------------------------------------
+
+log("")
+log("7. Rich Table: console renderable; placeholder in log", console_style="blue bold")
+
+log(
+    "Rich Table is rendered below the prefix in the console. "
+    "The plain-text log records a placeholder."
+)
 
 rich_table = Table(title="Example: Rich Table")
 rich_table.add_column("Name", style="cyan")
@@ -164,40 +310,91 @@ rich_table.add_row("Gamma", "30")
 
 log(rich_table)
 
-log("The same Rich Table can also be padded in the console.")
-log(Padding(rich_table, (0, 0, 0, 13)))
+log("Rich Padding can also indent the entire table.")
+
+log(
+    Padding(
+        rich_table,
+        (0, 0, 0, 13),
+    )
+)
 
 
-# ------------------------------------------------------------------------------
-section("PrettyTable / ColorTable: table string in console and log")
+# --- 8. PrettyTable / ColorTable ---------------------------------------------
+
+log("")
+log("8. PrettyTable / ColorTable: multiline string", console_style="blue bold")
 
 try:
-    import prettytable.colortable as pretty_colortable  # noqa # import not defined in except
+    # noinspection PyUnresolvedReferences
+    import prettytable.colortable as pretty_colortable
+
 except ImportError:
     log("PrettyTable example skipped: prettytable is not installed.")
     log("Install optional example dependency with: pip install prettytable")
+
 else:
     pretty_table = pretty_colortable.ColorTable(
         theme=pretty_colortable.Themes.OCEAN
     )
-    pretty_table.title = "Example: Pretty_table"
+
+    pretty_table.title = "Example: PrettyTable / ColorTable"
     pretty_table.field_names = ["Name", "Value"]
     pretty_table.align["Name"] = "l"
     pretty_table.align["Value"] = "r"
 
-    pretty_table.add_row([f"{BLUE}Alpha{RESET}", f"{GREEN}10{RESET}"])
-    pretty_table.add_row([f"{MAGENTA}Beta{RESET}", f"{YELLOW}20{RESET}"])
-    pretty_table.add_row([f"{RED}Gamma{RESET}", f"{WHITE}30{RESET}"])
+    pretty_table.add_row(
+        [f"{BLUE}Alpha{RESET}", f"{GREEN}10{RESET}"]
+    )
+    pretty_table.add_row(
+        [f"{MAGENTA}Beta{RESET}", f"{YELLOW}20{RESET}"]
+    )
+    pretty_table.add_row(
+        [f"{RED}Gamma{RESET}", f"{WHITE}30{RESET}"]
+    )
 
     table_text = pretty_table.get_string()
 
-    log("PrettyTable / ColorTable creates a formatted multiline string.")
-    log("Logduo sends that string to both the console (in color) and the log file (plain).")
+    log(
+        "PrettyTable / ColorTable produces a formatted multiline string, "
+        "so Logduo handles it like any other multiline string."
+    )
+
     log(table_text)
 
-    log("The same table string can also be indented using a helper function.")
-    log(indent_block(table_text, 13))
+    log("The same table string can be indented using left_indent.")
 
+    log(
+        table_text,
+        left_indent=13,
+    )
+
+
+# --- 9. Objects that are not console renderables -----------------------------
+
+log("")
+log("9. Other objects: placeholder representation", console_style="blue bold")
+log(
+    "Some Python objects, such as matplotlib Figure objects, cannot be "
+    "displayed directly by Logduo. Logduo displays their object representation "
+    "instead. Save figures or images to a file when the visual output is needed."
+)
+
+
+try:
+    plt = importlib.import_module("matplotlib.pyplot")
+
+except ImportError:
+    log("Matplotlib example skipped: matplotlib is not installed.")
+
+else:
+    fig, ax = plt.subplots()
+    ax.plot([1, 2, 3], [1, 4, 9])
+    ax.set_title("Example matplotlib Figure")
+
+    log("Example: log(fig)")
+    log(fig)
+
+    plt.close(fig)
 
 log.close()
-

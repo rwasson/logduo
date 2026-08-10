@@ -13,7 +13,7 @@ Provides:
 Most implementation lives in internal modules.
 See README.md for more details.
 
-Last edited: 2026-7-20
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -36,7 +36,6 @@ from logduo.internals.engine.runtime_classes import RuntimeRecord
 from logduo.internals.engine.start_session import _start_session
 from logduo.internals.engine.user_sink_call_adapter import UserSinkCallAdapter
 from logduo.internals.session_config.session_config_classes import (
-    _build_session_config_class_instance,
     ArgSourceRecord,
     SessionConfig,
 )
@@ -70,6 +69,7 @@ class Duo:
     - Each Duo instance maintains independent session state.
     - All Duo instances share the global Loguru backend.
     - Process IDs may be included in logging output when enabled.
+
     """
 
     def __init__(self) -> None:
@@ -77,7 +77,8 @@ class Duo:
         # --- StartupConfig ---
         # SessionConfig-shaped object populated from DEFAULTS.
         # Not yet fully resolved (e.g., console_theme_dict = {}).
-        _startup_config = _build_session_config_class_instance(DEFAULTS.copy())
+
+        _startup_config = SessionConfig.from_dict(DEFAULTS.copy())
         self._startup_config: SessionConfig = _startup_config
 
         # --- SessionConfig (immutable) ---
@@ -136,7 +137,17 @@ class Duo:
             )
             log("hello world")
 
-        3. Use a custom Rich session header and/or footer in console and/or log:
+        3. Reset a TOML setting to Logduo's built-in default:
+            # pyproject.toml:
+            # [tool.logduo]
+            # log_verbosity = 2
+
+            log.configure(log_verbosity=None)
+
+            # log_verbosity uses Logduo's built-in default (3),
+            # overriding the TOML value.
+
+        4. Use a custom Rich session header and/or footer in console and/or log:
            Note: "off" will suppress the default header/footer
 
             custom_log_header = (
@@ -147,7 +158,7 @@ class Duo:
             log("hello world")
 
 
-        4. Inside imported scripts, do not call log.configure() again:
+        5. Inside imported scripts, do not call log.configure() again:
             # inside imported script
             from logduo import log
             log = log.join()
@@ -173,6 +184,13 @@ class Duo:
         - To view the active session configuration:
                 - open config_table.txt (which also displays descriptions and allowed values)
                 - log(text_table(log.session_config))
+        - Passing None explicitly to a configuration argument resets that
+            argument to its built-in Logduo default.
+            This differs from omitting the argument:
+                - omitted argument -> TOML setting remains effective, if present
+                - argument=None    -> built-in default overrides TOML
+            In config_table.txt, the Source for an explicit None reset
+            is reported as "configure".
 
         """
         if self._initialized:
@@ -184,7 +202,7 @@ class Duo:
                     warning_msg = (
                         "log.configure() called after a log level statement, "
                         "e.g., log.warning(msg).\n"
-                        "    Configuration settings are set to defaults "
+                        "    Configuration settings were already resolved "
                         "for this session.\n"
                         "    To change settings: call log.close(), "
                         "then call log.configure()."
@@ -212,7 +230,10 @@ class Duo:
         return self._initialize_session(configure_args=configure_args)
 
     # --- export_logduo_docs() ------------------------------------------------------
-    def export_logduo_docs(self, path: str | Path | None = None) -> None:
+    def export_logduo_docs(
+            self,
+            path: str | Path | _NotGiven = _NOT_GIVEN,
+    ) -> None:
         """
         Purpose
         -------
@@ -223,7 +244,7 @@ class Duo:
         If path is provided:
             Documentation is written to the specified directory.
 
-        If path is None:
+        If path is not provided:
             Documentation is written alongside the logs directory to:
                 <project_root>/logduo_docs
 
@@ -378,7 +399,8 @@ class Duo:
         Additional per-logger overrides
         -------------------------------
         The following optional arguments override the corresponding
-        global configuration settings for this logger only:
+        session configuration settings for this logger only.
+        If omitted, the applicable session setting is inherited:
             - log_prefix
             - log_wrap_width
             - log_header
@@ -389,16 +411,16 @@ class Duo:
 
         Notes
         -----
-            - Each logger writes to its own dedicated log file.
-            - Messages may also be mirrored to console and/or the main log file.
-            - Logduo's per-message arguments are still available for new loggers.
-                  Example:
-                        report(
-                            "message",
-                            log_wrap_width=120,
-                            no_prefix=True,
-                            console_style="blue",
-                        )
+        - Each logger writes to its own dedicated log file.
+        - Messages may also be mirrored to console and/or the main log file.
+        - Logduo's per-message arguments are still available for new loggers.
+              Example:
+                    report(
+                        "message",
+                        log_wrap_width=120,
+                        no_prefix=True,
+                        console_style="blue",
+                    )
         """
         # NOTE: internally new_logger is called user_sink (to match main_sink)
         # _initialize_user_sink() calls new_logger_args_resolver(),
@@ -499,12 +521,12 @@ class Duo:
 
         Notes
         -----
-            - Parent directories are created automatically.
-            - Duplicate file paths are rejected.
-            - Created files are tracked for session reporting.
-            - Logduo formatting, headers, footers, wrapping,
-              verbosity filtering, and routing rules are not applied.
-            - Messages are emitted according to normal Loguru behavior.
+        - Parent directories are created automatically.
+        - Duplicate file paths are rejected.
+        - Created files are tracked for session reporting.
+        - Logduo formatting, headers, footers, wrapping, verbosity filtering,
+              and routing rules are not applied.
+        - Messages are emitted according to normal Loguru behavior.
 
         """
         self._ensure_initialized()
@@ -571,10 +593,11 @@ class Duo:
 
         Notes
         -----
-            - Reserved level names (INFO, WARNING, ERROR, etc.)
-              cannot be used as custom labels.
-            - Custom labels behave like their assigned level for
+        - Reserved level names (INFO, WARNING, ERROR, etc.)cannot be used as
+              custom labels.
+        - Custom labels behave like their assigned level for
               verbosity filtering and Loguru integration.
+
         """
         _create_custom_level_label(
             self,
@@ -615,40 +638,53 @@ class Duo:
         """
         Purpose
         -------
-        Absolute directory where the current session writes file output.
+        Resolved absolute directory for the current session's file output.
+
+        The directory may not exist yet if the session has not created any
+        file output.
 
         Example
         -------
-        1. Save a matplotlib figure alongside log files
+        1. Save a matplotlib figure alongside Logduo output:
             import matplotlib.pyplot as plt
+
             fig, ax = plt.subplots()
             ax.plot([1, 2, 3], [1, 4, 9])
 
-            if log.output_dir_path:
-                fig_path = log.output_dir_path / "figure1.png"
+            output_dir_path = log.output_dir_path
+
+            if output_dir_path is not None:
+                output_dir_path.mkdir(parents=True, exist_ok=True)
+
+                fig_path = output_dir_path / "figure1.png"
                 fig.savefig(fig_path)
-                log(f"Saved figure to {fig_path.name}" )
+
+                log(f"Saved figure to {fig_path.name}")
 
         Returns
         -------
         Path | None
-            Path to the current session's output directory.
+            Resolved path to the current session's output directory.
 
-        Returns None before session initialization and after session reset.
+            Returns None before session initialization and after session reset.
 
         Notes
         -----
-            - Does not create directories.
-            - Safe to combine with custom filenames when saving:
-                - plots
-                - CSV files
-                - reports
-                - exported artifacts
+        - Accessing this property does not create the directory.
+        - The returned path may therefore not exist yet.
+        - Logduo creates the directory automatically when Logduo-managed file
+          output requires it.
+        - When writing files directly to this path, create the directory first
+          with:
+              output_dir_path.mkdir(parents=True, exist_ok=True)
+        - Safe to combine with custom filenames for:
+            - plots
+            - CSV files
+            - reports
+            - exported artifacts
 
         """
         return self._runtime.main_sink_log_dir_path_abs
-
-
 
 
     # --- close() --------------------------------------------------------------
@@ -698,7 +734,7 @@ class Duo:
     # --- exception (ERROR + Traceback ) ---
     def exception(
             self,
-            message: object | None = None,
+            message: object | _NotGiven = _NOT_GIVEN,
             **kwargs: Any,
     ) -> None:
         """
@@ -708,7 +744,8 @@ class Duo:
         Call log.exception() inside an except block to include the current traceback.
 
         Displays:
-            - the user-provided error message
+            - the user-provided error message, or the default message,
+                 "Unhandled exception", if no message is provided
             - traceback block (detail depends on verbosity level)
             - Both log_verbosity and console_verbosity default to 3.
 
@@ -719,27 +756,29 @@ class Duo:
             try:
                 risky_operation()
             except Exception:
-                log.exception("Operation failed")
+                log.exception()
+                # or log.exception("My risky operation failed")
 
-        2. Override console style and wrapping for this message only
+        2. Override console style and log wrapping for this message only
             try:
                 risky_operation()
             except Exception:
-                log.exception(
-                    "Operation failed",
-                    console_style="bold red",
-                    log_wrap_width=120,
-                )
+                log.exception(console_style="bold red", log_wrap_width=120)
 
         Optional per-message arguments
         ------------------------------
+        These arguments apply to the exception message only.
+        The traceback block uses Logduo's fixed traceback formatting.
+
         no_prefix : bool
-            Suppress prefix for this message only.
+            Suppress the prefix for the exception message only.
         console_style : str
-            Apply Rich console styling to this message only.
+            Apply Rich console styling to the exception message only.
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
-            Override log wrapping width for this message only.
+            Override log wrapping width for the exception message only.
+        left_indent : int
+            Indent the exception message by the specified number of spaces.
 
         """
 
@@ -753,6 +792,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -780,6 +820,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -789,6 +833,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -800,6 +845,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -827,6 +873,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -836,6 +886,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -847,6 +898,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -874,6 +926,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -883,6 +939,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -894,6 +951,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -921,6 +979,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -930,6 +992,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -941,6 +1004,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -968,6 +1032,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -977,6 +1045,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -988,6 +1057,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -1017,6 +1087,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -1026,6 +1100,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -1037,6 +1112,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -1046,7 +1122,6 @@ class Duo:
         Shown if verbosity level >= 3,
         independently for console_verbosity and log_verbosity.
         Both verbosity settings default to 3.
-
 
         Example
         -------
@@ -1066,6 +1141,10 @@ class Duo:
             Example: "italic blue", "bold red", "underline"
         log_wrap_width : int | "off"
             Override log wrapping width for this message only.
+        left_indent : int
+            Indent the message by the specified number of spaces.
+            Applies to plain strings and Rich Text.
+            Wrapped and multiline text keeps the same indentation on each content line.
 
         """
         _level_entry(
@@ -1075,6 +1154,7 @@ class Duo:
             no_prefix=no_prefix,
             console_style=console_style,
             log_wrap_width=log_wrap_width,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -1109,7 +1189,8 @@ class Duo:
         except Exception as e:
             raise RuntimeError(
                 "Logduo failed to initialize automatically. "
-                "Call log.configure(...) once at the start of your logging session."
+                "If using log.configure(), call it once per logging session, "
+                "before emitting the session's first log message."
             ) from e
 
 
@@ -1133,6 +1214,7 @@ class Duo:
         no_prefix: bool | _NotGiven = _NOT_GIVEN,
         log_wrap_width: int | str | _NotGiven = _NOT_GIVEN,
         console_style: str | _NotGiven = _NOT_GIVEN,
+        left_indent: int | _NotGiven = _NOT_GIVEN,
         **kwargs: Any,
     ) -> None:
         """
@@ -1150,7 +1232,7 @@ class Duo:
             raise TypeError(
                 "Logduo accepts a single positional message argument. "
                 "Optional arguments must be passed by keyword "
-                "(no_prefix, log_wrap_width, console_style)."
+                "(no_prefix, log_wrap_width, console_style, left_indent)."
             )
 
         self.info(
@@ -1158,6 +1240,7 @@ class Duo:
             no_prefix=no_prefix,
             log_wrap_width=log_wrap_width,
             console_style=console_style,
+            left_indent=left_indent,
             **kwargs,
         )
 
@@ -1178,10 +1261,10 @@ class Duo:
 
         Notes
         -----
-            - This method is invoked only when normal attribute lookup fails.
-            - It provides dynamic support for log levels and custom labels.
-            - exception() is implemented as a dedicated method and is
-                therefore not resolved through __getattr__().
+        - This method is invoked only when normal attribute lookup fails.
+        - It provides dynamic support for log levels and custom labels.
+        - exception() is implemented as a dedicated method and is therefore
+             not resolved through __getattr__().
         """
         name_upper = name.upper()
         label_key = name.lower()

@@ -3,9 +3,9 @@
 #
 # Purpose:
 # - Runs the Logduo validation suite on Ubuntu, macOS, and Windows
-# - Uses Python 3.13
-# - Runs pytest, example scripts, and lint/type checks
-# - Uploads validation logs for each operating system
+# - Uses Python 3.13 and 3.14
+# - Runs pytest, example/documentation validation, and lint/type checks
+# - Uploads validation logs for each operating system and Python version
 #
 # Where it runs:
 # - Runs only through GitHub Actions
@@ -70,7 +70,7 @@ jobs:
       - name: Run pytest suite
         run: python -m developer_resources.logduo_validation.pytest_harness_runner
 
-      - name: Run example scripts
+      - name: Run example and documentation validation
         run: python -m developer_resources.logduo_validation.example_scripts_runner
 
       - name: Run Ruff, mypy, and Vulture
@@ -80,6 +80,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: logduo-validation-logs-${{ runner.os }}
+          name: logduo-validation-logs-${{ runner.os }}-py${{ matrix.python-version }}
           path: developer_resources/logduo_validation/logs/
           if-no-files-found: warn

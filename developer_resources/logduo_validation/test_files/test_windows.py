@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from logduo.internals.api_arg_resolvers import api_arg_resolver_helpers
-from logduo.internals.filesystem.path_validators import (
+from logduo.internals.filesystem.path_policy import (
     _raise_if_invalid_config_arg_log_dir_path,
     _raise_if_invalid_config_arg_log_file_name,
     _raise_if_invalid_config_arg_log_file_path,

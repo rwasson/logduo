@@ -1,7 +1,7 @@
 """
 header_footer_formatters.py
 
-Last edited: 2026-7-31
+Last edited: 2026-08-10
 """
 from collections.abc import Sequence
 from pathlib import Path

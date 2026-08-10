@@ -13,7 +13,7 @@ Covers:
 Optional example dependencies:
     pip install pandas numpy matplotlib statsmodels
 
-Last edited: 2026-07-08
+Last edited: 2026-08-10
 """
 
 from pathlib import Path
@@ -83,7 +83,8 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
     # ------------------------------------------------------------------
     section("Read the CSV file and log data previews")
 
-    data = pd.read_csv(csv_path)  # noqa inspection PyArgumentList
+    # noinspection PyArgumentList
+    data = pd.read_csv(csv_path)
 
     log("First 8 rows")
     log(data.head(8).to_string(index=False))
@@ -104,7 +105,8 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
     section("Regression output")
 
     try:
-        import statsmodels.api as sm  # noqa # sm not defined in except
+        # noinspection PyUnresolvedReferences
+        import statsmodels.api as sm
     except ImportError:
         log("Regression example skipped: statsmodels is not installed.")
         log("Install with: pip install statsmodels")
@@ -123,7 +125,8 @@ def main() -> None:  # noqa: PLR0915   # example scripts can have 'too many stat
         log("Selected regression values")
         log(f"R-squared: {results.rsquared:.4f}")
 
-        observation_count = int(float(results.nobs))     # noqa  # statsmodels typing incorrectly reports nobs as callable
+        # noinspection
+        observation_count = int(float(results.nobs))
         education_coefficient = float(results.params["education"])
         experience_coefficient = float(results.params["experience"])
 

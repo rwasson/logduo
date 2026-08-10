@@ -1,7 +1,8 @@
 """
 example_scripts_runner.py
 
-Run installed Logduo example scripts and README validation scripts, and log results.
+Run bundled Logduo example scripts, README quick-script validation,
+and documentation-export validation.
 
 Skips:
     script_child.py
@@ -10,10 +11,11 @@ Reason:
     script_child.py is intended to be run by script_parent.py.
     It calls log.join() and expects an active parent session.
 
-Runs automatically in macOS, Ubuntu and Windows when changes pushed to GitHub.
-    called by:  .github/workflows/tests.yml
+Runs automatically on macOS, Ubuntu, and Windows through GitHub Actions.
+Called by:
+    .github/workflows/tests.yml
 
-Last edited: 2026-08-02
+Last edited: 2026-08-09
 """
 
 from __future__ import annotations
@@ -26,11 +28,21 @@ from pathlib import Path
 from logduo import log
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-EXAMPLES_DIR = PROJECT_ROOT / "src" / "logduo" / "internals" / "artifacts" / "logduo_docs" / "example_scripts"
-README_QUICK_SCRIPTS_PATH = (
+
+VALIDATION_DIR = Path(__file__).resolve().parent
+
+EXAMPLES_DIR = (
     PROJECT_ROOT
-    / "developer_resources"
-    / "logduo_validation"
+    / "src"
+    / "logduo"
+    / "internals"
+    / "artifacts"
+    / "logduo_docs"
+    / "example_scripts"
+)
+
+README_QUICK_SCRIPTS_PATH = (
+    VALIDATION_DIR
     / "quick_scripts_in_readme.py"
 )
 
@@ -59,6 +71,7 @@ class ExampleResult:
     stderr: str
 
 
+# --- _section() ---------------------------------------------------------------
 def _section(title: str) -> None:
     log("")
     log("=" * 87)
@@ -66,11 +79,14 @@ def _section(title: str) -> None:
     log("=" * 87)
 
 
+# --- _find_example_scripts() --------------------------------------------------
 def _find_example_scripts() -> list[Path]:
     if not EXAMPLES_DIR.exists():
-        raise FileNotFoundError(f"Examples directory not found: {EXAMPLES_DIR}")
+        raise FileNotFoundError(
+            f"Examples directory not found: {EXAMPLES_DIR}"
+        )
 
-    example_scripts = []
+    example_scripts: list[Path] = []
 
     for path in sorted(EXAMPLES_DIR.glob("*.py")):
         if path.name in SKIP_EXAMPLES:
@@ -84,10 +100,14 @@ def _find_example_scripts() -> list[Path]:
     return example_scripts
 
 
+# --- _run_example() -----------------------------------------------------------
 def _run_example(path: Path) -> ExampleResult:
     _section(f"Example script: {path.name}")
 
-    command = [sys.executable, str(path)]
+    command = [
+        sys.executable,
+        str(path),
+    ]
 
     log("Command:")
     log(" ".join(command))
@@ -100,8 +120,12 @@ def _run_example(path: Path) -> ExampleResult:
             text=True,
             check=False,
         )
+
     except Exception as exc:
-        log.exception(f"{path.name} crashed before completion.")
+        log.exception(
+            f"{path.name} crashed before completion."
+        )
+
         return ExampleResult(
             name=path.name,
             path=path,
@@ -119,9 +143,14 @@ def _run_example(path: Path) -> ExampleResult:
         log(completed.stderr)
 
     if completed.returncode == 0:
-        log.success(f"{path.name} passed.")
+        log.success(
+            f"{path.name} passed."
+        )
     else:
-        log.error(f"{path.name} failed with return code {completed.returncode}.")
+        log.error(
+            f"{path.name} failed with return code "
+            f"{completed.returncode}."
+        )
 
     return ExampleResult(
         name=path.name,
@@ -132,11 +161,14 @@ def _run_example(path: Path) -> ExampleResult:
     )
 
 
+# --- run_example_scripts() ----------------------------------------------------
 def run_example_scripts() -> list[ExampleResult]:
-    """Run all standalone example scripts."""
+    """Run all standalone bundled example scripts."""
+
     example_scripts = _find_example_scripts()
 
     _section("Example script discovery")
+
     log(f"Examples directory: {EXAMPLES_DIR}")
     log(f"Skipped examples: {sorted(SKIP_EXAMPLES)}")
     log(f"Runnable examples found: {len(example_scripts)}")
@@ -144,85 +176,168 @@ def run_example_scripts() -> list[ExampleResult]:
     for path in example_scripts:
         log(f"- {path.name}")
 
-    return [_run_example(path) for path in example_scripts]
+    return [
+        _run_example(path)
+        for path in example_scripts
+    ]
 
 
-def failed_examples(results: list[ExampleResult]) -> list[ExampleResult]:
+# --- failed_examples() --------------------------------------------------------
+def failed_examples(
+    results: list[ExampleResult],
+) -> list[ExampleResult]:
     """Return examples that failed or crashed."""
-    return [result for result in results if result.returncode != 0]
+
+    return [
+        result
+        for result in results
+        if result.returncode != 0
+    ]
 
 
+# --- run_readme_quick_scripts() ----------------------------------------------
+def run_readme_quick_scripts() -> ExampleResult:
+    """
+    Run quick_scripts_in_readme.py.
+
+    The validation file is expected to be in the same directory
+    as example_scripts_runner.py.
+    """
+
+    if not README_QUICK_SCRIPTS_PATH.is_file():
+        raise FileNotFoundError(
+            "README quick-scripts file not found:\n"
+            f"  {README_QUICK_SCRIPTS_PATH}"
+        )
+
+    return _run_example(
+        README_QUICK_SCRIPTS_PATH
+    )
+
+
+# --- validate_logduo_docs_export() -------------------------------------------
 def validate_logduo_docs_export() -> None:
     """
     Validate log.export_logduo_docs().
-    Uses an explicit export directory inside the current validation run output
-    so the test is safe on local machines and GitHub runners.
+
+    Uses an explicit export directory inside the current validation
+    run output so the validation is safe on local machines and
+    GitHub runners.
+
+    Runs the export twice to verify that existing exported files
+    are preserved safely.
     """
 
     _section("Documentation export validation")
-    docs_dir = log.output_dir_path / "logduo_docs_export_demo"
+
+    output_dir_path = log.output_dir_path
+    assert output_dir_path is not None
+
+    docs_dir = (
+        output_dir_path
+        / "logduo_docs_export_demo"
+    )
+
     log("Export directory:")
     log(str(docs_dir))
+
     log("First export:")
     log.export_logduo_docs(docs_dir)
-    log("Second export:")
+
+    log(
+        "Second export "
+        "(existing files should be preserved):"
+    )
     log.export_logduo_docs(docs_dir)
+
     missing_files: list[str] = []
 
-    for relative_file_path in sorted(EXPECTED_EXPORTED_FILES):
-        file_path = docs_dir / relative_file_path
+    for relative_file_path in sorted(
+        EXPECTED_EXPORTED_FILES
+    ):
+        file_path = (
+            docs_dir
+            / relative_file_path
+        )
+
         if file_path.exists():
-            log.success(f"Found exported file: {relative_file_path}")
+            log.success(
+                f"Found exported file: "
+                f"{relative_file_path}"
+            )
         else:
-            log.error(f"Missing exported file: {relative_file_path}")
-            missing_files.append(relative_file_path)
+            log.error(
+                f"Missing exported file: "
+                f"{relative_file_path}"
+            )
+            missing_files.append(
+                relative_file_path
+            )
+
     if missing_files:
         raise RuntimeError(
             "Documentation export validation failed. "
             f"Missing files: {missing_files}"
         )
-    log.success("Documentation export validation passed.")
+
+    log.success(
+        "Documentation export validation passed."
+    )
 
 
-
-def run_readme_quick_scripts() -> ExampleResult:
-    """Run the quick scripts reproduced in README.txt."""
-    if not README_QUICK_SCRIPTS_PATH.is_file():
-        raise FileNotFoundError(
-            f"README quick-scripts file not found: {README_QUICK_SCRIPTS_PATH}"
-        )
-    return _run_example(README_QUICK_SCRIPTS_PATH)
-
-
+# --- main() -------------------------------------------------------------------
 def main() -> None:
 
     log.configure(
-        log_dir_path=PROJECT_ROOT / "developer_resources" / "logduo_validation" / "logs",
+        log_dir_path=(
+            PROJECT_ROOT
+            / "developer_resources"
+            / "logduo_validation"
+            / "logs"
+        ),
         console_verbosity=3,
         log_verbosity=3,
     )
-    log("something??")
 
+    # --- bundled examples ---
     results = run_example_scripts()
-    results.append(run_readme_quick_scripts())
+
+    # --- README quick scripts ---
+    # Always run whenever this validation runner is executed.
+    results.append(
+        run_readme_quick_scripts()
+    )
+
     failures = failed_examples(results)
+
+    # --- documentation export ---
     validate_logduo_docs_export()
+
+    # --- summary ---
     _section("Example script summary")
 
     if not failures:
-        log.success("All example and README validation scripts passed.")
+        log.success(
+            "All example, README, and documentation-export "
+            "validations passed."
+        )
         log.close()
         return
 
-    log.error("Some example or README validation scripts failed:")
+    log.error(
+        "Some example or README validation scripts failed:"
+    )
 
     for failure in failures:
-        log.error(f"- {failure.name}: return code {failure.returncode}")
+        log.error(
+            f"- {failure.name}: "
+            f"return code {failure.returncode}"
+        )
+
     log.close()
 
     raise SystemExit(1)
 
 
 if __name__ == "__main__":
-
     main()

@@ -16,7 +16,7 @@ After resolution, for call args:
     - If default_value is available → _NOT_GIVEN → default_value
 - Cross-field rules applied here, e.g., no_prefix is True -> subsequent_indent = "off"
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
@@ -33,6 +33,7 @@ from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import (
     _assert_no_none,
     _assert_no_not_given,
     _resolve_call_console_style,
+    _resolve_call_left_indent,
     _resolve_call_log_wrap_width,
     _resolve_call_no_prefix,
 )
@@ -51,23 +52,32 @@ def _resolve_level_call_args(
         sink_config=sink_config,
         no_prefix=call_args["no_prefix"])
 
+    log_wrap_width = _resolve_call_log_wrap_width(
+        duo=duo,
+        sink_config=sink_config,
+        log_wrap_width=call_args["log_wrap_width"]
+    )
+
     theme_dict = duo.session_config.console_theme_dict
     console_style = _resolve_call_console_style(
         console_style=call_args["console_style"],
         theme_dict=theme_dict,
     )
 
-    norm_call = {
+    left_indent = _resolve_call_left_indent(
+        left_indent=call_args["left_indent"]
+    )
+
+    resolved_call = {
         "no_prefix": no_prefix,
-        "log_wrap_width": _resolve_call_log_wrap_width(
-            duo=duo,
-            sink_config=sink_config,
-            log_wrap_width=call_args["log_wrap_width"]
-        ),
+        "log_wrap_width": log_wrap_width,
         "console_style": console_style,
+        "left_indent": left_indent,
     }
 
-    _assert_no_not_given(norm_call)
-    _assert_no_none(norm_call, allowed_fields={"console_style"})
+    _assert_no_not_given(resolved_call)
 
-    return norm_call
+    # console_style may resolve to None internally, meaning no explicit Rich style.
+    _assert_no_none(resolved_call, allowed_fields={"console_style"})
+
+    return resolved_call

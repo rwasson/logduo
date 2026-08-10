@@ -11,7 +11,10 @@ Unicode symbols are ordinary text:
 
 This example uses Unicode escape codes so each symbol can be identified
 and reproduced without copying it from another source.
+
+Last edite: 2026-08-10
 """
+
 from pathlib import Path
 
 from logduo import log
@@ -145,10 +148,9 @@ rho = "\u03c1"                   # ρ
 sigma = "\u03c3"                 # σ
 tau = "\u03c4"                   # τ
 phi = "\u03c6"                   # φ
-chi = "\u03c7"                   # χ       # noqa  # intentionally defined twice
+# chi = "\u03c7"                 # χ
 psi = "\u03c8"                   # ψ
 omega = "\u03c9"                 # ω
-
 capital_delta = "\u0394"         # Δ
 capital_gamma = "\u0393"         # Γ
 capital_lambda = "\u039b"        # Λ

@@ -13,6 +13,7 @@ from logduo.internals.api_arg_resolvers.api_arg_resolver_helpers import (
     _precheck_auto_and_none,
     _resolve_bool_arg,
     _resolve_call_console_style,
+    _resolve_call_left_indent,
     _resolve_call_no_prefix,
     _resolve_int_arg,
     _resolve_log_file_mode,
@@ -425,6 +426,7 @@ def test_35_console_prefix_off_resolves_no_prefix(tmp_path):
             "no_prefix": _NOT_GIVEN,
             "log_wrap_width": _NOT_GIVEN,
             "console_style": _NOT_GIVEN,
+            "left_indent": _NOT_GIVEN,
         },
     )
 
@@ -824,3 +826,64 @@ def test_68_call_no_prefix_for_file_sink():
         )
 
 
+# --- test_69_resolve_left_indent_not_given_uses_zero() -----------------------
+def test_69_resolve_left_indent_not_given_uses_zero():
+
+    result = _resolve_call_left_indent(
+        left_indent=_NOT_GIVEN,
+    )
+
+    assert result == 0
+
+
+# --- test_70_resolve_left_indent_accepts_non_negative_integer() ---------------
+@pytest.mark.parametrize(
+    "value",
+    [0, 1, 5, 20],
+)
+def test_70_resolve_left_indent_accepts_non_negative_integer(value):
+
+    result = _resolve_call_left_indent(
+        left_indent=value,
+    )
+
+    assert result == value
+
+
+# --- test_71_resolve_left_indent_rejects_negative_integer() ------------------
+def test_71_resolve_left_indent_rejects_negative_integer():
+
+    with pytest.raises(ValueError, match="non-negative integer"):
+        _resolve_call_left_indent(
+            left_indent=-1,
+        )
+
+
+# --- test_72_resolve_left_indent_rejects_bool() ------------------------------
+@pytest.mark.parametrize(
+    "value",
+    [True, False],
+)
+def test_72_resolve_left_indent_rejects_bool(value):
+
+    with pytest.raises(ValueError, match="non-negative integer"):
+        _resolve_call_left_indent(
+            left_indent=value,
+        )
+
+
+# --- test_73_resolve_left_indent_rejects_none() ------------------------------
+def test_73_resolve_left_indent_rejects_none():
+
+    with pytest.raises(ValueError, match="left_indent cannot be None"):
+        _resolve_call_left_indent(
+            left_indent=None,  # type: ignore[arg-type]
+        )
+
+
+# --- test_74_resolve_left_indent_rejects_string() ----------------------------
+def test_74_resolve_left_indent_rejects_string():
+    with pytest.raises(ValueError, match="non-negative integer"):
+        _resolve_call_left_indent(
+            left_indent="5",  # type: ignore[arg-type]
+        )

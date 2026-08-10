@@ -9,7 +9,7 @@ Responsible for:
 - registry cleanup
 - state reset for interactive reuse
 
-Last edited: 2026-5-23
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations

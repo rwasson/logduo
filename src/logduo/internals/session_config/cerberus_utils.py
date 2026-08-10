@@ -6,10 +6,12 @@ Validation helpers for Cerberus normalization and config validation.
 Note:
 - Validator normalization avoids string "none" → None coercion.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
+from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 
 # --- _norm_bool() -------------------------------------------------------------
@@ -32,7 +34,10 @@ def _norm_bool(v: object) -> bool | None:
 
 
 # --- _bool_hint() -------------------------------------------------------------
-def _bool_hint(field: str, defaults: dict) -> str:
+def _bool_hint(
+    field: str,
+    defaults: Mapping[str, Any],
+) -> str:
     return (
         "must be a boolean "
         "(true/false in TOML, True/False in Python) "

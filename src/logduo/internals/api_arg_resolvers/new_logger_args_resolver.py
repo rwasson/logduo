@@ -14,11 +14,12 @@ Applies:
 
 Final runtime-dependent setup is completed in sink setup layers.
 
-Last edited: 2026-5-27
+Last edited: 2026-08-10
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -45,9 +46,9 @@ _HARD_CODED_NEW_LOGGER_ARG_DEFAULTS = {"to_console": True, "to_main_log": True}
 
 # --- _resolve_new_logger_args() -------------------------------------------------
 def _resolve_new_logger_args(
-        *,
-        duo: Duo,
-        new_logger_args: dict[str, Any],
+    *,
+    duo: Duo,
+    new_logger_args: Mapping[str, Any],
 ) -> dict[str, Any]:
 
     sink_info = _resolve_new_logger_target_arg(duo=duo, value=new_logger_args["sink"])
