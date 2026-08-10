@@ -15,7 +15,7 @@ AFTER UPDATE VERSION IN PYPROJECT.TOML
 
 git status
 git add .
-git commit -m "Release Logduo 0.1.6"
+git commit -m "Release Logduo 0.2.0"
 git push
 
 2. update GitHub tag
@@ -42,16 +42,24 @@ echo "NEWEST COMMIT:"
 git log -1 --oneline
 
 
-3. Update build
+3. Update build (should see two PASSED statements at end)
 rm -rf dist
 python -m pip install --upgrade build twine
 python -m build
 python -m twine check dist/*
+
+
+4. check in another project
+example for 0.2.0:
+python -m pip install --force-reinstall /Users/renyawasson/Local/PycharmProjects_local/logduo_project/dist/*.whl
+
+
+5. push to PyPI (in Logduo project)
 python -m twine upload dist/*
 
 # enter PYPI token saved in Password app (will not see it on screen)
 
-4. verify 
+4. verify PyPi push was successful
 python -m pip install --upgrade logduo
 python -m pip show logduo
 
