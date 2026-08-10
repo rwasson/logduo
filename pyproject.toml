@@ -114,8 +114,6 @@ module = [
 ]
 ignore_missing_imports = true
 
-
-ignore_missing_imports = true
 # --- Ruff ---------------------------------------------------------------------
 [tool.ruff]
 line-length = 120
