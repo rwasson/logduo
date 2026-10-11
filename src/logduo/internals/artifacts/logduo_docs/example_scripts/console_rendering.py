@@ -15,6 +15,7 @@ Covers:
 - Rich Table
 - Rich Padding
 - PrettyTable / ColorTable string output when installed
+- Logduo text_table() plain-text table formatting
 
 Key ideas:
 - Simple text-like values are displayed inline with the prefix.
@@ -42,7 +43,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from logduo import log
+from logduo import log, text_table
 
 LOG_DIR = Path.cwd() / "logs"
 
@@ -368,10 +369,74 @@ else:
     )
 
 
-# --- 9. Objects that are not console renderables -----------------------------
+# --- 9. text_table() ----------------------------------------------------------
 
 log("")
-log("9. Other objects: placeholder representation", console_style="blue bold")
+log("9. text_table(): plain-text tables from Python data", console_style="blue bold")
+
+log(
+    "text_table() creates a formatted plain-text table from common Python data. "
+    "The returned string can be printed directly or passed to Logduo."
+)
+
+log("Simple example: a dictionary is automatically displayed as a Field / Value table.")
+
+settings = {
+    "console_theme": "dark",
+    "console_wrap_width": 120,
+    "log_wrap_width": 120,
+    "output_directory": LOG_DIR,
+}
+
+log(
+    text_table(
+        settings,
+        title="Example: dictionary",
+    )
+)
+
+log(
+    "More advanced example: a list of dictionaries is automatically displayed "
+    "as rows and columns. Display options can customize labels, widths, and wrapping."
+)
+
+investment_data = [
+    {
+        "name": "Alpha Fund",
+        "type": "Mutual Fund",
+        "value": "$125,430",
+        "description": "Broad-market equity fund used as a core holding.",
+    },
+    {
+        "name": "Beta Bond",
+        "type": "Bond",
+        "value": "$42,750",
+        "description": (
+            "Intermediate-term bond holding used for income and diversification."
+        ),
+    },
+    {
+        "name": "Gamma Corp",
+        "type": "Stock",
+        "value": "$18,900",
+        "description": "Individual company stock position.",
+    },
+]
+
+log(
+    text_table(
+        investment_data,
+        title="Example: investment holdings",
+        header_labels=["Name", "Type", "Value", "Description"],
+        max_col_widths=[20, 14, 12, 30],
+        wrap_table_width=90,
+    )
+)
+
+# --- 10. Objects that are not console renderables -----------------------------
+
+log("")
+log("10. Other objects: placeholder representation", console_style="blue bold")
 log(
     "Some Python objects, such as matplotlib Figure objects, cannot be "
     "displayed directly by Logduo. Logduo displays their object representation "

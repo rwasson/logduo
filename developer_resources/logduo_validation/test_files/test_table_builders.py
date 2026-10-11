@@ -4,6 +4,9 @@ test_table_builders.py
 Last edited: 2026-06-25
 """
 from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -21,7 +24,7 @@ class Person:
 def test_01_text_table_fixed_col_widths_none_entry_raises():
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[10, None],
         )
 
@@ -30,7 +33,7 @@ def test_01_text_table_fixed_col_widths_none_entry_raises():
 def test_02_text_table_fixed_col_widths_zero_raises():
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[0],
         )
 
@@ -39,7 +42,7 @@ def test_02_text_table_fixed_col_widths_zero_raises():
 def test_03_text_table_fixed_col_widths_negative_raises():
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[-5],
         )
 
@@ -47,7 +50,7 @@ def test_03_text_table_fixed_col_widths_negative_raises():
 # --- test_04_text_table_fixed_col_widths_valid() -----------------------------
 def test_04_text_table_fixed_col_widths_valid():
     result = text_table(
-        rows=[{"a": "hello"}],
+        data=[{"a": "hello"}],
         exact_col_widths=[10],
     )
 
@@ -58,7 +61,7 @@ def test_04_text_table_fixed_col_widths_valid():
 def test_05_text_table_max_col_widths_applied():
 
     result = text_table(
-        rows=[{
+        data=[{
             "field": "cwd",
             "value": "/very/long/path/that/should/not/be/wrapped"
         }],
@@ -75,7 +78,7 @@ def test_06_text_table_fixed_and_max_widths_warn():
 
     with pytest.warns(UserWarning):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[10],
             max_col_widths=[20],
         )
@@ -86,7 +89,7 @@ def test_07_text_table_empty_fixed_widths_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[],
         )
 
@@ -96,7 +99,7 @@ def test_08_text_table_empty_max_widths_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             max_col_widths=[],
         )
 
@@ -106,7 +109,7 @@ def test_09_text_table_padding_type_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             padding="5",    # noqa, testing an intentional error
         )
 
@@ -117,7 +120,7 @@ def test_10_text_table_fixed_widths_override_max_widths_warns():
     with pytest.warns(UserWarning):
 
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             exact_col_widths=[10],
             max_col_widths=[20],
 
@@ -177,11 +180,15 @@ class Demo2:
     def __init__(self):
         self.x = 123
 
+    def __str__(self):
+        return f"Demo2(x={self.x})"
+
+
 def test_15_text_table_invalid_object_type_raises():
     with pytest.raises(ValueError) as exc:
         text_table(Demo2())
 
-    assert "rows must be either:" in str(exc.value)
+    assert "data must be either:" in str(exc.value)
     assert "dataclass instance" in str(exc.value)
 
 
@@ -215,9 +222,8 @@ def test_16_dataclass_type_table():
     assert "int" in table
 
 
-# --- test_17_build_dict_table_nested_object_repr() ---------------------------
-def test_17_build_dict_table_nested_object_repr():
-
+# --- test_17_build_dict_table_nested_object_repr() ----------------------------
+def test_17_text_table_dict_custom_object_value():
     result = text_table(
         {
             "demo": Demo2(),
@@ -225,8 +231,7 @@ def test_17_build_dict_table_nested_object_repr():
     )
 
     assert "demo" in result
-    assert "Demo2" in result
-
+    assert "Demo2(x=123)" in result
 
 # --- test_18_build_dict_table_non_string_keys() ------------------------------
 def test_18_build_dict_table_non_string_keys():
@@ -245,16 +250,16 @@ def test_18_build_dict_table_non_string_keys():
 def test_19_text_table_empty_rows_raises():
 
     with pytest.raises(ValueError) as exc:
-        text_table(rows=[])
+        text_table(data=[])
 
-    assert "Cannot render empty table" in str(exc.value)
+    assert "Cannot render empty data as a table." in str(exc.value)
 
 
 # --- test_20_text_table_all_none_rows_returns_empty() -----------------------
 def test_20_text_table_all_none_rows_returns_empty():
 
     result = text_table(
-        rows=[None, None],
+        data=[None, None],
     )
 
     assert result == ""
@@ -264,7 +269,7 @@ def test_20_text_table_all_none_rows_returns_empty():
 def test_21_text_table_sequence_rows_auto_columns():
 
     result = text_table(
-        rows=[
+        data=[
             ["name", "age"],
             ["alice", 30],
         ]
@@ -279,7 +284,7 @@ def test_21_text_table_sequence_rows_auto_columns():
 def test_22_text_table_title_rendered():
 
     result = text_table(
-        rows=[{"a": 1}],
+        data=[{"a": 1}],
         title="TEST TABLE",
     )
 
@@ -295,7 +300,7 @@ def test_22_text_table_title_rendered():
 def test_23_text_table_wrap_table_false():
 
     result = text_table(
-        rows=[
+        data=[
             {
                 "a": "one",
                 "b": "two",
@@ -314,7 +319,7 @@ def test_23_text_table_wrap_table_false():
 def test_24_build_wrap_table_truncates_with_ellipsis():
 
     result = text_table(
-        rows=[
+        data=[
             {
                 "text": (
                     "This is a very long string that should wrap "
@@ -333,7 +338,7 @@ def test_24_build_wrap_table_truncates_with_ellipsis():
 def test_25_text_table_fallback_scalar_row():
 
     result = text_table(
-        rows=[
+        data=[
             "header",
             "value",
         ]
@@ -348,7 +353,7 @@ def test_26_text_table_empty_columns_raises():
 
     with pytest.raises(ValueError) as exc:
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             columns=[],
         )
 
@@ -359,7 +364,7 @@ def test_26_text_table_empty_columns_raises():
 
 def test_27_text_table_long_title():
     result = text_table(
-        rows=[{"a": 1}],
+        data=[{"a": 1}],
         title="THIS IS A VERY LONG TABLE TITLE",
     )
 
@@ -370,7 +375,7 @@ def test_27_text_table_long_title():
 def test_28_text_table_explicit_column_order_and_capitalized():
 
     result = text_table(
-        rows=[{"b": 2, "a": 1}],
+        data=[{"b": 2, "a": 1}],
         columns=["a", "b"],
     )
 
@@ -382,7 +387,7 @@ def test_28_text_table_explicit_column_order_and_capitalized():
 def test_29_text_table_missing_column_value():
 
     result = text_table(
-        rows=[
+        data=[
             {"a": 1},
             {"a": 2, "b": 3},
         ],
@@ -401,7 +406,7 @@ def test_29_text_table_missing_column_value():
 def test_30_text_table_wraps_many_columns():
 
     result = text_table(
-        rows=[
+        data=[
             {
                 "a": "1",
                 "b": "2",
@@ -423,7 +428,7 @@ def test_30_text_table_wraps_many_columns():
 def test_31_text_table_no_header():
 
     result = text_table(
-        rows=[
+        data=[
             {"a": 1},
             {"a": 2},
         ],
@@ -440,7 +445,7 @@ def test_32_text_table_mapping_with_integer_column_selector():
 
     result = text_table(
 
-        rows=[{"a": "one", "b": "two"}],
+        data=[{"a": "one", "b": "two"}],
 
         columns=[1],
 
@@ -456,7 +461,7 @@ def test_33_text_table_header_labels_not_padded():
     with pytest.raises(ValueError):
 
         text_table(
-            rows=[{"a": 1, "b": 2}],
+            data=[{"a": 1, "b": 2}],
             header_labels=["A"],
         )
 
@@ -465,7 +470,7 @@ def test_33_text_table_header_labels_not_padded():
 def test_34_text_table_empty_header_cell_uses_fallback():
 
     result = text_table(
-        rows=[
+        data=[
             ["", ""],
             ["a", "b"],
         ],
@@ -487,7 +492,7 @@ def test_35_text_table_long_title_warns():
     with pytest.warns(UserWarning):
 
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             title="X" * 200,
             wrap_table_width=20,
         )
@@ -499,7 +504,7 @@ def test_36_text_table_long_subtitle_warns():
     with pytest.warns(UserWarning):
 
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             subtitle="Y" * 200,
             wrap_table_width=20,
         )
@@ -509,7 +514,7 @@ def test_37_header_labels_and_header_row_conflict_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[
+            data=[
                 ["name", "age"],
                 ["alice", 30],
             ],
@@ -523,7 +528,7 @@ def test_38_mapping_unknown_column_name_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             columns=["missing"],
         )
 
@@ -533,7 +538,7 @@ def test_39_mapping_column_index_out_of_range_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1, "b": 2}],
+            data=[{"a": 1, "b": 2}],
             columns=[2],
         )
 
@@ -542,7 +547,7 @@ def test_39_mapping_column_index_out_of_range_raises():
 def test_40_mapping_first_row_used_as_header():
 
     result = text_table(
-        rows=[
+        data=[
             {"a": "FIRST", "b": "SECOND"},
             {"a": 1, "b": 2},
         ],
@@ -559,7 +564,7 @@ def test_40_mapping_first_row_used_as_header():
 def test_41_sequence_columns_selected_by_position():
 
     result = text_table(
-        rows=[
+        data=[
             ["one", "two", "three"],
         ],
         columns=[2, 0],
@@ -575,7 +580,7 @@ def test_42_sequence_string_column_selector_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[
+            data=[
                 ["one", "two"],
             ],
             columns=["first"],
@@ -587,7 +592,7 @@ def test_43_sequence_column_index_out_of_range_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=[
+            data=[
                 ["one", "two"],
             ],
             columns=[2],
@@ -599,7 +604,7 @@ def test_44_scalar_invalid_column_selector_raises():
 
     with pytest.raises(ValueError):
         text_table(
-            rows=["one", "two"],
+            data=["one", "two"],
             columns=[1],
         )
 
@@ -608,7 +613,7 @@ def test_44_scalar_invalid_column_selector_raises():
 def test_45_scalar_first_row_used_as_header():
 
     result = text_table(
-        rows=[
+        data=[
             "HEADER",
             "value",
         ],
@@ -623,7 +628,7 @@ def test_45_scalar_first_row_used_as_header():
 def test_46_first_non_none_row_determines_layout():
 
     result = text_table(
-        rows=[
+        data=[
             None,
             {"a": 1},
             {"a": 2},
@@ -639,7 +644,7 @@ def test_46_first_non_none_row_determines_layout():
 def test_47_sequence_explicit_header_labels():
 
     result = text_table(
-        rows=[
+        data=[
             ["alice", 30],
         ],
         header_labels=["Person", "Years"],
@@ -654,7 +659,7 @@ def test_47_sequence_explicit_header_labels():
 # --- test_48_text_table_global_exact_col_width() ------------------------------
 def test_48_text_table_global_exact_col_width():
     result = text_table(
-        rows=[{"a": "hello", "b": "world"}],
+        data=[{"a": "hello", "b": "world"}],
         exact_col_widths=10,
     )
 
@@ -665,7 +670,7 @@ def test_48_text_table_global_exact_col_width():
 # --- test_49_text_table_global_max_col_width() --------------------------------
 def test_49_text_table_global_max_col_width():
     result = text_table(
-        rows=[{"a": "a very long value"}],
+        data=[{"a": "a very long value"}],
         max_col_widths=8,
     )
 
@@ -683,7 +688,7 @@ def test_49_text_table_global_max_col_width():
 def test_50_text_table_widths_invalid_container_raises(argument_name, value):
     with pytest.raises(ValueError, match=rf"{argument_name} must be"):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             **{argument_name: value},
         )
 
@@ -702,7 +707,7 @@ def test_50_text_table_widths_invalid_container_raises(argument_name, value):
 def test_51_text_table_invalid_general_argument_raises(kwargs):
     with pytest.raises(ValueError):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             **kwargs,
         )
 
@@ -711,7 +716,7 @@ def test_51_text_table_invalid_general_argument_raises(kwargs):
 def test_52_text_table_invalid_column_selector_type_raises():
     with pytest.raises(ValueError, match=r"columns\[0\] must be str or int"):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             columns=[1.5],   # noqa intentional
         )
 
@@ -732,7 +737,7 @@ def test_52_text_table_invalid_column_selector_type_raises():
 def test_53_text_table_invalid_title_or_header_raises(kwargs, match):
     with pytest.raises(ValueError, match=match):
         text_table(
-            rows=[{"a": 1}],
+            data=[{"a": 1}],
             **kwargs,
         )
 
@@ -741,7 +746,7 @@ def test_53_text_table_invalid_title_or_header_raises(kwargs, match):
 def test_54_text_table_exact_width_count_mismatch_raises():
     with pytest.raises(ValueError, match="exact_col_widths must have either"):
         text_table(
-            rows=[{"a": 1, "b": 2}],
+            data=[{"a": 1, "b": 2}],
             exact_col_widths=[5, 5, 5],
         )
 
@@ -749,6 +754,93 @@ def test_54_text_table_exact_width_count_mismatch_raises():
 def test_55_text_table_max_width_count_mismatch_raises():
     with pytest.raises(ValueError, match="max_col_widths must have either"):
         text_table(
-            rows=[{"a": 1, "b": 2}],
+            data=[{"a": 1, "b": 2}],
             max_col_widths=[5, 5, 5],
         )
+
+# --- test_56_text_table_dict_decimal_value() ---------------------------------
+def test_56_text_table_dict_decimal_value():
+    result = text_table(
+        {
+            "return": Decimal("0.025"),
+        }
+    )
+
+    assert "return" in result
+    assert "0.025" in result
+    assert "<Decimal>" not in result
+
+
+# --- test_57_text_table_dict_scalar_value_types() ----------------------------
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        (123, "123"),
+        (1.25, "1.25"),
+        (Decimal("0.025"), "0.025"),
+        (True, "True"),
+        (date(2026, 10, 11), "2026-10-11"),
+        (Path("/tmp/example"), "/tmp/example"),
+    ],
+)
+def test_57_text_table_dict_scalar_value_types(value, expected):
+    result = text_table(
+        {
+            "value": value,
+        }
+    )
+
+    assert expected in result
+
+
+# --- test_58_text_table_list_of_mappings_decimal_value() ---------------------
+def test_58_text_table_list_of_mappings_decimal_value():
+    result = text_table(
+        data=[
+            {
+                "year": 2026,
+                "return": Decimal("0.025"),
+            }
+        ]
+    )
+
+    assert "2026" in result
+    assert "0.025" in result
+
+
+# --- test_59_text_table_sequence_decimal_value() -----------------------------
+def test_59_text_table_sequence_decimal_value():
+    result = text_table(
+        data=[
+            [2026, Decimal("0.025")],
+        ]
+    )
+
+    assert "2026" in result
+    assert "0.025" in result
+
+
+# --- test_60_text_table_scalar_decimal_rows() --------------------------------
+def test_60_text_table_scalar_decimal_rows():
+    result = text_table(
+        data=[
+            Decimal("0.025"),
+            Decimal("0.030"),
+        ]
+    )
+
+    assert "0.025" in result
+    assert "0.030" in result
+
+
+# --- test_61_text_table_dict_nested_values_are_displayed() -------------------
+def test_61_text_table_dict_nested_values_are_displayed():
+    result = text_table(
+        {
+            "numbers": [1, 2, 3],
+            "settings": {"width": 80},
+        }
+    )
+
+    assert "[1, 2, 3]" in result
+    assert "{'width': 80}" in result

@@ -17,5 +17,5 @@ __all__ = [
     "log",         # typical entry
     "Duo",         # advanced entry for independent logger instances
     "run",         # interactive/nested workflow helper: reloads imported script
-    "text_table",  # created log-friendly table, supports ANSI in console
+    "text_table",  # created log or print friendly table as string, supports ANSI in console
 ]

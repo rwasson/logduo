@@ -1,4 +1,4 @@
-LOGDUO MINOR UPDATE CHECKLIST (GitHub only)
+MINOR UPDATE CHECKLIST (GitHub only)
 ===========================================
 # Change reason string!!
 
@@ -9,6 +9,7 @@ git push
 
 
 Quick version update
+===========================================
 AFTER UPDATE VERSION IN PYPROJECT.TOML
 1. push to GitHub
 # Change Release number!!
@@ -21,7 +22,7 @@ git push
 2. update GitHub tag
 A.
 # Change VERSION number!!
-VERSION="0.1.6"
+VERSION="0.2.0"
 TAG="v$VERSION"
 if git rev-parse "$TAG" >/dev/null 2>&1; then
     echo "STOP: tag $TAG already exists."

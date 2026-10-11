@@ -17,6 +17,7 @@ Features
 - Safely prunes old run directories containing a Logduo marker file
 - Generates optional session artifacts: `config_table.txt`, `config.json`
 - Emits ANSI-styled and Rich output to console while preserving plain-text logs
+- Provides a utility to log/print plain-text tables from common Python data via `text_table()`
 - Creates dedicated log files via `new_logger()`
 - Creates advanced pass-through Loguru sinks via `new_loguru_sink()`
 - Creates custom logging levels via `new_level()`
@@ -212,6 +213,14 @@ Logduo Methods, Functions, and Properties
       Resolving a path does not necessarily create the corresponding directory or file.
       Logduo creates output directories only when file output is actually needed.
   
+- Use `text_table()` to log/print python data: `log(text_table(my_data))`
+    - for more information, at interactive prompt: 
+    
+          from logduo import text_table
+          help(text_table)
+  
+    - or check included example script: `console_rendering.py`.
+
 
 Per-call line options
 ---------------------

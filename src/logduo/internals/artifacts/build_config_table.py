@@ -161,7 +161,7 @@ def _build_session_config_class_instance_txt(
     display_rows = [_format_display_row(row, session_config=session_config) for row in rows]
 
     table = text_table(
-        rows=display_rows,
+        data=display_rows,
         columns=TABLE_COLUMNS,
         title=title,
         subtitle=subtitle,

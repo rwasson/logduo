@@ -28,13 +28,12 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from logduo.utils.table.reshape_dict_rows import _reshape_dict_obj_to_dict_rows
 from logduo.utils.table.text_table_classes_and_constants import (
     _DEFAULT_MAX_CELL_LINES,
     _DEFAULT_PADDING,
     _DEFAULT_WRAP_TABLE_WIDTH,
 )
-from logduo.utils.table.text_table_layout import _resolve_table_layout
+from logduo.utils.table.text_table_layout import _reshape_dict_obj_to_dict_rows, _resolve_table_layout
 from logduo.utils.table.text_table_render import (
     _build_table_block_for_column_group,
     _group_columns_to_fit_wrap_table_width,
@@ -52,7 +51,7 @@ __all__ = ["text_table"]
 
 # --- Public API ---------------------------------------------------------------
 def text_table(
-    rows: object,
+    data: object,
     *,
     title: str | None = None,
     subtitle: str | None = None,
@@ -62,7 +61,7 @@ def text_table(
     max_col_widths: int | list[int]  | None = None,
     exact_col_widths: int | list[int] | None = None,
     indent: int | None = None,
-    max_cell_lines: int | None = _DEFAULT_MAX_CELL_LINES,
+    max_cell_lines: int = _DEFAULT_MAX_CELL_LINES,
     wrap_table: bool = True,
     wrap_table_width: int = _DEFAULT_WRAP_TABLE_WIDTH,
     padding: int = _DEFAULT_PADDING,
@@ -70,6 +69,7 @@ def text_table(
     """
     Purpose
     -------
+
     Creates a string that renders as a table when printed or logged.
     ANSI colors supported in console.
 
@@ -84,11 +84,11 @@ def text_table(
 
     Examples
     --------
-    Render a dictionary:
+    log a dictionary using Logduo:
         log(text_table(my_dict))
 
-    Render tabular data:
-        log(
+    print tabular data:
+        print(
             text_table(
                 rows,
                 columns=["name", "age", "bio"],
@@ -98,7 +98,7 @@ def text_table(
 
     Arguments
     ---------
-    rows : object
+    data : object
         Data to render.
     title : str | None
         Optional title displayed above the table.
@@ -122,9 +122,8 @@ def text_table(
         Overrides automatic sizing.
     indent: int | None
         Left indent table by specified number of spaces.
-    max_cell_lines : int | None
-        Maximum displayed lines per cell.
-        None disables truncation.
+    max_cell_lines : int
+        Maximum displayed lines per cell (overrides default max cell lines = 3).
     wrap_table : bool
         Allow wide tables to be split into multiple blocks.
     wrap_table_width : int
@@ -137,16 +136,16 @@ def text_table(
     - Wide tables may be split into multiple blocks when wrap_table=True.
     - ANSI colors supported in console.
     """
+    rows = data
     if not rows:
-        raise ValueError("Cannot render empty table.")
+        raise ValueError("Cannot render empty data as a table.")
 
     widths = _normalize_global_col_widths(
         exact_col_widths=exact_col_widths,
         max_col_widths=max_col_widths,
     )
 
-
-    # if rows object is not a dictionary, dict_rows is None
+    # Reshape a dict or dataclass into field/value rows when applicable.
     dict_rows, default_header_labels = _reshape_dict_obj_to_dict_rows(rows)
     if dict_rows is not None:
         rows = dict_rows
@@ -159,7 +158,7 @@ def text_table(
 
     if not isinstance(rows, list):
         raise ValueError(
-            "rows must be either:\n"
+            "data must be either:\n"
             "    - list of row records\n"
             "    - dict\n"
             "    - dataclass instance\n"
@@ -269,24 +268,27 @@ def text_table(
 
 # Supported input shapes
 #
-# Data                                        Python shape                    (rows = N, cols = M)
-# ------------------------------------------  ------------------------------  ----------------------------
+# Data                                  Python shape        rows = N, cols = M)
+# -----------------------------------   ----------------    -------------------
 #
-# ["Alice", "Bob"]                            list of scalars                 rows = 2, cols = 1
+# ["Alice", "Bob"]                      list of scalars      rows = 2, cols = 1
 #
-# [["Alice", 30], ["Bob", 25]]                list of sequences               rows = 2, cols = 2
+# [["Alice", 30], ["Bob", 25]]          list of sequences    rows = 2, cols = 2
 #
-# [{"name": "Alice"}, {"name": "Bob"}]        list of mappings                rows = 2, cols = 1
+# [{"name": "Alice"}, {"name": "Bob"}]  list of mappings     rows = 2, cols = 1
 #
-# {"name": "Alice", "age": 30}                mapping                         rows = 2, cols = 1
+# {"name": "Alice", "age": 30}          mapping              rows = 2, cols = 1
 #
-# Person(name="Alice", age=30)                dataclass instance              rows = 2, cols = 1
+# Person(name="Alice", age=30)          dataclass instance   rows = 2, cols = 1
 #
+# [{"name": "Alice", "age": 30},
+# {"name": "Bob", "age": 25}]           list of mappings     rows = 2, cols = 2
+
 # Notes:
-# - A mapping is any dict-like object implementing the Mapping protocol.
+# - Top-level dictionaries and dataclass objects are rendered as
+#   field/value inspection tables.
 # - A sequence is an ordered container such as list or tuple.
 # - Scalars include str, int, float, bool, Path, datetime, etc.
 # - Lists are treated as collections of rows.
 # - Mappings and dataclass objects are treated as a single record and
 #   rendered as field/value inspection tables.
-

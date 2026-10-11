@@ -18,12 +18,15 @@ def _visible_len(s: str) -> int:
     return len(strip_ansi(s))
 
 
-# --- _stringify_for_table() ----------------------------------------------------
+# --- _stringify_for_table() ---------------------------------------------------
 def _stringify_for_table(value: Any) -> str:
     if value is None:
         return ""
-    return str(value)
 
+    if isinstance(value, type):
+        return value.__name__
+
+    return str(value)
 
 
 # --- _wrap_cell_text_for_width() ----------------------------------------------
