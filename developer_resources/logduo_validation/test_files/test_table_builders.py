@@ -780,16 +780,11 @@ def test_56_text_table_dict_decimal_value():
         (Decimal("0.025"), "0.025"),
         (True, "True"),
         (date(2026, 10, 11), "2026-10-11"),
-        (Path("/tmp/example"), "/tmp/example"),
+        (Path("/tmp/example"), str(Path("/tmp/example"))),
     ],
 )
 def test_57_text_table_dict_scalar_value_types(value, expected):
-    result = text_table(
-        {
-            "value": value,
-        }
-    )
-
+    result = text_table({"value": value})
     assert expected in result
 
 

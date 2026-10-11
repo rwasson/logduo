@@ -16,13 +16,13 @@ AFTER UPDATE VERSION IN PYPROJECT.TOML
 
 git status
 git add .
-git commit -m "Release Logduo 0.2.0"
+git commit -m "Release Logduo 0.2.1"
 git push
 
 2. update GitHub tag
 A.
 # Change VERSION number!!
-VERSION="0.2.0"
+VERSION="0.2.1"
 TAG="v$VERSION"
 if git rev-parse "$TAG" >/dev/null 2>&1; then
     echo "STOP: tag $TAG already exists."
