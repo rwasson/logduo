@@ -1,5 +1,5 @@
 # tests.yml
-# Logduo GitHub Actions test workflow
+# Folioincome GitHub Actions test workflow
 #
 # Purpose:
 # - Runs the Logduo validation suite on Ubuntu, macOS, and Windows
